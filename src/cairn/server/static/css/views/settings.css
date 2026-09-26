@@ -463,6 +463,10 @@
   margin-top: 8px;
 }
 
+.share-row .select {
+  height: var(--control-h-sm);
+}
+
 .suggested {
   display: grid;
   gap: 6px;

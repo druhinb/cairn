@@ -59,6 +59,19 @@ export function renderSources(view) {
 
 /** Save the watchlist as a file to share, or add the companies from one. */
 function sharingRow(view) {
+  const merge = async (url, body, from) => {
+    try {
+      const got = await api(url, { method: "POST", quiet: true, body: { ...body, watchlist: view.draft.watchlist || [] } });
+      if (!view.mounted) return;
+      view.set("watchlist", got.watchlist);
+      renderSources(view);
+      const changed = got.added + got.turned_on;
+      toast(changed ? `Added ${fmt.plural(changed, "company", "companies")} from ${got.name || from}. Save to keep the change`
+        : `You already follow every company in ${got.name || from}`);
+    } catch (error) {
+      toast(`Couldn't add ${from}: ${error.message}`, { tone: "error" });
+    }
+  };
   const exportList = async () => {
     const data = await api("/api/watchlist/export").catch(() => null);
     if (!data) return;
@@ -74,26 +87,23 @@ function sharingRow(view) {
   file.addEventListener("change", async () => {
     const chosen = file.files?.[0];
     file.value = "";
-    if (!chosen) return;
-    try {
-      const got = await api("/api/watchlist/import", { method: "POST", quiet: true,
-        body: { text: await chosen.text(), watchlist: view.draft.watchlist || [] } });
-      if (!view.mounted) return;
-      view.set("watchlist", got.watchlist);
-      renderSources(view);
-      const changed = got.added + got.turned_on;
-      toast(changed ? `Added ${fmt.plural(changed, "company", "companies")} from ${got.name || chosen.name}. Save to keep the change`
-        : `You already follow every company in ${got.name || chosen.name}`);
-    } catch (error) {
-      toast(`Couldn't import ${chosen.name}: ${error.message}`, { tone: "error" });
-    }
+    if (chosen) merge("/api/watchlist/import", { text: await chosen.text() }, chosen.name);
+  });
+  const starters = h("select", { class: "select", "aria-label": "Add a starter list", onchange: () => {
+    const id = starters.value;
+    starters.value = "";
+    if (id) merge(`/api/watchlist/starters/${id}`, {}, "the list");
+  } }, h("option", { value: "", text: "Add a starter list…" }));
+  api("/api/watchlist/starters", { quiet: true }).then((lists) => starters.append(
+    ...lists.map((list) => h("option", { value: list.id, text: `${list.name} (${list.companies.length})` }))), () => {
+    starters.hidden = true;
   });
   return h("div", { class: "share-row" },
     h("button", { type: "button", class: "btn btn-sm", text: "Save as a file", onclick: exportList,
       title: "Save the companies you follow as a file to share. Save your changes first to include them." }),
     h("button", { type: "button", class: "btn btn-sm", text: "Add from a file", onclick: () => file.click(),
       title: "Add the companies from a watchlist file someone shared" }),
-    file);
+    starters, file);
 }
 
 /** Companies with strong recent postings and no watchlist board, each with Follow. */
