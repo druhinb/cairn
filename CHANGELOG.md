@@ -9,6 +9,9 @@ This file lists every notable change to this project. It follows
 - The first run ranks every posting that matches your preferences, where it used
   to rank at most 100 from the last two weeks. Max ranked per run, in Settings,
   applies to the runs after it.
+- The profile that setup drafts from your resume has no TODO lines left to fill
+  in. Your answers to the setup questions add your work authorization, the
+  companies you rate highest and where you want to work.
 
 ## [0.0.2] — 2026-09-26
 

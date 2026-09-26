@@ -1,8 +1,8 @@
 """Setup from a resume: one Claude call drafts profile.md, and the answers to a few
 questions become config.toml.
 
-The draft holds only what the resume states. Everything else is a `TODO:` line for
-the user to fill in before the files are written.
+The draft holds only what the resume states. The answers write work authorization,
+company anchors and locations into it.
 """
 import dataclasses
 import json
@@ -57,20 +57,18 @@ SETTING_FOR_PREF = {
 SECTION_GUIDE = {
     "Snapshot": (
         "- bullets: name, degree, school, GPA if stated, expected graduation; the roles "
-        "and start dates being applied for; a `- Work authorization: ...` line."),
+        "and start dates being applied for; a `- Work authorization: ...` line only "
+        "when the resume states it."),
     "Target roles (higher fit)": "- bullets naming the role families the resume points to.",
     "Strengths to match on": (
         "- bullets pairing each strength with the resume evidence for it."),
     "Rank higher when a posting mentions": (
         "- one bullet of comma-separated topics drawn from the resume."),
-    "Rank lower / skip": "- `TODO: ` line for the kinds of role the candidate does not want.",
+    "Rank lower / skip": "nothing under the heading.",
     "Company tier (drives the `tier` score, 0-100)": (
         "The five anchor bands (90-100, 70-89, 55-69, 30-54, 0-29) with a generic "
-        "description of each, then the single line "
-        "`- TODO: company calibre anchors, e.g. Stripe, Databricks, Jane Street = 90`."),
-    "Location preference (soft, in priority order)": (
-        "- `TODO: ` line for preferred locations. Where the candidate lives or studied "
-        "is not a preference."),
+        "description of each."),
+    "Location preference (soft, in priority order)": "nothing under the heading.",
 }
 
 DRAFT_PROMPT = """\
@@ -86,8 +84,8 @@ PROFILE SKELETON>>>
 Rules:
 - Use only facts the resume states. Never invent an employer, date, metric, skill, or
   preference. Copy metrics exactly.
-- Anything a section needs that the resume does not state is a line starting `TODO:`
-  that says what to fill in. Company tier anchors and preferences are always TODO lines.
+- Leave out anything the resume does not state, with no placeholder or TODO lines.
+  Questions after this draft ask for preferences, company anchors and locations.
 - Plain markdown only, no code fences.
 
 Reply with exactly this envelope and nothing before or after it:
@@ -328,6 +326,8 @@ def _validated(out):
     profile, raw = _envelope(out or "")
     if not profile:
         raise OnboardError("profile.md is empty")
+    # the questions after the draft ask what a placeholder line would
+    profile = "\n".join(line for line in profile.splitlines() if "TODO:" not in line)
     present = set(_headings(profile))
     missing = [h for h in required_headings("profile.md") if h not in present]
     if missing:
@@ -428,7 +428,32 @@ def default_prefs(suggestions):
 # profile.md answers
 # --------------------------------------------------------------------------
 _AUTHORIZATION_LINE = re.compile(r"work authori[sz]ation", re.I)
+SNAPSHOT_HEADING = "Snapshot"
 TIER_HEADING = "Company tier (drives the `tier` score, 0-100)"
+LOCATION_HEADING = "Location preference (soft, in priority order)"
+
+
+def _section(lines, heading):
+    """(start, end) of a `## heading` section's lines less its trailing blank lines,
+    or None when there is no such section."""
+    start = next((i for i, line in enumerate(lines)
+                  if line.startswith("## ") and line[3:].strip() == heading), None)
+    if start is None:
+        return None
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+               len(lines))
+    while end > start + 1 and not lines[end - 1].strip():
+        end -= 1
+    return start, end
+
+
+def _append_to_section(text, heading, bullets):
+    lines = text.rstrip("\n").splitlines()
+    bounds = _section(lines, heading)
+    if bounds is None:
+        return "\n".join(lines + ["", f"## {heading}", *bullets]) + "\n"
+    lines[bounds[1]:bounds[1]] = bullets
+    return "\n".join(lines) + "\n"
 
 
 def _with_authorization(text, authorization):
@@ -436,40 +461,31 @@ def _with_authorization(text, authorization):
     lines = text.rstrip("\n").splitlines()
     for i, existing in enumerate(lines):
         if _AUTHORIZATION_LINE.search(existing):
-            if "TODO:" in existing:
-                lines[i] = line
-            else:
-                lines.insert(i + 1, f"  Stated during setup: {authorization}.")
+            lines.insert(i + 1, f"  Stated during setup: {authorization}.")
             return "\n".join(lines) + "\n"
-    return "\n".join(lines + ["", "## Work authorization", line]) + "\n"
+    return _append_to_section(text, SNAPSHOT_HEADING, [line])
 
 
-def _with_anchors(text, anchors):
-    bullets = [f"- {anchor}" for anchor in anchors]
+def _with_locations(text, locations, remote_ok):
+    places = _location_allow(locations, remote_ok)
     lines = text.rstrip("\n").splitlines()
-    start = next((i for i, line in enumerate(lines)
-                  if line.startswith("## ") and line[3:].strip() == TIER_HEADING), None)
-    if start is None:
-        return "\n".join(lines + ["", f"## {TIER_HEADING}", *bullets]) + "\n"
-    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
-               len(lines))
-    todo = next((i for i in range(start + 1, end) if "TODO:" in lines[i]), None)
-    if todo is None:
-        while end > start + 1 and not lines[end - 1].strip():
-            end -= 1
-        lines[end:end] = bullets
-    else:
-        lines[todo:todo + 1] = bullets
-    return "\n".join(lines) + "\n"
+    bounds = _section(lines, LOCATION_HEADING)
+    if bounds is not None:
+        del lines[bounds[0] + 1:bounds[1]]
+    return _append_to_section("\n".join(lines), LOCATION_HEADING, [f"- {', '.join(places)}."])
 
 
 def with_answers(profile_md, prefs):
-    """profile.md with the stated work authorization and calibre anchors written in."""
+    """profile.md with the stated work authorization, calibre anchors and locations
+    written in."""
     text = profile_md
     if prefs.get("work_authorization", "unknown") != "unknown":
         text = _with_authorization(text, prefs["work_authorization"])
     if prefs.get("calibre_anchors"):
-        text = _with_anchors(text, prefs["calibre_anchors"])
+        text = _append_to_section(text, TIER_HEADING,
+                                  [f"- {anchor}" for anchor in prefs["calibre_anchors"]])
+    if prefs.get("locations"):
+        text = _with_locations(text, prefs["locations"], prefs.get("remote_ok", False))
     return text
 
 

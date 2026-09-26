@@ -28,7 +28,6 @@ const BUILT_IN_OPTIONS = { roles: Object.keys(ROLE_LABELS),
 const GRADUATION_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const DEFAULT_GRADUATION_MONTH = "06";
 const READ_LINE = /^\[setup\] read (\d+) words/;
-const TODO_LINE = /^\s*(?:[-*]\s*)?TODO:/;
 const SLOW_DRAFT_SECONDS = 60;
 // long enough to see the draft pass its check before Review replaces the screen
 const CHECKED_PAUSE_MS = 700;
@@ -258,7 +257,7 @@ class Setup {
       this.profile = draft.profile_md;
       this.prefs = this.startingPrefs(draft.suggestions, current);
       this.step = REVIEW_STEP;
-      await screen.checked(draft);
+      await screen.checked();
     } catch (error) {
       if (abort.signal.aborted) {
         this.stoppedAt = Date.now();
@@ -317,12 +316,11 @@ class Setup {
     return {
       element: frame.element,
       /** Mark the draft received and checked, and hold the screen a moment. */
-      checked: async (draft) => {
+      checked: async () => {
         this.stopDraftScreen();
         if (!read) markRead(null);
-        const todos = draft.profile_md.split("\n").filter((line) => TODO_LINE.test(line)).length;
         frame.step("write", "done", fmt.duration((Date.now() - started) / 1000));
-        frame.step("check", "done", todos ? `${fmt.plural(todos, "line")} for you to fill in` : "Nothing left to fill in");
+        frame.step("check", "done");
         frame.actions.replaceChildren();
         frame.say("Your profile draft is ready.");
         await new Promise((resolve) => setTimeout(resolve, CHECKED_PAUSE_MS));
@@ -376,7 +374,7 @@ class Setup {
   reviewStep() {
     const edit = editor(this.profile, { label: "Profile draft", onInput: (text) => { this.profile = text; } });
     return h("div", { class: "setup-body" },
-      h("p", { class: "setup-lead", text: "Cairn compares every job to this profile. Fill in the highlighted TODO lines now or later in Settings." }),
+      h("p", { class: "setup-lead", text: "Cairn compares every job to this profile. Fix anything it got wrong. The next step asks about locations and the companies you rate highest." }),
       edit.element,
       h("div", { class: "setup-actions" },
         h("button", { type: "button", class: "btn btn-ghost", text: "Back", onclick: () => this.go(RESUME_STEP) }),

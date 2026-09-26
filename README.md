@@ -134,8 +134,8 @@ many postings it takes, change the fit cutoff for that run, or do a dry run that
 changes nothing. Past runs are listed below; click one to read its log.
 
 **Settings** has every setting in `config.toml`, and checks each value as you
-type. It also has an editor for `profile.md`, which highlights the `TODO:` lines you
-still need to fill in. From Settings you can add feeds and companies, turn the
+type. It also has an editor for `profile.md`, the notes Cairn compares every job
+to. From Settings you can add feeds and companies, turn the
 daily run on or off, and run the checkup.
 
 ### Other things worth knowing

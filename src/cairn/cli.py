@@ -471,9 +471,6 @@ def _apply_draft(draft, prefs, overwrite):
         ui.info(f"  wrote {path}")
     for name in applied.unresolved:
         ui.warn(f"  no job board found for {name}. Add it under [[watchlist]] in config.toml by hand")
-    todos = paths.profile_md().read_text(encoding="utf-8").count("TODO:")
-    if todos:
-        ui.info(f"{todos} TODO line(s) left in profile.md. Fill them in.")
     ui.info("Then run: cairn doctor, and cairn seed")
     return 0
 

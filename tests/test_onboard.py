@@ -21,13 +21,14 @@ def _doc(title, name, sections=None):
 
 
 PROFILE = _doc("Candidate profile", "profile.md", {
-    "Snapshot": "- Sam Lee, B.S. Computer Science.\n- Work authorization: TODO: not stated",
-    onboard.TIER_HEADING: "- **90-100** — the strongest engineering orgs.\n"
-                          "- TODO: company calibre anchors, e.g. Stripe = 90"})
+    "Snapshot": "- Sam Lee, B.S. Computer Science.",
+    onboard.TIER_HEADING: "- **90-100** — the strongest engineering orgs."})
 SUGGESTIONS = {"graduation_year": 2027, "graduation_month": 6, "degrees_held": ["Bachelor's"],
                "roles": ["backend", "systems"], "locations": ["Seattle, WA"],
                "work_authorization": "unknown", "internship_terms": ["fall 2026"],
                "name": "Sam Lee", "email": "sam@example.com"}
+# PROFILE once setup has written the suggested location into it
+APPLIED = PROFILE.replace("order)\n- from the resume\n", "order)\n- Seattle, WA.\n")
 
 
 def envelope(profile=PROFILE, suggestions=None):
@@ -56,6 +57,11 @@ class ValidatedTest(unittest.TestCase):
             suggestions=f"```json\n{json.dumps(extra)}\n```"))
         self.assertEqual(draft.profile_md, PROFILE)
         self.assertEqual(draft.suggestions, {**SUGGESTIONS, "roles": ["backend"]})
+
+    def test_placeholder_lines_are_dropped(self):
+        todo = PROFILE.replace("Computer Science.", "Computer Science.\n- GPA: TODO: not stated\n"
+                                                    "- TODO: add work authorization")
+        self.assertEqual(onboard._validated(envelope(profile=todo)).profile_md, PROFILE)
 
     def test_each_missing_marker_is_named(self):
         for marker in onboard.MARKERS:
@@ -118,7 +124,7 @@ class DraftTest(unittest.TestCase):
         self.assertNotIn("master", prompt)
         for persona in ("Alex Rivera", "Northwind", "tinyinfer", "State University"):
             self.assertNotIn(persona, prompt)
-        self.assertIn("TODO:", prompt)
+        self.assertIn("no placeholder or TODO lines", prompt)
 
     def test_every_example_heading_has_a_section_guide(self):
         for heading in onboard.required_headings("profile.md"):
@@ -278,40 +284,47 @@ class PreferencesTest(unittest.TestCase):
 
 
 class ProfileAnswersTest(unittest.TestCase):
-    def test_authorization_replaces_a_todo_line(self):
+    def test_authorization_joins_the_snapshot(self):
         text = onboard.with_answers(PROFILE, {"work_authorization": "F-1 OPT"})
-        self.assertIn("- Work authorization: F-1 OPT.\n", text)
-        self.assertNotIn("TODO: not stated", text)
+        self.assertIn("- Sam Lee, B.S. Computer Science.\n- Work authorization: F-1 OPT.\n\n", text)
 
     def test_authorization_goes_under_a_stated_line(self):
-        stated = PROFILE.replace("TODO: not stated", "**U.S. Citizen**")
+        stated = PROFILE.replace("Computer Science.", "Computer Science.\n"
+                                                      "- Work authorization: **U.S. Citizen**")
         text = onboard.with_answers(stated, {"work_authorization": "US citizen"})
         self.assertIn("- Work authorization: **U.S. Citizen**\n"
                       "  Stated during setup: US citizen.\n", text)
 
-    def test_authorization_without_a_line_gets_a_section(self):
-        text = onboard.with_answers("# Profile\n\n## Snapshot\n- Sam\n",
-                                    {"work_authorization": "needs sponsorship"})
-        self.assertTrue(text.endswith("## Work authorization\n"
-                                      "- Work authorization: needs sponsorship.\n"))
+    def test_authorization_without_a_snapshot_gets_one(self):
+        text = onboard.with_answers("# Profile\n", {"work_authorization": "needs sponsorship"})
+        self.assertEqual(text, "# Profile\n\n## Snapshot\n- Work authorization: needs sponsorship.\n")
 
     def test_unknown_authorization_changes_nothing(self):
         self.assertEqual(onboard.with_answers(PROFILE, {"work_authorization": "unknown"}),
                          PROFILE)
 
-    def test_anchors_replace_the_tier_todo(self):
+    def test_anchors_end_the_tier_section(self):
         text = onboard.with_answers(PROFILE, {"calibre_anchors": [
             "Stripe, Databricks, Jane Street = 90", "Datadog = 75"]})
         self.assertIn("orgs.\n- Stripe, Databricks, Jane Street = 90\n- Datadog = 75\n\n"
                       "## Location", text)
-        self.assertNotIn("TODO: company calibre", text)
-
-    def test_anchors_without_a_todo_or_section(self):
-        no_todo = PROFILE.replace("\n- TODO: company calibre anchors, e.g. Stripe = 90", "")
-        text = onboard.with_answers(no_todo, {"calibre_anchors": ["Stripe = 90"]})
-        self.assertIn("orgs.\n- Stripe = 90\n\n## Location", text)
         text = onboard.with_answers("# Profile\n", {"calibre_anchors": ["Stripe = 90"]})
         self.assertEqual(text, f"# Profile\n\n## {onboard.TIER_HEADING}\n- Stripe = 90\n")
+
+    def test_locations_fill_the_location_section(self):
+        text = onboard.with_answers(PROFILE, {"locations": ["Seattle, WA", "New York, NY"],
+                                              "remote_ok": True})
+        self.assertTrue(text.endswith(f"## {onboard.LOCATION_HEADING}\n"
+                                      "- Seattle, WA, New York, NY, Remote.\n"))
+
+    def test_new_locations_replace_what_the_section_held(self):
+        held = onboard.with_answers(PROFILE, {"locations": ["Austin, TX"]})
+        text = onboard.with_answers(held, {"locations": ["Boston, MA"], "remote_ok": False})
+        self.assertTrue(text.endswith(f"## {onboard.LOCATION_HEADING}\n- Boston, MA.\n"))
+
+    def test_no_locations_leave_the_section_alone(self):
+        self.assertEqual(onboard.with_answers(PROFILE, {"locations": [], "remote_ok": True}),
+                         PROFILE)
 
 
 class ApplyTest(unittest.TestCase):
@@ -398,7 +411,7 @@ class InitFromResumeTest(unittest.TestCase):
 
     def test_yes_applies_the_suggested_answers(self):
         self.assertEqual(self.init("--from-resume", str(self.resume), "--yes"), 0)
-        self.assertEqual(paths.profile_md().read_text(), PROFILE)
+        self.assertEqual(paths.profile_md().read_text(), APPLIED)
         self.assertEqual(settings.load().graduation_year, 2027)
         self.assertEqual(settings.load().location_allow, ["Seattle, WA"])
         saved = onboard.draft_dir()
@@ -456,11 +469,11 @@ class InitFromResumeTest(unittest.TestCase):
         paths.profile_md().write_text("mine")
         self.assertEqual(self.init("--apply-draft"), 1)
         self.assertEqual(self.init("--apply-draft", "--overwrite"), 0)
-        self.assertEqual(paths.profile_md().read_text(), PROFILE)
+        self.assertEqual(paths.profile_md().read_text(), APPLIED)
         paths.profile_md().write_text("mine again")
         self.assertEqual(
             self.init("--from-resume", str(self.resume), "--yes", "--overwrite"), 0)
-        self.assertEqual(paths.profile_md().read_text(), PROFILE)
+        self.assertEqual(paths.profile_md().read_text(), APPLIED)
         self.assertNotIn("overwrite", json.loads(
             (onboard.draft_dir() / "prefs.json").read_text()))
 
