@@ -6,6 +6,7 @@ their scores, so a failed run retries next time.
 """
 import argparse
 import getpass
+import io
 import sys
 import time
 from importlib import resources
@@ -707,7 +708,7 @@ def _windows_output():
         if stream is None:
             paths.home().mkdir(parents=True, exist_ok=True)
             setattr(sys, name, open(paths.home() / file, "a", encoding="utf-8"))
-        else:
+        elif isinstance(stream, io.TextIOWrapper):
             # a redirected stream writes the ANSI code page, which lacks ✓ and most
             # company names outside Western Europe
             stream.reconfigure(encoding="utf-8", errors="replace")
