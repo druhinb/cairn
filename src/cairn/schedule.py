@@ -63,7 +63,7 @@ def render(program_path, hour=DEFAULT_HOUR, minute=DEFAULT_MINUTE):
     if os.environ.get("CAIRN_HOME"):
         home_env = ("\n    <key>CAIRN_HOME</key>\n"
                     f"    <string>{escape(os.environ['CAIRN_HOME'])}</string>")
-    template = (resources.files("cairn") / "launchd.plist.template").read_text()
+    template = (resources.files("cairn") / "launchd.plist.template").read_text(encoding="utf-8")
     return Template(template).substitute(
         label=LABEL, program=escape(str(program_path)),
         path=escape(LAUNCHD_PATH.format(home=Path.home())), home_env=home_env,

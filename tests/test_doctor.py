@@ -33,7 +33,7 @@ class DoctorTest(unittest.TestCase):
         self.patch(schedule, "plist_path", lambda: self.plist)
         self.patch(schedule, "autostart_plist_path", lambda: self.home / "absent-ui.plist")
         for name in HOME_FILES:
-            (self.home / name).write_text("")
+            (self.home / name).write_text("", encoding="utf-8")
 
     def patch(self, module, name, value):
         self.addCleanup(setattr, module, name, getattr(module, name))
@@ -82,10 +82,10 @@ class DoctorTest(unittest.TestCase):
         self.assertFalse(schedule_check["required"])
         self.assertIn("Turn it on in Settings › Schedule", schedule_check["detail"])
 
-        self.plist.write_text(schedule.render("/bin/cairn", 6, 5))
+        self.plist.write_text(schedule.render("/bin/cairn", 6, 5), encoding="utf-8")
         self.assertIn("Daily at 6:05", self.checks()["schedule"]["detail"])
 
-        self.plist.write_text("not a plist")
+        self.plist.write_text("not a plist", encoding="utf-8")
         schedule_check = self.checks()["schedule"]
         self.assertTrue(schedule_check["ok"])
         self.assertIn("Couldn't read the schedule", schedule_check["detail"])
@@ -117,7 +117,7 @@ class ProviderDoctorTest(unittest.TestCase):
     def setUp(self):
         self.home = llm_home(self, llm_provider="groq")
         for name in HOME_FILES:
-            (self.home / name).write_text("")
+            (self.home / name).write_text("", encoding="utf-8")
         self.sent = []
         self.answer = ("OK", None)
         self.enterContext(mock.patch.object(llm, "send", self.fake_send))
@@ -177,7 +177,7 @@ class ProviderDoctorTest(unittest.TestCase):
     def test_a_recent_answer_skips_the_call(self):
         secrets.set_key("groq", KEY)
         answered = datetime.datetime.now(datetime.UTC) - datetime.timedelta(minutes=42)
-        llm.check_file().write_text(json.dumps({"groq": answered.isoformat()}))
+        llm.check_file().write_text(json.dumps({"groq": answered.isoformat()}), encoding="utf-8")
         check = self.checks()["llm"]
         self.assertEqual((check["ok"], check["detail"]),
                          (True, "Answered 42 min ago"))
@@ -186,7 +186,7 @@ class ProviderDoctorTest(unittest.TestCase):
     def test_an_answer_over_a_day_old_is_asked_again(self):
         secrets.set_key("groq", KEY)
         answered = datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=25)
-        llm.check_file().write_text(json.dumps({"groq": answered.isoformat()}))
+        llm.check_file().write_text(json.dumps({"groq": answered.isoformat()}), encoding="utf-8")
         self.assertTrue(self.checks()["llm"]["ok"])
         self.assertEqual(len(self.sent), 1)
 

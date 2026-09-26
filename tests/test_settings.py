@@ -22,7 +22,7 @@ BAD_CONFIG = 'fit_treshold = 70\nlocation_allow = ["Nowhere"]\n'
 def _bad_home():
     """A directory holding a config.toml that fails to load."""
     home = tempfile.TemporaryDirectory()
-    with open(os.path.join(home.name, "config.toml"), "w") as f:
+    with open(os.path.join(home.name, "config.toml"), "w", encoding="utf-8") as f:
         f.write(BAD_CONFIG)
     return home
 
@@ -73,7 +73,7 @@ class RoundTripTest(unittest.TestCase):
 
     def test_only_changed_settings_are_written(self):
         settings.save(dataclasses.replace(settings.defaults(), fit_threshold=70))
-        text = paths.config_file().read_text()
+        text = paths.config_file().read_text(encoding="utf-8")
         self.assertIn("fit_threshold = 70", text)
         self.assertNotIn("tier_floor", text)
         self.assertNotIn("sources", text)
@@ -92,7 +92,7 @@ class InvalidFileTest(unittest.TestCase):
         self.home = self.enterContext(temp_home())
 
     def _write(self, text):
-        paths.config_file().write_text(text)
+        paths.config_file().write_text(text, encoding="utf-8")
 
     def test_an_unknown_key_names_itself(self):
         self._write("fit_treshold = 70\n")
@@ -157,14 +157,15 @@ class RetiredKeyTest(unittest.TestCase):
 
     def test_retired_keys_are_ignored_with_one_warning(self):
         paths.config_file().write_text('fit_threshold = 70\noutput_dir = "~/Desktop/a"\n'
-                                       "max_tailor_per_run = 12\n")
+                                       "max_tailor_per_run = 12\n", encoding="utf-8")
         cfg = settings.load()
         self.assertEqual(cfg.fit_threshold, 70)
         self.assertEqual(self.warnings, ["config.toml: ignoring retired setting(s): "
                                          "output_dir, max_tailor_per_run"])
 
     def test_a_usajobs_key_in_config_toml_is_retired_and_never_a_setting(self):
-        paths.config_file().write_text('usajobs_key = "k3y"\nusajobs_email = "me@example.com"\n')
+        paths.config_file().write_text('usajobs_key = "k3y"\nusajobs_email = "me@example.com"\n',
+                                       encoding="utf-8")
         cfg = settings.load()
         self.assertEqual(cfg.usajobs_email, "me@example.com")
         self.assertFalse(hasattr(cfg, "usajobs_key"))
@@ -172,12 +173,13 @@ class RetiredKeyTest(unittest.TestCase):
         with self.assertRaisesRegex(settings.SettingsError, "unknown setting 'usajobs_key'"):
             settings.from_dict({"usajobs_key": "k3y"})
         settings.save(cfg)
-        self.assertNotIn("k3y", paths.config_file().read_text())
+        self.assertNotIn("k3y", paths.config_file().read_text(encoding="utf-8"))
 
     def test_the_next_save_drops_them_from_disk(self):
-        paths.config_file().write_text('fit_threshold = 70\noutput_dir = "~/Desktop/a"\n')
+        paths.config_file().write_text('fit_threshold = 70\noutput_dir = "~/Desktop/a"\n',
+                                       encoding="utf-8")
         settings.save(settings.load())
-        text = paths.config_file().read_text()
+        text = paths.config_file().read_text(encoding="utf-8")
         self.assertIn("fit_threshold = 70", text)
         self.assertNotIn("output_dir", text)
         self.warnings.clear()
@@ -246,7 +248,7 @@ class SuiteGuardTest(unittest.TestCase):
         home = _bad_home()
         self.addCleanup(home.cleanup)
         os.makedirs(os.path.join(home.name, ".cairn"))
-        with open(os.path.join(home.name, ".cairn", "config.toml"), "w") as f:
+        with open(os.path.join(home.name, ".cairn", "config.toml"), "w", encoding="utf-8") as f:
             f.write(BAD_CONFIG)
         env = {**os.environ, "HOME": home.name, "CAIRN_HOME": home.name,
                "PYTHONPATH": os.path.join(REPO, "src")}
@@ -302,9 +304,9 @@ class InitTest(unittest.TestCase):
 
     def test_init_never_overwrites(self):
         cli.cmd_init(self.args)
-        paths.profile_md().write_text("my own profile")
+        paths.profile_md().write_text("my own profile", encoding="utf-8")
         self.assertEqual(cli.cmd_init(self.args), 0)
-        self.assertEqual(paths.profile_md().read_text(), "my own profile")
+        self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), "my own profile")
 
     def test_init_restores_only_the_missing_files(self):
         cli.cmd_init(self.args)

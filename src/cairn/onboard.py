@@ -195,7 +195,7 @@ def _as_path(source):
 def _pdf_text(path):
     try:
         out = subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True,
-                             text=True, timeout=PDFTOTEXT_TIMEOUT)
+                             text=True, encoding="utf-8", timeout=PDFTOTEXT_TIMEOUT)
     except FileNotFoundError:
         raise OnboardError("Cairn can't read PDFs on this Mac yet. Paste the resume "
                            "text instead") from None

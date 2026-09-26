@@ -64,10 +64,10 @@ class CheckTest(unittest.TestCase):
         self.enterContext(mock.patch.object(update, "_placeholder_warned", False))
 
     def age_cache(self, **ago):
-        cached = json.loads(update.cache_file().read_text())
+        cached = json.loads(update.cache_file().read_text(encoding="utf-8"))
         then = datetime.datetime.now(datetime.UTC) - datetime.timedelta(**ago)
         cached["checked_at"] = then.isoformat()
-        update.cache_file().write_text(json.dumps(cached))
+        update.cache_file().write_text(json.dumps(cached), encoding="utf-8")
 
     def test_reports_a_newer_release(self):
         self.assertEqual(update.check(), {
@@ -87,10 +87,10 @@ class CheckTest(unittest.TestCase):
 
     def test_a_day_old_answer_is_asked_again(self):
         update.check()
-        cached = json.loads(update.cache_file().read_text())
+        cached = json.loads(update.cache_file().read_text(encoding="utf-8"))
         day_ago = datetime.datetime.now(datetime.UTC) - datetime.timedelta(hours=25)
         cached["checked_at"] = day_ago.isoformat()
-        update.cache_file().write_text(json.dumps(cached))
+        update.cache_file().write_text(json.dumps(cached), encoding="utf-8")
         update.check()
         self.assertEqual(self.urlopen.call_count, 2)
 
@@ -126,7 +126,7 @@ class CheckTest(unittest.TestCase):
                 self.assertIsNone(found["url"])
 
     def test_an_unreadable_cache_is_asked_again(self):
-        update.cache_file().write_text("{not json")
+        update.cache_file().write_text("{not json", encoding="utf-8")
         self.assertTrue(update.check()["newer"])
 
     def test_never_raises(self):

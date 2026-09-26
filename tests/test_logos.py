@@ -1113,7 +1113,7 @@ class IconJobTest(unittest.TestCase):
         self.assertFalse(logos.icons_running())
 
     def test_a_marker_left_by_a_process_that_died_holds_nothing(self):
-        (self.home / "icons.pid").write_text("999999")
+        (self.home / "icons.pid").write_text("999999", encoding="utf-8")
         self.assertFalse(logos.icons_running())
         with logos.icon_job():
             self.assertTrue(logos.icons_running())

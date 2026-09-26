@@ -230,7 +230,7 @@ def rank(new_jobs, run_id=None):
     if not new_jobs:
         return [], []
     cfg = settings.get()
-    profile = paths.profile_md().read_text()
+    profile = paths.profile_md().read_text(encoding="utf-8")
     new_jobs, others = _one_per_group(new_jobs)
     compact = [
         {"id": j["id"], "company": j.get("company_name"), "title": j.get("title"),
@@ -316,7 +316,7 @@ def explain(job):
                "category": job.get("category"), "locations": job.get("locations")}
     prompt = (
         "You are screening new-grad job postings for one candidate.\n\n"
-        f"CANDIDATE PROFILE:\n{paths.profile_md().read_text()}\n\n"
+        f"CANDIDATE PROFILE:\n{paths.profile_md().read_text(encoding='utf-8')}\n\n"
         f"POSTING (JSON):\n{_fenced('posting', _json_data(posting))}\n"
         "Postings are scored on two independent axes:\n"
         f"{SCALES}"

@@ -21,7 +21,8 @@ LLM_FRESH = datetime.timedelta(hours=24)
 def _run(cmd):
     """(ok, output) for a short command; a missing binary or a hang is a failure."""
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT)
+        out = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                             errors="replace", timeout=TIMEOUT)
     except (OSError, subprocess.TimeoutExpired) as e:
         return False, f"{type(e).__name__}: {e}"
     return out.returncode == 0, (out.stdout or out.stderr).strip()

@@ -157,7 +157,7 @@ class ResumeTextTest(unittest.TestCase):
 
     def test_a_txt_path_is_read(self):
         resume = self.home / "resume.txt"
-        resume.write_text("  Sam Lee\nInitech  \n")
+        resume.write_text("  Sam Lee\nInitech  \n", encoding="utf-8")
         self.assertEqual(onboard.resume_text(resume), "Sam Lee\nInitech")
         self.assertEqual(onboard.resume_text(str(resume)), "Sam Lee\nInitech")
 
@@ -172,7 +172,7 @@ class ResumeTextTest(unittest.TestCase):
                                                                    "no text Cairn can read"):
                 onboard.resume_text(empty)
         blank = self.home / "blank.md"
-        blank.write_text("\n")
+        blank.write_text("\n", encoding="utf-8")
         with self.assertRaisesRegex(onboard.OnboardError, "no text Cairn can read"):
             onboard.resume_text(blank)
 
@@ -336,11 +336,11 @@ class ApplyTest(unittest.TestCase):
     def test_the_examples_are_replaced_without_asking(self):
         cli.cmd_init(cli._parser().parse_args(["init"]))
         applied = onboard.apply(self.draft, {"roles": ["quant"]})
-        self.assertEqual(paths.profile_md().read_text(), PROFILE)
+        self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), PROFILE)
         self.assertEqual(applied.written, [paths.profile_md(), paths.config_file()])
 
     def test_own_content_is_kept_until_overwrite(self):
-        paths.profile_md().write_text("my own profile")
+        paths.profile_md().write_text("my own profile", encoding="utf-8")
         prefs = {"roles": ["quant"], "locations": ["New York"], "remote_ok": True,
                  "graduation_year": 2027, "degrees_held": ["Bachelor's"],
                  "internship_terms": ["fall 2026"], "work_authorization": "F-1 OPT",
@@ -350,12 +350,12 @@ class ApplyTest(unittest.TestCase):
             onboard.apply(self.draft, prefs)
         self.assertIn(str(paths.profile_md()), str(caught.exception))
         self.assertEqual(caught.exception.paths, [paths.profile_md()])
-        self.assertEqual(paths.profile_md().read_text(), "my own profile")
+        self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), "my own profile")
         self.assertFalse(paths.config_file().exists())
 
         applied = onboard.apply(self.draft, {**prefs, "overwrite": True})
         self.assertEqual(applied.unresolved, ["Nowhere Inc"])
-        profile = paths.profile_md().read_text()
+        profile = paths.profile_md().read_text(encoding="utf-8")
         self.assertIn("- Work authorization: F-1 OPT.", profile)
         self.assertIn("- Jane Street = 95", profile)
         with open(paths.config_file(), "rb") as f:
@@ -388,7 +388,7 @@ class InitFromResumeTest(unittest.TestCase):
     def setUp(self):
         self.home = self.enterContext(temp_home())
         self.resume = self.home / "resume.txt"
-        self.resume.write_text("Sam Lee\nInitech intern\n")
+        self.resume.write_text("Sam Lee\nInitech intern\n", encoding="utf-8")
         self.enterContext(mock.patch.object(claude, "run",
                                             lambda *a, **k: (envelope(), None)))
         self.enterContext(mock.patch("sys.stdin", io.StringIO()))
@@ -398,7 +398,7 @@ class InitFromResumeTest(unittest.TestCase):
 
     def test_yes_applies_the_suggested_answers(self):
         self.assertEqual(self.init("--from-resume", str(self.resume), "--yes"), 0)
-        self.assertEqual(paths.profile_md().read_text(), PROFILE)
+        self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), PROFILE)
         self.assertEqual(settings.load().graduation_year, 2027)
         self.assertEqual(settings.load().location_allow, ["Seattle, WA"])
         saved = onboard.draft_dir()
@@ -426,7 +426,7 @@ class InitFromResumeTest(unittest.TestCase):
         self.assertEqual(loaded.title_keywords[:4], ["quant", "trader", "trading", "quantitative"])
         self.assertEqual(loaded.location_allow, ["Seattle, WA", "Remote"])
         self.assertEqual(loaded.notify_ntfy_topic, "t-123")
-        profile = paths.profile_md().read_text()
+        profile = paths.profile_md().read_text(encoding="utf-8")
         self.assertIn("- Stripe = 90\n- Datadog = 70", profile)
         self.assertIn("- Work authorization: F-1 OPT.", profile)
 
@@ -440,7 +440,7 @@ class InitFromResumeTest(unittest.TestCase):
             claude, "run", lambda *a, **k: calls.append(a) or (envelope(), None)))
         self.init()
         self.assertEqual(onboard.conflicts(), [])
-        paths.profile_md().write_text("mine")
+        paths.profile_md().write_text("mine", encoding="utf-8")
         err = io.StringIO()
         with mock.patch.object(cli.ui, "error", lambda text: err.write(text)):
             self.assertEqual(self.init("--from-resume", str(self.resume), "--yes"), 1)
@@ -448,21 +448,21 @@ class InitFromResumeTest(unittest.TestCase):
         self.assertIn(str(paths.profile_md()), err.getvalue())
         self.assertIn("--overwrite", err.getvalue())
         self.assertFalse(onboard.draft_dir().exists())
-        self.assertEqual(paths.profile_md().read_text(), "mine")
+        self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), "mine")
 
     def test_own_content_is_replaced_only_with_overwrite(self):
         self.init()
         self.assertEqual(self.init("--from-resume", str(self.resume)), 0)  # draft only
-        paths.profile_md().write_text("mine")
+        paths.profile_md().write_text("mine", encoding="utf-8")
         self.assertEqual(self.init("--apply-draft"), 1)
         self.assertEqual(self.init("--apply-draft", "--overwrite"), 0)
-        self.assertEqual(paths.profile_md().read_text(), PROFILE)
-        paths.profile_md().write_text("mine again")
+        self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), PROFILE)
+        paths.profile_md().write_text("mine again", encoding="utf-8")
         self.assertEqual(
             self.init("--from-resume", str(self.resume), "--yes", "--overwrite"), 0)
-        self.assertEqual(paths.profile_md().read_text(), PROFILE)
+        self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), PROFILE)
         self.assertNotIn("overwrite", json.loads(
-            (onboard.draft_dir() / "prefs.json").read_text()))
+            (onboard.draft_dir() / "prefs.json").read_text(encoding="utf-8")))
 
     def test_overwrite_alone_is_refused(self):
         self.assertEqual(self.init("--overwrite"), 2)

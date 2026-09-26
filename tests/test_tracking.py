@@ -385,7 +385,7 @@ class RouteTest(unittest.TestCase):
     def test_attachments(self):
         home = self.enterContext(tempfile.TemporaryDirectory())
         self.enterContext(mock.patch.dict(os.environ, {"HOME": home}))
-        (Path(home) / "cv.pdf").write_text("cv")
+        (Path(home) / "cv.pdf").write_text("cv", encoding="utf-8")
         added = self.call("POST", "/api/jobs/a/attachments", 200,
                           json={"label": "CV", "path": str(Path(home) / "cv.pdf")})
         self.assertEqual(added["path"], os.path.realpath(Path(home) / "cv.pdf"))

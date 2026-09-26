@@ -36,8 +36,8 @@ class BackupTestCase(unittest.TestCase):
         self.root = self.enterContext(temp_home())
         self.out = self.root / "out"
         self.use_home("a")
-        paths.config_file().write_text(CONFIG)
-        paths.profile_md().write_text(PROFILE)
+        paths.config_file().write_text(CONFIG, encoding="utf-8")
+        paths.profile_md().write_text(PROFILE, encoding="utf-8")
         store.upsert_postings([_posting("p1"), _posting("p2")], "feed")
         store.save_scores([{"id": "p1", "fit": 90, "tier": 70, "below_floor": False,
                             "fit_reason": "good"}])
@@ -71,7 +71,7 @@ class BackupTestCase(unittest.TestCase):
         return path
 
     def assert_unchanged(self):
-        self.assertEqual(paths.config_file().read_text(), CONFIG)
+        self.assertEqual(paths.config_file().read_text(encoding="utf-8"), CONFIG)
         self.assertEqual(store.counts()["postings"], 2)
         self.assertEqual(list(self.root.glob("a.bak-*")), [])
 
@@ -95,7 +95,7 @@ class ExportRestoreTest(BackupTestCase):
         self.use_home("b")
         aside = backup.restore(path)
         self.assertEqual(store.counts(), before)
-        self.assertEqual(paths.config_file().read_text(), CONFIG)
+        self.assertEqual(paths.config_file().read_text(encoding="utf-8"), CONFIG)
         self.assertEqual(settings.get().fit_threshold, 72)
         self.assertEqual((paths.home() / "logos" / "acme.com.png").read_bytes(),
                          b"\x89PNG icon")
@@ -104,10 +104,11 @@ class ExportRestoreTest(BackupTestCase):
     def test_restore_moves_the_current_files_aside(self):
         path = backup.export(self.out)
         store.upsert_postings([_posting("p3")], "feed")
-        paths.config_file().write_text("fit_threshold = 50\n")
+        paths.config_file().write_text("fit_threshold = 50\n", encoding="utf-8")
         aside = backup.restore(path)
         self.assertEqual(aside.name.split(".bak-")[0], "a")
-        self.assertEqual((aside / "config.toml").read_text(), "fit_threshold = 50\n")
+        self.assertEqual((aside / "config.toml").read_text(encoding="utf-8"),
+                         "fit_threshold = 50\n")
         self.assertTrue((aside / "pipeline.db").exists())
         self.assertEqual(store.counts()["postings"], 2)
         self.assertTrue((paths.home() / "run.lock").exists())
@@ -117,7 +118,7 @@ class ExportRestoreTest(BackupTestCase):
                                "pipeline.db": b""})
         with self.assertRaisesRegex(backup.BackupError, "Update Cairn"):
             backup.restore(newer)
-        self.assertEqual(paths.config_file().read_text(), CONFIG)
+        self.assertEqual(paths.config_file().read_text(encoding="utf-8"), CONFIG)
         self.assertEqual(store.counts()["postings"], 2)
 
     def test_refuses_what_is_no_backup(self):
@@ -135,9 +136,9 @@ class ExportRestoreTest(BackupTestCase):
             with self.subTest(shape):
                 with self.assertRaises(backup.BackupError):
                     backup.restore(self.make_zip(entries))
-                self.assertEqual(paths.config_file().read_text(), CONFIG)
+                self.assertEqual(paths.config_file().read_text(encoding="utf-8"), CONFIG)
         not_zip = self.root / "notes.txt"
-        not_zip.write_text("hello")
+        not_zip.write_text("hello", encoding="utf-8")
         with self.assertRaisesRegex(backup.BackupError, "isn't a Cairn backup"):
             backup.restore(not_zip)
 
@@ -164,16 +165,17 @@ class ExportRestoreTest(BackupTestCase):
 
     def test_a_later_restore_keeps_the_files_an_earlier_one_moved_aside(self):
         path = backup.export(self.out)
-        paths.config_file().write_text("fit_threshold = 50\n")
+        paths.config_file().write_text("fit_threshold = 50\n", encoding="utf-8")
         first = backup.restore(path)
         second = backup.restore(path)
         self.assertEqual(sorted(self.root.glob("a.bak-*")), sorted([first, second]))
-        self.assertEqual((first / "config.toml").read_text(), "fit_threshold = 50\n")
+        self.assertEqual((first / "config.toml").read_text(encoding="utf-8"),
+                         "fit_threshold = 50\n")
 
     def test_a_backup_that_changes_who_answers_prompts_needs_accepting(self):
-        paths.config_file().write_text('llm_provider = "ollama"\n')
+        paths.config_file().write_text('llm_provider = "ollama"\n', encoding="utf-8")
         path = backup.export(self.out)
-        paths.config_file().write_text(CONFIG)
+        paths.config_file().write_text(CONFIG, encoding="utf-8")
         settings.reset()
         with self.assertRaisesRegex(backup.ModelChange, "llm_provider 'claude-code' to "
                                                         "'ollama'") as caught:
@@ -186,14 +188,14 @@ class ExportRestoreTest(BackupTestCase):
 
     def test_a_restore_over_an_invalid_config_asks_to_confirm_the_provider(self):
         path = backup.export(self.out)
-        paths.config_file().write_text("fit_threshold = \n")
+        paths.config_file().write_text("fit_threshold = \n", encoding="utf-8")
         settings.reset()
         with self.assertRaises(backup.ModelChange) as caught:
             backup.restore(path)
         self.assertEqual([(c["setting"], c["current"]) for c in caught.exception.changes],
                          [(name, None) for name in backup.MODEL_SETTINGS])
         backup.restore(path, accept_model_change=True)
-        self.assertEqual(paths.config_file().read_text(), CONFIG)
+        self.assertEqual(paths.config_file().read_text(encoding="utf-8"), CONFIG)
 
     def test_restored_files_are_private(self):
         path = backup.export(self.out)
@@ -259,7 +261,7 @@ class ExportRestoreTest(BackupTestCase):
                 self.assertRaisesRegex(backup.BackupError,
                                        "your data is back as it was"):
             backup.restore(path)
-        self.assertEqual(paths.config_file().read_text(), CONFIG)
+        self.assertEqual(paths.config_file().read_text(encoding="utf-8"), CONFIG)
         self.assertEqual(store.counts()["postings"], 3)
         self.assertTrue((paths.home() / "logos" / "acme.com.png").exists())
         self.assertEqual(list(self.root.glob("a.bak-*")), [])
@@ -312,7 +314,7 @@ class CommandTest(BackupTestCase):
     def test_the_app_server_holds_the_marker_while_it_runs(self):
         with TestClient(create_app(), base_url="http://127.0.0.1"):
             self.assertTrue(backup.app_running())
-            self.assertEqual(backup.server_marker().read_text(), str(os.getpid()))
+            self.assertEqual(backup.server_marker().read_text(encoding="utf-8"), str(os.getpid()))
         self.assertFalse(backup.app_running())
 
     def test_restore_asks_on_a_terminal(self):
@@ -353,7 +355,7 @@ class RouteTest(BackupTestCase):
 
     def test_restore_over_an_invalid_config_asks_to_confirm(self):
         data = backup.export(self.out).read_bytes()
-        paths.config_file().write_text("fit_threshold = \n")
+        paths.config_file().write_text("fit_threshold = \n", encoding="utf-8")
         settings.reset()
         response = self.client.post("/api/restore", files={"backup": ("b.zip", data)})
         self.assertEqual(response.status_code, 409)

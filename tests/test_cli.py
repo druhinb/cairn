@@ -123,7 +123,7 @@ class LlmCommandTest(unittest.TestCase):
         self.assertEqual(secrets.get_key("groq"), KEY)
         self.assertEqual((settings.get().llm_provider, settings.get().llm_model),
                          ("groq", "llama-x"))
-        self.assertNotIn(KEY, paths.config_file().read_text())
+        self.assertNotIn(KEY, paths.config_file().read_text(encoding="utf-8"))
 
     def test_a_bad_key_on_stdin_exits_2_with_one_line(self):
         code, out = run_main("llm", "set", "groq", "--key-stdin", stdin="two words\n")
@@ -166,7 +166,7 @@ class MainTest(unittest.TestCase):
         self.enterContext(temp_home())
 
     def test_secrets_and_schedule_errors_exit_2_with_one_line(self):
-        secrets.secrets_file().write_text("[keys\n")
+        secrets.secrets_file().write_text("[keys\n", encoding="utf-8")
         code, out = run_main("llm")
         self.assertEqual(code, 2)
         self.assertTrue(out.splitlines()[-1].startswith(
@@ -194,12 +194,12 @@ class LockDownTest(unittest.TestCase):
     def test_an_open_home_becomes_owner_only_and_so_do_new_files(self):
         home = self.root / "home"
         home.mkdir(0o755)
-        (home / "profile.md").write_text("resume")
-        (home / "run.lock").write_text("1")
+        (home / "profile.md").write_text("resume", encoding="utf-8")
+        (home / "run.lock").write_text("1", encoding="utf-8")
         (home / "run.lock").chmod(0o640)
         (home / "logos").mkdir(0o755)
         outside = self.root / "outside.txt"
-        outside.write_text("x")
+        outside.write_text("x", encoding="utf-8")
         (home / "link").symlink_to(outside)
         with mock.patch.dict(os.environ, CAIRN_HOME=str(home)):
             paths.lock_down()
@@ -207,12 +207,12 @@ class LockDownTest(unittest.TestCase):
                           ("", "profile.md", "run.lock", "logos")},
                          {"": 0o700, "profile.md": 0o600, "run.lock": 0o600, "logos": 0o700})
         self.assertEqual(self.mode(outside), 0o644)
-        (home / "new.txt").write_text("x")
+        (home / "new.txt").write_text("x", encoding="utf-8")
         self.assertEqual(self.mode(home / "new.txt"), 0o600)
 
     def test_every_command_locks_the_home_down(self):
         self.root.chmod(0o755)
-        paths.profile_md().write_text("resume")
+        paths.profile_md().write_text("resume", encoding="utf-8")
         paths.profile_md().chmod(0o644)
         run_main("status")
         self.assertEqual((self.mode(self.root), self.mode(paths.profile_md())), (0o700, 0o600))

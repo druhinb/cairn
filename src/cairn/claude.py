@@ -78,7 +78,7 @@ def run_cli(prompt, model=None, timeout=240, thinking=True):
     try:
         home.mkdir(parents=True, exist_ok=True)
         out = subprocess.run(cmd, input=prompt, capture_output=True, text=True,
-                             timeout=timeout, cwd=home,
+                             encoding="utf-8", timeout=timeout, cwd=home,
                              env=None if thinking else {**os.environ, **NO_THINKING})
     except FileNotFoundError:
         return None, "Couldn't find Claude Code on this Mac. Install it, or pick another provider in Settings."

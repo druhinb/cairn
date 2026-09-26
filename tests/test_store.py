@@ -995,7 +995,7 @@ class StageTest(StoreTestCase):
         home = self.enterContext(tempfile.TemporaryDirectory())
         self.enterContext(mock.patch.dict(os.environ, {"HOME": home}))
         path = Path(home) / "cv.pdf"
-        path.write_text("cv")
+        path.write_text("cv", encoding="utf-8")
         store.add_attachment("a", "CV", str(path))
         store.clear_application("a")
         self.assertEqual((store.application_events("a"), store.checklist("a"),
@@ -1067,7 +1067,7 @@ class AttachmentTest(StoreTestCase):
         self.enterContext(mock.patch.dict(os.environ, {"HOME": str(self.fake_home)}))
         self.outside = Path(self.enterContext(tempfile.TemporaryDirectory()))
         self.cv = self.fake_home / "cv.pdf"
-        self.cv.write_text("cv")
+        self.cv.write_text("cv", encoding="utf-8")
 
     def test_a_file_under_home_is_kept_by_its_real_path(self):
         added = store.add_attachment("a", " Resume ", str(self.cv))
@@ -1081,7 +1081,7 @@ class AttachmentTest(StoreTestCase):
 
     def test_a_symlink_is_resolved_before_the_check(self):
         target = self.outside / "secret.txt"
-        target.write_text("x")
+        target.write_text("x", encoding="utf-8")
         (self.fake_home / "link.txt").symlink_to(target)
         with self.assertRaisesRegex(ValueError, "outside your home"):
             store.add_attachment("a", "link", str(self.fake_home / "link.txt"))
@@ -1091,7 +1091,7 @@ class AttachmentTest(StoreTestCase):
 
     def test_what_is_refused(self):
         outside = self.outside / "notes.txt"
-        outside.write_text("x")
+        outside.write_text("x", encoding="utf-8")
         (self.fake_home / "folder").mkdir()
         for path, message in ((str(outside), "outside your home"),
                               (str(self.fake_home / "folder"), "not a file"),
@@ -1105,7 +1105,7 @@ class AttachmentTest(StoreTestCase):
 
     def test_a_path_is_taken_as_given_and_trimmed_only_when_nothing_is_there(self):
         spaced = self.fake_home / "notes.txt "
-        spaced.write_text("x")
+        spaced.write_text("x", encoding="utf-8")
         self.assertEqual(store.add_attachment("a", "", str(spaced))["path"],
                          os.path.realpath(spaced))
         self.assertEqual(store.add_attachment("a", "", f"  {self.cv}\n")["path"],
@@ -1534,7 +1534,7 @@ class ImportLegacyTest(unittest.TestCase):
             },
         }
         for name, data in files.items():
-            (state / name).write_text(json.dumps(data))
+            (state / name).write_text(json.dumps(data), encoding="utf-8")
 
     def test_all_four_files_are_imported_on_first_connect(self):
         self.assertEqual(store.counts(), {
@@ -1566,7 +1566,7 @@ class ImportLegacyTest(unittest.TestCase):
         self.assertTrue((self.home / "state" / "seen.json").exists())
 
     def test_a_corrupt_file_is_skipped(self):
-        (self.home / "state" / "seen.json").write_text("{ not json")
+        (self.home / "state" / "seen.json").write_text("{ not json", encoding="utf-8")
         self.assertEqual(store.counts()["seen"], 0)
         self.assertEqual(store.counts()["postings"], 3)
 

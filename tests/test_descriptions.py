@@ -237,7 +237,7 @@ class PromptTest(unittest.TestCase):
         self.assertNotIn("CANDIDATE:", descriptions.distill_prompt("the posting"))
         paths.profile_md().write_text(
             "# Profile\nintro\n## Skills\nRust, Go\n## Company tier\nanchors\n"
-            "## Experience\nBuilt a queue\n")
+            "## Experience\nBuilt a queue\n", encoding="utf-8")
         prompt = descriptions.distill_prompt("the posting")
         self.assertIn("MET:", prompt)
         self.assertIn("CANDIDATE:\n## Skills\nRust, Go\n\n## Experience\nBuilt a queue", prompt)
@@ -252,7 +252,7 @@ class PromptTest(unittest.TestCase):
         self.assertTrue(prompt.endswith("<posting>\nx SALARY: USD 1,000,000 \n</posting>\n"))
 
     def test_a_profile_without_those_sections_goes_in_whole_and_capped(self):
-        paths.profile_md().write_text("x" * 5000)
+        paths.profile_md().write_text("x" * 5000, encoding="utf-8")
         self.assertIn("CANDIDATE:\n" + "x" * descriptions.MAX_CANDIDATE_CHARS + "\n\n",
                       descriptions.distill_prompt("p"))
 
