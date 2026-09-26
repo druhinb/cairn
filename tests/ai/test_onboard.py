@@ -27,7 +27,8 @@ PROFILE = _doc("Candidate profile", "profile.md", {
     "Snapshot": "- Sam Lee, B.S. Computer Science.",
     onboard.TIER_HEADING: "- **90-100** — the strongest engineering orgs."})
 SUGGESTIONS = {"graduation_year": 2027, "graduation_month": 6, "degrees_held": ["Bachelor's"],
-               "roles": ["backend", "systems"], "locations": ["Seattle, WA"],
+               "title_keywords": ["backend", "software engineer"], "title_exclude": ["senior"],
+               "title_exclude_field": ["hardware"], "locations": ["Seattle, WA"],
                "work_authorization": "unknown", "internship_terms": ["fall 2026"],
                "name": "Sam Lee", "email": "sam@example.com"}
 # PROFILE once setup has written the suggested location into it
@@ -52,14 +53,25 @@ class ValidatedTest(unittest.TestCase):
         self.assertEqual(draft.profile_md, PROFILE)
         self.assertEqual(draft.suggestions, SUGGESTIONS)
 
-    def test_fences_are_stripped_and_unknown_keys_and_roles_dropped(self):
-        extra = {**SUGGESTIONS, "roles": ["backend", "astronaut"], "hobby": "chess",
-                 "header": {"name": "Sam Lee"}}
+    def test_fences_are_stripped_and_unknown_keys_dropped(self):
+        extra = {**SUGGESTIONS, "hobby": "chess", "header": {"name": "Sam Lee"}}
         draft = onboard.resume._validated(envelope(
             profile=f"```markdown\n{PROFILE}```\n",
             suggestions=f"```json\n{json.dumps(extra)}\n```"))
         self.assertEqual(draft.profile_md, PROFILE)
-        self.assertEqual(draft.suggestions, {**SUGGESTIONS, "roles": ["backend"]})
+        self.assertEqual(draft.suggestions, SUGGESTIONS)
+
+    def test_title_words_are_lowercased_and_deduplicated(self):
+        messy = {**SUGGESTIONS, "title_keywords": [" Backend ", "backend", "", "x" * 41],
+                 "title_exclude": []}
+        suggestions = onboard.resume._validated(envelope(suggestions=messy)).suggestions
+        self.assertEqual(suggestions["title_keywords"], ["backend"])
+        self.assertEqual(suggestions["title_exclude"], [])
+
+    def test_no_title_keywords_suggests_the_defaults(self):
+        empty = {**SUGGESTIONS, "title_keywords": [" "]}
+        suggestions = onboard.resume._validated(envelope(suggestions=empty)).suggestions
+        self.assertEqual(suggestions["title_keywords"], settings.DEFAULT_TITLE_KEYWORDS)
 
     def test_placeholder_lines_are_dropped(self):
         todo = PROFILE.replace("Computer Science.", "Computer Science.\n- GPA: TODO: not stated\n"
@@ -83,13 +95,14 @@ class ValidatedTest(unittest.TestCase):
         self.rejects(envelope(profile=""), "profile.md is empty")
 
     def test_bad_json(self):
-        self.rejects(envelope(suggestions="{roles: [backend]"), "not valid JSON")
+        self.rejects(envelope(suggestions="{title_keywords: [backend]"), "not valid JSON")
         self.rejects(envelope(suggestions="[1, 2]"), "JSON object")
 
     def test_a_wrong_type_or_missing_key_is_named(self):
         cases = [({"graduation_year": "2027"}, "'graduation_year'"),
                  ({"graduation_year": True}, "'graduation_year'"),
-                 ({"roles": "backend"}, "'roles'"),
+                 ({"title_keywords": "backend"}, "'title_keywords'"),
+                 ({"title_exclude_field": [1]}, "'title_exclude_field'"),
                  ({"locations": [1]}, "'locations'"),
                  ({"work_authorization": "citizen"}, "'work_authorization'"),
                  ({"graduation_month": 13}, "'graduation_month'"),
@@ -128,6 +141,8 @@ class DraftTest(unittest.TestCase):
         for persona in ("Alex Rivera", "Northwind", "tinyinfer", "State University"):
             self.assertNotIn(persona, prompt)
         self.assertIn("no placeholder or TODO lines", prompt)
+        for words in onboard.TITLE_DEFAULTS.values():
+            self.assertIn(json.dumps(words), prompt)
 
     def test_every_example_heading_has_a_section_guide(self):
         for heading in onboard.required_headings("profile.md"):
@@ -228,27 +243,15 @@ class PreferencesTest(unittest.TestCase):
     def mapped(self, **prefs):
         return onboard.preferences_to_settings(prefs, settings.defaults())
 
-    def test_roles_are_the_union_of_their_keywords_plus_the_fixed_ones(self):
-        keywords = self.mapped(roles=["quant", "research", "ml"]).title_keywords
-        self.assertEqual(keywords, [
-            "quant", "trader", "trading", "quantitative", "research scientist",
-            "research engineer", "machine learning", "ml engineer", "data scientist",
-            "forward deployed", "fdse", "solutions engineer"])
+    def test_title_words_become_the_settings(self):
+        mapped = self.mapped(title_keywords=["Quant", "trader", "quant"], title_exclude=[],
+                             title_exclude_field=["hardware"])
+        self.assertEqual((mapped.title_keywords, mapped.title_exclude, mapped.title_exclude_field),
+                         (["quant", "trader"], [], ["hardware"]))
 
-    def test_every_role_keyword_is_lowercase_and_distinct(self):
-        for role, keywords in onboard.ROLE_KEYWORDS.items():
-            with self.subTest(role=role):
-                self.assertEqual(keywords, [k.lower() for k in dict.fromkeys(keywords)])
-
-    def test_embedded_stops_excluding_firmware_but_not_hardware(self):
-        excluded = self.mapped(roles=["embedded"]).title_exclude_field
-        self.assertNotIn("firmware", excluded)
-        self.assertIn("hardware", excluded)
-        self.assertIn("firmware", self.mapped(roles=["backend"]).title_exclude_field)
-
-    def test_empty_roles_keep_the_default_keywords(self):
+    def test_no_title_keywords_keeps_the_defaults(self):
         base = dataclasses.replace(settings.defaults(), title_keywords=["quant"])
-        mapped = onboard.preferences_to_settings({"roles": []}, base)
+        mapped = onboard.preferences_to_settings({"title_keywords": []}, base)
         self.assertEqual(mapped.title_keywords, settings.DEFAULT_TITLE_KEYWORDS)
 
     def test_us_only_becomes_the_setting(self):
@@ -278,8 +281,8 @@ class PreferencesTest(unittest.TestCase):
         self.assertEqual(mapped, dataclasses.replace(base, graduation_year=2028))
 
     def test_bad_answers_are_named(self):
-        cases = [({"role": ["ml"]}, "unknown preference 'role'"),
-                 ({"roles": ["astronaut"]}, "unknown role(s): astronaut"),
+        cases = [({"roles": ["ml"]}, "unknown preference 'roles'"),
+                 ({"title_exclude": "senior"}, "'title_exclude'"),
                  ({"remote_ok": "yes"}, "'remote_ok'"),
                  ({"daily_resume_budget": 5}, "unknown preference 'daily_resume_budget'"),
                  ({"calibre_anchors": ["a", "b", "c", "d"]}, "'calibre_anchors'"),
@@ -362,13 +365,13 @@ class ApplyTest(unittest.TestCase):
 
     def test_the_examples_are_replaced_without_asking(self):
         cli.init.cmd_init(cli.parser.build_parser().parse_args(["init"]))
-        applied = onboard.apply(self.draft, {"roles": ["quant"]})
+        applied = onboard.apply(self.draft, {"title_keywords": ["quant"]})
         self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), PROFILE)
         self.assertEqual(applied.written, [paths.profile_md(), paths.config_file()])
 
     def test_own_content_is_kept_until_overwrite(self):
         paths.profile_md().write_text("my own profile", encoding="utf-8")
-        prefs = {"roles": ["quant"], "locations": ["New York"], "remote_ok": True,
+        prefs = {"title_keywords": ["quant", "trader"], "locations": ["New York"], "remote_ok": True,
                  "graduation_year": 2027, "degrees_held": ["Bachelor's"],
                  "internship_terms": ["fall 2026"], "work_authorization": "F-1 OPT",
                  "calibre_anchors": ["Jane Street = 95"],
@@ -388,8 +391,7 @@ class ApplyTest(unittest.TestCase):
         with open(paths.config_file(), "rb") as f:
             written = tomllib.load(f)
         self.assertEqual(written, {
-            "title_keywords": ["quant", "trader", "trading", "quantitative",
-                               "forward deployed", "fdse", "solutions engineer"],
+            "title_keywords": ["quant", "trader"],
             "location_allow": ["New York", "Remote"], "graduation_year": 2027,
             "degrees_held": ["Bachelor's"], "wanted_intern_terms": ["fall 2026"],
             "notify_ntfy_topic": "t-123",
@@ -414,8 +416,8 @@ class ApplyTest(unittest.TestCase):
     def test_an_empty_file_or_bad_answer_writes_nothing(self):
         with self.assertRaisesRegex(onboard.OnboardError, "profile.md is empty"):
             onboard.apply(onboard.Draft(" \n", {}), {})
-        with self.assertRaisesRegex(onboard.OnboardError, "unknown role"):
-            onboard.apply(self.draft, {"roles": ["astronaut"]})
+        with self.assertRaisesRegex(onboard.OnboardError, "unknown preference 'roles'"):
+            onboard.apply(self.draft, {"roles": ["quant"]})
         self.assertEqual(sorted(p.name for p in self.home.iterdir()), [])
 
 
@@ -452,13 +454,14 @@ class InitFromResumeTest(unittest.TestCase):
         self.assertEqual(settings.load().wanted_intern_terms, ["fall 2026"])
 
     def test_on_a_terminal_each_answer_is_asked(self):
-        replies = iter(["ml, astronaut", "quant", "", "y", "F-1 OPT", "", "", "",
+        replies = iter(["Quant, trader", "", "", "", "y", "F-1 OPT", "soon", "", "", "",
                         "Stripe = 90; Datadog = 70", "t-123", ""])
         with mock.patch.object(sys.stdin, "isatty", return_value=True), \
                 mock.patch("builtins.input", lambda prompt: next(replies)):
             self.assertEqual(self.init("--from-resume", str(self.resume)), 0)
         loaded = settings.load()
-        self.assertEqual(loaded.title_keywords[:4], ["quant", "trader", "trading", "quantitative"])
+        self.assertEqual(loaded.title_keywords, ["quant", "trader"])
+        self.assertEqual(loaded.title_exclude_field, ["hardware"])
         self.assertEqual(loaded.location_allow, ["Seattle, WA", "Remote"])
         self.assertEqual(loaded.notify_ntfy_topic, "t-123")
         profile = paths.profile_md().read_text(encoding="utf-8")

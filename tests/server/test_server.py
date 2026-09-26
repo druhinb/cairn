@@ -1061,10 +1061,9 @@ class OnboardTest(ServerTestCase):
         paths.profile_md().write_text("mine", encoding="utf-8")
         self.assertFalse(self.client.get("/api/onboard/status").json()["needs_setup"])
 
-    def test_options_list_the_roles_and_authorizations(self):
+    def test_options_list_the_authorizations(self):
         body = self.client.get("/api/onboard/options").json()
-        self.assertEqual(body, {"roles": list(onboard.ROLE_KEYWORDS),
-                                "work_authorization": list(onboard.WORK_AUTHORIZATION)})
+        self.assertEqual(body, {"work_authorization": list(onboard.WORK_AUTHORIZATION)})
 
     def test_draft_from_pasted_text(self):
         response = self.client.post("/api/onboard/draft", json={"text": "Sam Lee\nInitech"})
@@ -1192,7 +1191,7 @@ class OnboardTest(ServerTestCase):
         self.patch(onboard.files.sources, "resolve_company", lambda name: None)
         paths.profile_md().write_text("mine", encoding="utf-8")
         body = {"profile_md": PROFILE,
-                "prefs": {"roles": ["ml"], "graduation_year": 2027, "watchlist": ["Nope"]}}
+                "prefs": {"title_keywords": ["ml"], "graduation_year": 2027, "watchlist": ["Nope"]}}
         response = self.client.post("/api/onboard/apply", json=body)
         self.assertEqual(response.status_code, 409)
         self.assertIn(str(paths.profile_md()), response.json()["error"])
@@ -1212,9 +1211,9 @@ class OnboardTest(ServerTestCase):
 
     def test_apply_with_a_bad_answer_is_400(self):
         response = self.client.post("/api/onboard/apply", json={
-            "profile_md": PROFILE, "prefs": {"roles": ["astronaut"]}})
+            "profile_md": PROFILE, "prefs": {"title_keywords": "astronaut"}})
         self.assertEqual(response.status_code, 400)
-        self.assertIn("astronaut", response.json()["error"])
+        self.assertIn("title_keywords", response.json()["error"])
 
     def test_seed_holds_the_run_lock(self):
         held = []

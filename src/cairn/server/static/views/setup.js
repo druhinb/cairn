@@ -16,15 +16,11 @@ const STEPS = ["AI", "Resume", "Review", "Preferences", "Companies", "Alerts"];
 const [AI_STEP, RESUME_STEP, REVIEW_STEP, PREFS_STEP, COMPANIES_STEP, ALERTS_STEP] = STEPS.keys();
 const CLAUDE_CODE = "claude-code";
 const CLAUDE_CODE_URL = "https://claude.com/claude-code";
-const ROLE_LABELS = { backend: "Backend", frontend: "Frontend", fullstack: "Full stack", systems: "Systems",
-  ml: "Machine learning", data: "Data", quant: "Quant", research: "Research", platform: "Platform",
-  security: "Security", mobile: "Mobile", embedded: "Embedded" };
 const ANCHOR_HINTS = ["e.g. Stripe, Databricks, Jane Street = 90", "e.g. Datadog, Snowflake = 75",
   "e.g. a strong regional company = 60"];
 const ACCEPT = ".pdf,.txt,.md";
 // what /api/onboard/options answers, for when it cannot be reached
-const BUILT_IN_OPTIONS = { roles: Object.keys(ROLE_LABELS),
-  work_authorization: ["US citizen", "F-1 OPT", "needs sponsorship", "unknown"] };
+const BUILT_IN_OPTIONS = { work_authorization: ["US citizen", "F-1 OPT", "needs sponsorship", "unknown"] };
 const GRADUATION_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const DEFAULT_GRADUATION_MONTH = "06";
 const DEFAULT_MAX_YEARS = 2;
@@ -32,8 +28,6 @@ const READ_LINE = /^\[setup\] read (\d+) words/;
 const SLOW_DRAFT_SECONDS = 60;
 // long enough to see the draft pass its check before Review replaces the screen
 const CHECKED_PAUSE_MS = 700;
-
-const roleLabel = (role) => ROLE_LABELS[role] || role[0].toUpperCase() + role.slice(1);
 
 /**
  * The graduation year in a month field, or why the field refuses its text. The
@@ -366,7 +360,9 @@ class Setup {
     this.graduation = year == null ? "" : `${year}-${month}`;
     this.initial = { ntfy_topic: current?.notify_ntfy_topic || "", watchlist };
     return {
-      roles: suggestions.roles || [],
+      title_keywords: suggestions.title_keywords ?? current?.title_keywords ?? [],
+      title_exclude: suggestions.title_exclude ?? current?.title_exclude ?? [],
+      title_exclude_field: suggestions.title_exclude_field ?? current?.title_exclude_field ?? [],
       locations: either(suggestions.locations, allow.filter((place) => !isRemote(place))),
       remote_ok: allow.some(isRemote),
       us_only: current?.us_only ?? false,
@@ -546,11 +542,7 @@ class Setup {
     const field = (label, help, control, id) => h("div", { class: "field" },
       h(id ? "label" : "span", { class: "field-label", for: id, text: label }),
       help && h("p", { class: "field-help" }, help), control);
-    const roles = h("div", { class: "check-grid", role: "group", "aria-label": "Roles" },
-      this.options.roles.map((role) => h("label", { class: "check" },
-        h("input", { type: "checkbox", checked: p.roles.includes(role), onchange: (event) => {
-          p.roles = this.options.roles.filter((r) => (r === role ? event.target.checked : p.roles.includes(r)));
-        } }), roleLabel(role))));
+    const words = (key, id) => tagInput(p[key], { id, onChange: (tags) => { p[key] = tags; } });
     const auth = h("select", { class: "select", id: "pref-auth", onchange: (event) => { p.work_authorization = event.target.value; } },
       this.options.work_authorization.map((value) => h("option", { value, selected: value === p.work_authorization,
         text: value === "unknown" ? "Prefer not to say" : value })));
@@ -576,7 +568,12 @@ class Setup {
       oninput: (event) => { p.calibre_anchors[i] = event.target.value; } })));
     return h("div", { class: "setup-body" },
       h("p", { class: "setup-lead", text: "Cairn filled these in from your resume. You can change them later in Settings." }),
-      field("Roles", "Leave all unchecked to see every kind of engineering job.", roles),
+      field("Title keywords", "Cairn shows only jobs whose title has one of these words. Leave it empty to use Cairn’s own list.",
+        words("title_keywords", "pref-title-keywords"), "pref-title-keywords"),
+      field("Skip titles with", "Cairn hides jobs whose title has any of these words, such as senior roles.",
+        words("title_exclude", "pref-title-exclude"), "pref-title-exclude"),
+      field("Skip field roles with", "Cairn hides jobs in fields your resume doesn’t point to, such as hardware.",
+        words("title_exclude_field", "pref-title-field"), "pref-title-field"),
       field("Locations", "Leave empty to see jobs in every location.",
         h("div", { class: "field-stack" }, tagInput(p.locations, { id: "pref-locations", placeholder: "Seattle, New York, CA…",
           onChange: (tags) => { p.locations = tags; } }),

@@ -15,24 +15,14 @@ DRAFT_TIMEOUT = 240
 MARKERS = ("===PROFILE===", "===SUGGESTIONS===")
 WORK_AUTHORIZATION = ("US citizen", "F-1 OPT", "needs sponsorship", "unknown")
 
-# Each role narrows title_keywords to the slice of the default list it cares about.
-ROLE_KEYWORDS = {
-    "backend": ["backend", "software engineer", "software developer", "swe", "sde",
-                "engineer", "developer", "programmer"],
-    "frontend": ["frontend", "front end"],
-    "fullstack": ["full stack", "fullstack"],
-    "systems": ["systems engineer", "infrastructure", "distributed", "compiler", "platform",
-                "site reliability", "sre"],
-    "ml": ["machine learning", "ml engineer", "research scientist", "research engineer",
-           "data scientist"],
-    "data": ["data engineer", "data scientist", "analytics engineer"],
-    "quant": ["quant", "trader", "trading", "quantitative"],
-    "research": ["research scientist", "research engineer"],
-    "platform": ["platform", "infrastructure", "site reliability", "sre"],
-    "security": ["security engineer"],
-    "mobile": ["ios", "android", "mobile"],
-    "embedded": ["embedded", "firmware"],
+# suggestion key -> the default list the draft starts from
+TITLE_DEFAULTS = {
+    "title_keywords": settings.DEFAULT_TITLE_KEYWORDS,
+    "title_exclude": settings.DEFAULT_TITLE_EXCLUDE,
+    "title_exclude_field": settings.DEFAULT_TITLE_EXCLUDE_FIELD,
 }
+MAX_TITLE_WORDS = 80
+MAX_TITLE_WORD_CHARS = 40
 
 # The prompt shows each example profile.md heading with one of these under it. A
 # heading added to the example without an entry here fails the draft with a KeyError.
@@ -78,7 +68,17 @@ Suggestion keys, again from the resume only:
 - "graduation_month": that graduation's month as an integer 1-12, or null
 - "degrees_held": degrees earned or in progress, from "Associate's", "Bachelor's",
   "Master's", "PhD"
-- "roles": role kinds the experience suits, from {roles}
+- "title_keywords": lowercase words or phrases, one of which a job title must contain
+  to be shown, covering the roles the resume points to. Start from these defaults,
+  drop the ones for roles the resume shows no sign of wanting, and add titles it
+  does: {title_keywords}
+- "title_exclude": lowercase words that mark a title too senior or the wrong kind for
+  this candidate. Start from these defaults and drop any that fit the resume, such
+  as "phd" for a PhD holder or "lead" for someone with years of experience leading:
+  {title_exclude}
+- "title_exclude_field": lowercase words that mark a field the candidate is not
+  aiming for. Start from these defaults and drop the ones the resume aims at, such
+  as "firmware" and "hardware" for an embedded engineer: {title_exclude_field}
 - "locations": locations the resume says the candidate wants to work in, else []
 - "work_authorization": one of {authorizations}; "unknown" unless the resume says
 - "internship_terms": terms like "fall 2026" the resume says the candidate is free for,
@@ -197,7 +197,7 @@ def draft_prompt(text):
     for delimiter in RESUME_DELIMITERS:
         text = text.replace(delimiter, delimiter.replace("RESUME", "resume"))
     return DRAFT_PROMPT.format(profile=_skeleton("profile.md"),
-                               roles=json.dumps(list(ROLE_KEYWORDS)),
+                               **{key: json.dumps(words) for key, words in TITLE_DEFAULTS.items()},
                                authorizations=", ".join(f'"{a}"' for a in WORK_AUTHORIZATION),
                                envelope=ENVELOPE, resume=text)
 
@@ -254,7 +254,7 @@ SUGGESTION_SHAPES = {
     "graduation_year": (_int_or_none, "an integer year or null"),
     "graduation_month": (_month_or_none, "a month 1-12 or null"),
     "degrees_held": (_str_list, "a list of strings"),
-    "roles": (_str_list, "a list of strings"),
+    **{key: (_str_list, "a list of strings") for key in TITLE_DEFAULTS},
     "locations": (_str_list, "a list of strings"),
     "work_authorization": (lambda v: v in WORK_AUTHORIZATION,
                            f"one of {', '.join(WORK_AUTHORIZATION)}"),
@@ -278,8 +278,18 @@ def _suggestions(raw):
             raise OnboardError(f"suggestions: '{key}' should be {expected}, "
                                f"got {json.dumps(data[key])[:80]}")
     kept = {key: data[key] for key in SUGGESTION_SHAPES}
-    kept["roles"] = [role for role in kept["roles"] if role in ROLE_KEYWORDS]
+    for key in TITLE_DEFAULTS:
+        kept[key] = title_words(kept[key])
+    # an empty title_keywords would hide every posting
+    kept["title_keywords"] = kept["title_keywords"] or list(settings.DEFAULT_TITLE_KEYWORDS)
     return kept
+
+
+def title_words(words):
+    """words lowercased and deduplicated, less blank and overlong ones."""
+    cleaned = [w.strip().lower() for w in words
+               if w.strip() and len(w.strip()) <= MAX_TITLE_WORD_CHARS]
+    return list(dict.fromkeys(cleaned))[:MAX_TITLE_WORDS]
 
 
 def _validated(out):

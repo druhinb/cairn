@@ -122,13 +122,6 @@
   overflow-wrap: anywhere;
 }
 
-.check-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 8px 16px;
-  margin-top: 4px;
-}
-
 .anchor-inputs {
   display: grid;
   gap: 8px;

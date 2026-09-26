@@ -40,7 +40,9 @@ def _split(text, separator):
 
 # key, answer kind, question; each answer is checked by onboard before it is kept
 PREF_QUESTIONS = [
-    ("roles", "list", f"Roles ({', '.join(onboard.ROLE_KEYWORDS)})"),
+    ("title_keywords", "list", "Show jobs whose title has one of"),
+    ("title_exclude", "list", "Skip titles with"),
+    ("title_exclude_field", "list", "Skip field roles with"),
     ("locations", "list", "Locations to work in, empty for anywhere"),
     ("remote_ok", "bool", "Remote OK"),
     ("work_authorization", "text",

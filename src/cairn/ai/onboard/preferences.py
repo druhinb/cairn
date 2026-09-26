@@ -3,22 +3,19 @@ import json
 import re
 
 from cairn.ai.onboard.resume import (
-    ROLE_KEYWORDS,
+    TITLE_DEFAULTS,
     WORK_AUTHORIZATION,
     OnboardError,
     _int_or_none,
     _str_list,
+    title_words,
 )
 from cairn.core import settings
 from cairn.sources.watchlists import STARTERS
 
 MAX_ANCHORS = 3
 
-ALWAYS_KEYWORDS = ["forward deployed", "fdse", "solutions engineer"]
-# the default title_exclude_field drops these, which would undo choosing embedded
-EMBEDDED_UNEXCLUDED = ("firmware", "embedded")
-
-# pref key -> the setting it becomes unchanged; roles and locations are derived
+# pref key -> the setting it becomes unchanged; title lists and locations are derived
 SETTING_FOR_PREF = {
     "graduation_year": "graduation_year",
     "degrees_held": "degrees_held",
@@ -30,7 +27,7 @@ SETTING_FOR_PREF = {
 }
 
 PREF_SHAPES = {
-    "roles": (_str_list, "a list of strings"),
+    **{key: (_str_list, "a list of strings") for key in TITLE_DEFAULTS},
     "locations": (_str_list, "a list of strings"),
     "remote_ok": (lambda v: isinstance(v, bool), "true or false"),
     "us_only": (lambda v: isinstance(v, bool), "true or false"),
@@ -63,22 +60,15 @@ def checked_prefs(prefs):
         if not fits(value):
             raise OnboardError(f"preference '{key}' should be {expected}, "
                                f"got {json.dumps(value)[:80]}")
-    unknown = [role for role in prefs.get("roles", []) if role not in ROLE_KEYWORDS]
-    if unknown:
-        raise OnboardError(f"unknown role(s): {', '.join(unknown)}. "
-                           f"Choose from {', '.join(ROLE_KEYWORDS)}")
     return {key: [v.strip() for v in value if v.strip()] if _str_list(value) else value
             for key, value in prefs.items()}
 
 
-def _role_settings(roles, base):
-    if not roles:
-        return {"title_keywords": list(settings.DEFAULT_TITLE_KEYWORDS)}
-    chosen = [kw for role in roles for kw in ROLE_KEYWORDS[role]] + ALWAYS_KEYWORDS
-    changes = {"title_keywords": list(dict.fromkeys(chosen))}
-    if "embedded" in roles:
-        changes["title_exclude_field"] = [word for word in base.title_exclude_field
-                                          if word not in EMBEDDED_UNEXCLUDED]
+def _title_settings(prefs):
+    changes = {key: title_words(prefs[key]) for key in TITLE_DEFAULTS if key in prefs}
+    # an empty title_keywords would hide every posting
+    if changes.get("title_keywords") == []:
+        changes["title_keywords"] = list(settings.DEFAULT_TITLE_KEYWORDS)
     return changes
 
 
@@ -93,8 +83,7 @@ def _location_allow(locations, remote_ok):
 def _mapped(prefs, base):
     changes = {SETTING_FOR_PREF[key]: value for key, value in prefs.items()
                if key in SETTING_FOR_PREF}
-    if "roles" in prefs:
-        changes.update(_role_settings(prefs["roles"], base))
+    changes.update(_title_settings(prefs))
     if "locations" in prefs or "remote_ok" in prefs:
         changes["location_allow"] = _location_allow(
             prefs.get("locations", base.location_allow), prefs.get("remote_ok", False))
@@ -108,7 +97,7 @@ def preferences_to_settings(prefs, base):
 
 def default_prefs(suggestions):
     """Answers to start from, taken from the draft's suggestions."""
-    return {"roles": suggestions.get("roles", []),
+    return {**{key: suggestions.get(key, list(default)) for key, default in TITLE_DEFAULTS.items()},
             "locations": suggestions.get("locations", []),
             "remote_ok": False,
             "graduation_year": suggestions.get("graduation_year"),

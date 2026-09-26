@@ -115,8 +115,7 @@ def onboard_status():
 
 @router.get("/api/onboard/options")
 def onboard_options():
-    return {"roles": list(onboard.ROLE_KEYWORDS),
-            "work_authorization": list(onboard.WORK_AUTHORIZATION)}
+    return {"work_authorization": list(onboard.WORK_AUTHORIZATION)}
 
 
 @router.post("/api/onboard/draft")

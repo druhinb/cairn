@@ -19,8 +19,6 @@ from cairn.ai.onboard.files import (
     save_prefs,
 )
 from cairn.ai.onboard.preferences import (
-    ALWAYS_KEYWORDS,
-    EMBEDDED_UNEXCLUDED,
     LOCATION_HEADING,
     MAX_ANCHORS,
     PREF_SHAPES,
@@ -40,9 +38,9 @@ from cairn.ai.onboard.resume import (
     MAX_RESUME_CHARS,
     PDFTOTEXT_TIMEOUT,
     RESUME_DELIMITERS,
-    ROLE_KEYWORDS,
     SECTION_GUIDE,
     SUGGESTION_SHAPES,
+    TITLE_DEFAULTS,
     WORK_AUTHORIZATION,
     ClaudeFailed,
     Draft,
