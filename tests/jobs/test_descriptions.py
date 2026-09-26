@@ -1,9 +1,8 @@
 """Job-description fetching and distillation.
 
-Two failure modes matter here and both were caught in real runs:
-the feed deep-links to application forms rather than postings, and a model handed a
-page with no requirements on it answers in prose instead of the requested block.
-Either one, unchecked, stores nonsense as the posting's requirements.
+Real runs stored nonsense as a posting's requirements two ways. The feed deep-links
+to application forms, and a model handed a page with no requirements on it answers
+in prose where the block belongs.
 """
 import dataclasses
 import time
@@ -76,8 +75,8 @@ class PostingUrlTest(unittest.TestCase):
         self.assertEqual(descriptions._posting_url(url), url)
 
     def test_a_greenhouse_query_survives(self):
-        """Regression: the job id lives in the query here. Dropping it returned the
-        company's careers landing page instead of the posting."""
+        """The job id lives in the query here. Dropping it once fetched the company's
+        careers landing page."""
         url = "https://www.digicert.com/careers/?gh_jid=8637536002"
         self.assertEqual(descriptions._posting_url(url), url)
 
@@ -121,10 +120,10 @@ class FetchOneNetworkTest(unittest.TestCase):
 
 
 class TimingTest(unittest.TestCase):
-    """The graduation cycle appears only in the job description, never the feed.
+    """The graduation cycle appears only in the job description.
 
-    Titles carry no year at all, so without this a role starting before you
-    graduate looks identical to one you can actually take.
+    Titles carry no year, so a role starting before you graduate looks the same as
+    one you can take.
     """
 
     def setUp(self):

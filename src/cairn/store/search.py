@@ -71,7 +71,7 @@ WHERE place = 1"""
 def _match_expression(q):
     """Each whitespace-separated token as a quoted prefix, so user input is never FTS syntax.
 
-    NUL is dropped because FTS5 rejects it even inside a quoted string.
+    Drops NUL, which FTS5 rejects even inside a quoted string.
     """
     tokens = (q or "").replace("\x00", "").split()
     return " ".join('"' + token.replace('"', '""') + '"*' for token in tokens)
@@ -210,11 +210,7 @@ candidates AS MATERIALIZED (
 def facets(source=None, category=None, status=None, hide_passed=True, sponsorship=None,
            **filters):
     """{facet: {value: groups}} under search's filters, each facet with its own
-    filter left out, so a value's count is the total that choosing it would give.
-
-    The postings every facet shares are found once; each facet then counts them
-    under the other facets' filters.
-    """
+    filter left out, so a value's count is the total that choosing it would give."""
     where, params = _filters(**filters, hide_passed=False)
     own = _facet_filters(source, category, status, hide_passed, sponsorship)
     parts = []

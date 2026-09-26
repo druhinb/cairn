@@ -99,7 +99,6 @@ def mark_inactive_missing(source, seen_ids):
 
 
 def rename_sources(mapping):
-    """Relabel postings stored under each old source name with its new one."""
     conn = connect()
     with conn:
         conn.executemany("UPDATE postings SET source = ? WHERE source = ?",
@@ -182,9 +181,7 @@ def _add_also_on(jobs):
 def resolve(prefix):
     """Full id for an exact match or an unambiguous prefix, else None.
 
-    The TTY listing shows a short id prefix to keep the table readable, so typing
-    that prefix has to work. An ambiguous prefix resolves to nothing rather than
-    guessing which posting you meant.
+    The TTY listing prints a short id prefix, and typing that prefix has to work.
     """
     conn = connect()
     if conn.execute("SELECT 1 FROM postings WHERE id = ?", (prefix,)).fetchone():

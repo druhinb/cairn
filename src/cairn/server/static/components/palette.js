@@ -111,7 +111,6 @@ export function closePalette() {
   return true;
 }
 
-/** Open the palette, or close it when it is open. */
 export function togglePalette() {
   if (!closePalette()) openPalette();
 }

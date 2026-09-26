@@ -75,7 +75,6 @@ def _cached(now):
 
 
 def _release_page(url):
-    """url when it is an https page on github.com, else None."""
     parts = urlparse(url) if isinstance(url, str) else None
     return url if parts and parts.scheme == "https" and parts.hostname == "github.com" else None
 

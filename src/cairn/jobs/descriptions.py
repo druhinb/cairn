@@ -1,17 +1,15 @@
 """Fetch the real job description for a posting, and distill it to a requirements summary.
 
-The upstream listings feed carries no description text — only title, company, url,
-locations and category. Judging whether a posting is worth applying to from that is
-guesswork, so the posting itself is fetched.
+The listings feed carries no description text, only title, company, url, locations
+and category, so the posting itself is fetched.
 
-Three of the ATS platforms cover ~72% of the feed and each needs its own approach:
-Workday and Ashby serve JavaScript shells whose text lives behind a JSON API, while
-Greenhouse and Lever render server-side and can just be stripped. Anything else
-falls back to the generic HTML strip and is allowed to come back empty — a missing
-description means no summary, it does not fail the run.
+The big ATS platforms cover ~72% of the feed. Workday and Ashby serve JavaScript
+shells whose text sits behind a JSON API; Greenhouse and Lever render server-side
+and get the generic HTML strip like any other site. A description that comes back
+empty means no summary and never fails the run.
 
-Descriptions are stored in the database so a re-run never refetches, and the
-Haiku-distilled keywords are stored alongside them.
+Descriptions and their Haiku-distilled keywords are stored, so a re-run never
+refetches.
 """
 import json
 import re
@@ -35,19 +33,15 @@ BROWSER_HEADERS = {
 }
 
 
-# --------------------------------------------------------------------------
-# HTTP + HTML
-# --------------------------------------------------------------------------
 def _http(url, deadline, data=None, headers=None):
     hdrs = {"User-Agent": UA, **(headers or {})}
     try:
         reply = net.get(url, limit=MAX_BYTES, deadline=deadline, headers=hdrs,
                         method="POST" if data is not None else "GET", data=data)
     except net.Failure as e:
-        # Some career sites reject an unfamiliar agent outright. One retry announcing
-        # a normal browser is fair for reading a public posting you would open by
-        # hand; anything beyond that is defeating a site's access controls, so a
-        # second refusal is taken as a no.
+        # some career sites 403 an unfamiliar agent. One retry as a browser is fair
+        # for a public posting you could open by hand; more would be defeating the
+        # site's access controls, so a second refusal stands
         if e.status != 403 or data is not None:
             raise
         reply = net.get(url, limit=MAX_BYTES, deadline=deadline, headers={**hdrs, **BROWSER_HEADERS})
@@ -55,7 +49,6 @@ def _http(url, deadline, data=None, headers=None):
 
 
 def _text(markup):
-    """HTML (or a fragment of it) down to readable prose."""
     body = re.sub(r"(?is)<(script|style|nav|header|footer|svg).*?</\1>", " ", markup or "")
     body = re.sub(r"(?i)<(br|/p|/div|/li|/h[1-6])[^>]*>", "\n", body)
     body = re.sub(r"(?s)<[^>]+>", " ", body)
@@ -64,9 +57,7 @@ def _text(markup):
     return re.sub(r"\n\s*\n\s*", "\n", body).strip()
 
 
-# --------------------------------------------------------------------------
-# Per-platform adapters. Each returns text or raises.
-# --------------------------------------------------------------------------
+# each adapter returns text or raises
 def _workday(url, deadline):
     """A Workday job page mirrors its content at /wday/cxs/{tenant}/{site}/job/..."""
     u = urlparse(url)
@@ -128,16 +119,16 @@ _APPLY_SUFFIX = re.compile(r"/(apply|application)/?$")
 def _posting_url(url):
     """Strip a trailing /apply or /application, and only then the query.
 
-    The query is dropped alongside the suffix because it belongs to the form
-    (Ashby uses ...\\/application?embed=true). It must survive otherwise: a
-    Greenhouse link carries the job id in it, as ...\\/careers/?gh_jid=8637536002.
+    The query goes with the suffix because it belongs to the form, as in Ashby's
+    ...\\/application?embed=true. Without the suffix it stays, since a Greenhouse
+    link carries the job id there, as in ...\\/careers/?gh_jid=8637536002.
     """
     base, _, _query = (url or "").partition("?")
     stripped = _APPLY_SUFFIX.sub("", base)
     return stripped if stripped != base else url
 
 
-# A form scraped instead of a description: these labels cluster on apply pages.
+# labels that cluster on apply forms; three of them mean the scrape got the form
 _FORM_MARKERS = ("attach resume", "resume/cv", "cover letter", "eeo",
                  "voluntary self-identification", "submit your application",
                  "are you currently legally eligible")
@@ -148,14 +139,11 @@ def _looks_like_a_form(text):
     return sum(marker in low for marker in _FORM_MARKERS) >= 3
 
 
-# --------------------------------------------------------------------------
-# Public API
-# --------------------------------------------------------------------------
-MIN_USEFUL = 400  # below this it is a JS shell or a cookie banner, not a description
+MIN_USEFUL = 400  # shorter text is a JS shell or a cookie banner
 
 
 def fetch_one(job):
-    """(text, source, err). Never raises: a posting we cannot read is not fatal."""
+    """(text, source, err). Never raises; an unreadable posting comes back with err."""
     url = job.get("url")
     if not url:
         return None, None, "no url"
@@ -262,9 +250,9 @@ def model_called(model, tier):
 def keywords(job, force=False, run_id=None, calls=None):
     """Haiku-distilled requirements summary for a posting, or None.
 
-    A raw description runs 4-6KB of which most is mission statements and legal text.
-    The summary is distilled once with a cheap model and stored, so the app shows it,
-    search indexes it, and the start-date check reads it without another model call.
+    A raw description runs 4-6KB, mostly mission statement and legal text. The cheap
+    model distills it once and the summary is stored, so the app, search and the
+    start-date check read it without another model call.
     force fetches the posting again and replaces the stored description and
     summary, which stay as they were when the fetch or the distillation fails.
     run_id is recorded with the Claude call. calls, a rank.CallBudget, is taken from
@@ -460,8 +448,8 @@ def gap(keywords):
 def starts_before_graduation(keywords):
     """True when the posting names a start strictly earlier than you graduate.
 
-    Only fires on an explicit, earlier year: most postings say nothing about
-    timing, and treating silence as a conflict would throw away most of the feed.
+    Only an explicit earlier year counts. Most postings say nothing about timing,
+    and reading silence as a conflict would throw away most of the feed.
     """
     graduation_year = settings.get().graduation_year
     stated = timing(keywords)

@@ -1,4 +1,4 @@
-"""Track which postings you actually applied to."""
+"""The postings you applied to."""
 import datetime
 
 from cairn import store
@@ -14,7 +14,7 @@ def record(job_id, note=""):
 
 
 def annotate(results):
-    """Flag postings you have applied to before — same posting, or same company."""
+    """Flag results you applied to before, matched by posting id or company name."""
     sent = store.applications(store.SENT)
     by_id = {a["id"]: a for a in sent}
     # reversed so the most recently updated row for a company is the one kept

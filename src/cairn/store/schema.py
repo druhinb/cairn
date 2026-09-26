@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS applications (
     updated_at TEXT
 )"""
 
-# a to-do list per application, shown in position order
 _CHECKLIST = """
 CREATE TABLE IF NOT EXISTS checklist (
     id INTEGER PRIMARY KEY,
@@ -217,7 +216,8 @@ CREATE VIRTUAL TABLE IF NOT EXISTS postings_fts
     USING fts5(id UNINDEXED, company, title, keywords);
 """
 
-# connect() runs SCHEMA before migrating, when older tables lack these columns
+# connect() runs this after _migrate; an older table lacks these columns until a
+# migration adds them
 _AFTER_MIGRATION = """
 CREATE INDEX IF NOT EXISTS postings_group ON postings(group_key);
 CREATE INDEX IF NOT EXISTS postings_relevant ON postings(relevant, active, visible);

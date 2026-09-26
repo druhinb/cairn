@@ -7,7 +7,6 @@ from cairn.store.rows import _list
 
 
 def name_key(name):
-    """A company name casefolded with its whitespace collapsed, the companies key."""
     return None if name is None else " ".join(name.casefold().split())
 
 
@@ -25,12 +24,12 @@ def web_url(url):
 
 
 def url_key(job):
-    """Same posting across sources, identified by where it actually applies.
+    """Same posting across sources, keyed by its apply URL.
 
-    Ids are assigned per repo, so the same job carries a different id in each feed.
-    The apply URL is what makes two rows the same posting; tracking-only query
-    strings are dropped so they do not defeat the match. Greenhouse-hosted career
-    pages such as stripe.com/jobs/search name the job only in gh_jid, which is kept.
+    Each feed repo assigns its own ids, so one job carries a different id per feed.
+    The key drops the query string, whose tracking params would defeat the match,
+    but keeps gh_jid, the only place Greenhouse-hosted pages such as
+    stripe.com/jobs/search name the job.
     """
     path, _, query = (web_url(job.get("url")) or "").lower().partition("?")
     url = path.rstrip("/")
@@ -71,8 +70,6 @@ def location_key(locations):
 
 
 def match_key(company, title, locations):
-    """What postings of one job share across sources: company, title, and places,
-    folded."""
     return f"{name_key(company) or ''}\n{title_key(title)}\n{location_key(locations)}"
 
 

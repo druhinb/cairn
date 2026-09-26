@@ -1,15 +1,14 @@
 """Terminal output: rich on a TTY, plain log-safe lines everywhere else.
 
 Progress reaches the terminal as events once `attach()` subscribes the renderer.
-The table printers below are called directly by the commands that show results.
 
-launchd redirects stdout into a file, and a file full of cursor escapes is
-unreadable, so off a TTY no Live/Progress is ever built. Everything untrusted is
-escaped too; a title like "Engineer [New Grad]" is otherwise swallowed as rich markup.
+launchd redirects stdout into a file, and cursor escapes make that file unreadable,
+so off a TTY no Live/Progress is ever built. Untrusted text goes through escape();
+rich would swallow a title like "Engineer [New Grad]" as markup.
 
 Every renderer here has two branches. The TTY branch may use colour, tables, and
 live regions; the plain branch must emit the same facts as flat text and nothing
-else. Tests assert zero ESC bytes off a TTY, so keep that invariant when editing.
+else. Tests assert zero ESC bytes off a TTY.
 """
 import sys
 
@@ -19,14 +18,13 @@ from rich.table import Table
 
 from cairn.core import events, settings
 
-# isatty(), not console.is_terminal: rich honors FORCE_COLOR, which would let an
-# inherited env var put a live Progress region into redirected output.
+# console.is_terminal honors FORCE_COLOR, so an inherited env var would put a live
+# Progress region into redirected output
 # pythonw, which Windows starts for the daily task and at login, has no stdout
 IS_TTY = sys.stdout is not None and sys.stdout.isatty()
 
-# force_terminal=False, not just no_color=True. no_color strips colour but keeps
-# attributes, so a bold style still emits "\x1b[1m...\x1b[0m" — enough to corrupt
-# a log. Declaring it a non-terminal suppresses every escape.
+# no_color alone keeps attributes, so a bold style still emits \x1b[1m into a log;
+# force_terminal=False suppresses every escape
 console = Console(force_terminal=IS_TTY, no_color=not IS_TTY,
                   highlight=False, soft_wrap=True)
 
@@ -57,7 +55,6 @@ def rule(text):
 
 
 def fit_style(fit):
-    """Colour a 0-100 fit score by how worth your time it is."""
     if fit is None:
         return "dim"
     if fit >= 75:
@@ -70,7 +67,6 @@ def fit_style(fit):
 
 
 def tier_style(tier):
-    """Colour company calibre against the configured floor."""
     if tier is None:
         return "dim"
     if tier >= 75:
@@ -110,7 +106,7 @@ def postings(jobs, extra=0):
     table.add_column("category", style="cyan", width=11, no_wrap=True, overflow="ellipsis")
     # ratio + expand lets `role` absorb the leftover width; without it a no_wrap
     # column claims its full content width and squeezes the fixed ones to ellipses.
-    # One line per posting: a wrapped title turns a 25-row list into 50 rows of noise.
+    # no_wrap holds each posting to one line, since a wrapped title doubles the list
     table.add_column("role", ratio=1, no_wrap=True, overflow="ellipsis")
     table.add_column("id", style="dim", width=ID_PREFIX, no_wrap=True)
     for job in jobs:

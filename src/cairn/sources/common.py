@@ -33,7 +33,6 @@ def _posting(posting_id, company, title, url, locations, posted, updated, catego
 
 
 def _place(*parts):
-    """A location string from its non-empty parts."""
     return ", ".join(part.strip() for part in parts if part and part.strip())
 
 
@@ -52,7 +51,6 @@ _TAG = re.compile(r"<[^>]*>")
 
 
 def _plain(markup):
-    """The text of an HTML fragment, entities decoded and whitespace collapsed."""
     return " ".join(html.unescape(_TAG.sub(" ", markup or "")).split())
 
 

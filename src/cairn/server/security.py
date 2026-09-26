@@ -1,7 +1,7 @@
-"""Who gets an answer. LocalOnly guards every request: only this Mac, addressed by
-a loopback name, from the app's own origin, gets an answer. Every API request needs
-the session cookie that the launch URL's token buys, and a change also needs the
-header only the app's page sends.
+"""Who gets an answer. LocalOnly answers only this computer, addressed by a loopback
+name, from the app's own origin. Every API request needs the session cookie the
+launch URL's token trades for, and a change also needs the header only the app's
+page sends.
 """
 import hmac
 import http.cookies

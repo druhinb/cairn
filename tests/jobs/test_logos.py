@@ -91,7 +91,6 @@ def _website_claims(url):
 
 
 def _off(hosts, urls):
-    """urls, less those on any of hosts."""
     return [url for url in urls if url.split("/")[2] not in hosts]
 
 

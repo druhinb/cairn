@@ -1,15 +1,11 @@
 """Tell you the daily list is ready, without needing an account or a secret.
 
-ntfy.sh is a free pub/sub relay: you pick an unguessable topic name, subscribe the
-phone app to it, and anything POSTed to that topic arrives as a push. No signup, no
-API key, nothing to rotate — which is why it is the default here over SMTP.
+Anything POSTed to an ntfy.sh topic arrives as a push on every phone subscribed to
+it. Anyone who knows the topic string can read it, so use a long random one.
+Messages name postings and scores and never carry your profile or contact details.
 
-A topic is a shared secret only in the sense that anyone who knows the string can
-read it, so use a long random one. Nothing sensitive goes in the message: company
-names and fit scores, never your profile or contact details.
-
-Notification failures never fail a run. The ranked postings are already stored by the
-time this is called, and the app still shows them.
+A failed notification never fails a run. The ranked postings are already stored
+by the time this is called, and the app still shows them.
 """
 import json
 import re
@@ -25,8 +21,8 @@ TIMEOUT = 15
 
 
 def _header_safe(value):
-    """value usable as one line of an HTTP header: latin-1, and free of the CR or LF
-    that would let it inject a second header or start a new one."""
+    """value when it is latin-1 with no CR or LF, else None. A CR or LF would let it
+    inject a second header."""
     if not value or re.search(r"[\r\n]", value):
         return None
     try:
@@ -97,8 +93,7 @@ def _line(r):
 
 def _action(r):
     """An ntfy view button, or None for a url the Actions header cannot carry.
-    Commas and semicolons delimit the header, so a url with either is dropped
-    rather than mangled into a link that no longer opens the posting."""
+    Commas and semicolons delimit the header and would cut such a url short."""
     url = _header_safe(r.get("url"))
     if not url or re.search(r"[,;]", url):
         return None
@@ -108,12 +103,12 @@ def _action(r):
 
 
 def run_finished(results, follow_ups=None):
-    """Summarise a run: what cleared the bar, the applications that need a
-    follow-up, and a way to act on it from the phone.
+    """Push a run's strong matches and due follow-ups. Returns the channels that
+    accepted it.
 
     follow_ups holds tracking.stale_applications() rows, looked up when None. The
-    app lives on the Mac, so a link into it is useless on a phone. The buttons point
-    at the postings themselves, which open anywhere.
+    buttons open the postings themselves, since the app lives on the Mac and a link
+    into it is useless on a phone.
     """
     cfg = settings.get()
     if not (cfg.notify_ntfy_topic or cfg.notify_macos):

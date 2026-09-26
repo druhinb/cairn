@@ -154,9 +154,7 @@ class Setup {
     this.card.closest(".setup-scroll").scrollTop = 0;
   }
 
-  // -------------------------------------------------------------------------
-  // Step 2: the resume
-  // -------------------------------------------------------------------------
+  // step 2, the resume
   resumeStep() {
     const input = h("input", { type: "file", accept: ACCEPT, class: "visually-hidden", id: "resume-file",
       onchange: () => input.files[0] && this.pickFile(input.files[0]) });
@@ -368,9 +366,7 @@ class Setup {
     };
   }
 
-  // -------------------------------------------------------------------------
-  // Step 3: review profile.md
-  // -------------------------------------------------------------------------
+  // step 3, review profile.md
   reviewStep() {
     const edit = editor(this.profile, { label: "Profile draft", onInput: (text) => { this.profile = text; } });
     return h("div", { class: "setup-body" },
@@ -382,9 +378,7 @@ class Setup {
         h("button", { type: "button", class: "btn btn-primary", text: "Next: preferences", onclick: () => this.go(PREFS_STEP) })));
   }
 
-  // -------------------------------------------------------------------------
-  // Step 1: the AI provider
-  // -------------------------------------------------------------------------
+  // step 1, the AI provider
   /** @returns {boolean} whether Claude Code is on this Mac, as /api/llm/providers reports */
   claudeFound() {
     return Boolean(this.ai.data?.providers.find((p) => p.id === CLAUDE_CODE)?.configured);
@@ -529,9 +523,7 @@ class Setup {
     if (this.mounted) this.go(RESUME_STEP);
   }
 
-  // -------------------------------------------------------------------------
-  // Step 4: preferences
-  // -------------------------------------------------------------------------
+  // step 4, preferences
   prefsStep() {
     const p = this.prefs;
     const field = (label, help, control, id) => h("div", { class: "field" },
@@ -629,9 +621,7 @@ class Setup {
     this.card.querySelector("h1").focus({ preventScroll: true });
   }
 
-  // -------------------------------------------------------------------------
-  // Finished
-  // -------------------------------------------------------------------------
+  // finished
   finished() {
     const { unresolved } = this.result;
     const checks = h("div", { class: "setup-doctor" });

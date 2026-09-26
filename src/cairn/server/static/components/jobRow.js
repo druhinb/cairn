@@ -92,7 +92,7 @@ function dayText(isoDay) {
  * One posting as a two-line list row: company and title, then location and chips;
  * on the right the verdict, pay, fit and tier, status and age, and the hover actions
  * (buttons with `data-action` open, saved, applied or passed). The caller sets
- * aria-selected and handles clicks; a selected row is the list's one tab stop.
+ * aria-selected and listens for clicks; a selected row is the list's one tab stop.
  * @param {object} job  an /api/jobs row
  * @param {{selected?: boolean, unread?: boolean}} [options]
  * @returns {HTMLElement}

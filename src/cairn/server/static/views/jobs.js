@@ -141,9 +141,7 @@ class JobsList {
     return () => this.cleanups.forEach((fn) => fn());
   }
 
-  // -------------------------------------------------------------------------
-  // Structure
-  // -------------------------------------------------------------------------
+  // structure
   build() {
     this.count = h("span", { class: "view-count", "aria-live": "polite" });
     this.searchInput = h("input", { type: "search", class: "search-input",
@@ -251,9 +249,7 @@ class JobsList {
     ].filter(Boolean);
   }
 
-  // -------------------------------------------------------------------------
-  // Filters
-  // -------------------------------------------------------------------------
+  // filters
   set(changes, { replace = false } = {}) {
     this.filters = { ...this.filters, ...changes };
     this.ctx.setParams(writeFilters(this.filters), { replace });
@@ -293,7 +289,6 @@ class JobsList {
     return this.facetCache.counts;
   }
 
-  /** Fill a panel's count cells from the facets. */
   async paintCounts(panel) {
     this.countedPanel = panel;
     let counts;
@@ -446,9 +441,7 @@ class JobsList {
     return chip.wrap;
   }
 
-  // -------------------------------------------------------------------------
-  // Data
-  // -------------------------------------------------------------------------
+  // data
   async reload() {
     const token = ++this.token;
     if (this.scope.byRun && this.runId == null) {
@@ -667,9 +660,7 @@ class JobsList {
     this.banner.hidden = false;
   }
 
-  // -------------------------------------------------------------------------
-  // Bulk selection
-  // -------------------------------------------------------------------------
+  // bulk selection
   async bulkStatus(next) {
     const jobs = this.rows.filter((row) => this.picked.has(row.id));
     this.clearPicks();
@@ -746,9 +737,7 @@ class JobsList {
         onclick: () => this.clearPicks() }));
   }
 
-  // -------------------------------------------------------------------------
-  // List
-  // -------------------------------------------------------------------------
+  // list
   renderCount() {
     const rel = this.scope.fixed.rel ?? this.filters.rel;
     const noun = this.scope === SCOPES.saved ? "saved"

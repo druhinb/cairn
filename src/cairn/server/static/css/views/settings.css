@@ -1,4 +1,3 @@
-/* settings */
 /* past about 760px a section only widens the gap between a label and its control */
 .settings-layout {
   display: grid;
@@ -294,7 +293,7 @@
   overflow-wrap: anywhere;
 }
 
-/* Settings: the AI provider picker (also in setup), System, USAJOBS, suggestions */
+/* the AI provider picker (also in setup), System, USAJOBS, suggestions */
 .provider-picker {
   display: grid;
   gap: 16px;

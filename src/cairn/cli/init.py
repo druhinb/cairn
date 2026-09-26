@@ -96,7 +96,6 @@ def _ask(answers, questions, check=None):
 
 
 def _ask_prefs(prefs):
-    """prefs with each preference answered on the terminal."""
     ui.rule("Preferences")
     return _ask(prefs, PREF_QUESTIONS,
                 check=lambda key, value: onboard.checked_prefs({key: value}))
@@ -157,7 +156,7 @@ def cmd_init(args):
     An existing file is always left alone. Once edited these files are the user's own
     content, and a second `init` must never be able to erase them. With --from-resume
     or --apply-draft, profile.md is then replaced by a draft from a resume, but only
-    while it still holds the example.
+    while it still holds the example, unless --overwrite is given.
     """
     if args.overwrite and not (args.from_resume or args.apply_draft):
         ui.error("--overwrite only applies with --from-resume or --apply-draft")

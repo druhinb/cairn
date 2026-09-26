@@ -288,9 +288,7 @@ export class FirstRunScreen {
   }
 }
 
-// ---------------------------------------------------------------------------
-// The reveal: a card over Jobs that fades to show the list
-// ---------------------------------------------------------------------------
+// the reveal card over Jobs, which fades to show the list
 let reveal = null;
 
 /** @returns {boolean} whether the reveal card is showing */

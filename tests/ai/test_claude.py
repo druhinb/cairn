@@ -1,7 +1,7 @@
-"""`claude --output-format json` returns an array of messages, not an object.
+"""`claude --output-format json` returns an array of messages.
 
-Reading it as an object raised, the raw transcript was returned as if it were the
-model's answer, and every posting ended up scored 0. These lock that shape in.
+Reading it as an object once raised, claude.result returned the raw transcript as
+the model's answer, and every posting scored 0.
 """
 import json
 import unittest
@@ -12,8 +12,8 @@ import helpers  # noqa: F401 - installs the suite settings guard
 from cairn.ai import claude
 from cairn.core import paths
 
-# Trimmed from a real `claude -p ... --output-format json --tools ""` run: same
-# element order and the same keys we depend on.
+# trimmed from a real `claude -p ... --output-format json --tools ""` run, keeping
+# its element order and every key claude.result reads
 TRANSCRIPT = json.dumps([
     {"type": "system", "subtype": "init", "model": "claude-sonnet-4-6", "tools": []},
     {"type": "assistant", "message": {"role": "assistant", "content": [

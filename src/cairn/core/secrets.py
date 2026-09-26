@@ -69,8 +69,8 @@ def _write(keys):
     lines = ["# API keys for Cairn. Keep this file private.", "", "[keys]"]
     lines += [f"{json.dumps(p)} = {json.dumps(k)}" for p, k in sorted(keys.items())]
     staging = path.with_name(path.name + ".tmp")
-    # O_CREAT keeps the mode of a tmp file an interrupted write left behind, so it is
-    # removed and the new one is created 0600
+    # O_CREAT keeps the mode of a tmp file an interrupted write left behind, so it
+    # goes first and the new one starts at 0600
     staging.unlink(missing_ok=True)
     fd = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:

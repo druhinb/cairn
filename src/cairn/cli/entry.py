@@ -6,7 +6,7 @@ from cairn.cli.parser import build_parser
 from cairn.core import logfile, paths, secrets, settings, ui
 from cairn.system import schedule
 
-LOGGED_COMMANDS = {"run", "serve", "icons"}  # their events are appended to paths.run_log()
+LOGGED_COMMANDS = {"run", "serve", "icons"}
 
 BACKGROUND_OUTPUT = {"stdout": "background.out", "stderr": "background.err"}
 

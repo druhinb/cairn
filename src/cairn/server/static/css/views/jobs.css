@@ -557,7 +557,7 @@
   }
 }
 
-/* jobs rows: pay, the score verdict, closed postings */
+/* row pay, the score verdict, closed postings */
 .row-pay {
   flex: none;
   color: var(--ink-2);

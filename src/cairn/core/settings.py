@@ -348,8 +348,7 @@ def _toml_tables(name, tables):
 def save(settings, path=None):
     """Write the settings that differ from the defaults. Returns the path.
 
-    This rewrites the file whole, which drops the comments of a hand-edited or
-    example file.
+    Rewrites the file whole, dropping the comments of a hand-edited or example file.
     """
     path = Path(path) if path else paths.config_file()
     base = defaults()

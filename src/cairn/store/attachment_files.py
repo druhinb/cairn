@@ -25,8 +25,8 @@ def _home_file(path):
     """path with ~ expanded and symlinks resolved, when that names an existing regular
     file under the user's home directory. Raises ValueError otherwise.
 
-    path is taken as given, so a file whose name ends in a space is found. Only when
-    nothing exists there is path with its surrounding whitespace dropped tried."""
+    path is tried as given first, so a file whose name ends in a space is found, and
+    stripped of surrounding whitespace only when nothing exists there."""
     if not isinstance(path, str) or not path.strip():
         raise ValueError("a file needs a path")
     given = Path(path).expanduser()

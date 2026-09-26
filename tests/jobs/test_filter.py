@@ -1,8 +1,7 @@
-"""Relevance filtering: category and title must BOTH look right.
+"""Relevance filtering: a posting needs both its category and its title to look right.
 
-Either signal alone was demonstrably unreliable on the live feed — category alone
-admitted "Meteorologist" (tagged AI/ML/Data upstream), title alone admitted
-"Photonics Engineer". These guard the AND.
+On the live feed, category alone admitted "Meteorologist" (tagged AI/ML/Data
+upstream) and title alone admitted "Photonics Engineer".
 """
 import dataclasses
 import unittest
@@ -22,7 +21,7 @@ def _job(title, category="Software", degrees=None):
 
 
 class DegreeTest(unittest.TestCase):
-    """`degrees` lists what a posting ACCEPTS, so a list without yours excludes you."""
+    """`degrees` lists the degrees a posting accepts, so a list without yours excludes you."""
 
     def setUp(self):
         self.enterContext(temp_home(degrees_held=["Bachelor's", "Associate's"]))
@@ -53,7 +52,7 @@ class RelevanceTest(unittest.TestCase):
         self.assertTrue(fetch._relevant(_job("ML Engineer", "AI/ML/Data")))
 
     def test_right_category_but_non_technical_title_is_dropped(self):
-        # Upstream really does tag these AI/ML/Data.
+        # upstream tags these AI/ML/Data
         self.assertFalse(fetch._relevant(_job("Meteorologist", "AI/ML/Data")))
         self.assertFalse(fetch._relevant(_job("Survey Mapping Drafter", "AI/ML/Data")))
         self.assertFalse(fetch._relevant(_job("Data Analyst 2", "AI/ML/Data")))
@@ -119,10 +118,10 @@ class BoardRowTest(unittest.TestCase):
 
 
 class InternshipTest(unittest.TestCase):
-    """The season lives in the feed's `terms` field, not the title.
+    """The season lives in the feed's `terms` field.
 
-    Matching on the title found zero and silently hid 446 Fall 2026 postings,
-    because nearly every title is a bare "Software Engineer Intern".
+    Matching on the title found none and hid 446 Fall 2026 postings, since nearly
+    every title is a bare "Software Engineer Intern".
     """
 
     def setUp(self):
@@ -146,7 +145,7 @@ class InternshipTest(unittest.TestCase):
         self.assertFalse(fetch._relevant(self._intern(["Spring 2026"])))
 
     def test_an_internship_with_no_terms_is_dropped(self):
-        """No stated term means the summer cohort by default."""
+        """No stated term means the summer cohort."""
         self.assertFalse(fetch._relevant(self._intern([])))
 
     def test_one_wanted_term_among_several_is_enough(self):

@@ -30,9 +30,7 @@ export function stagesOf(job) {
     .sort((a, b) => String(a.at).localeCompare(String(b.at)));
 }
 
-// ---------------------------------------------------------------------------
-// Stages
-// ---------------------------------------------------------------------------
+// stages
 /** Which stage form is open: {jobId, event} for an edit, event null for a new one. */
 let stageForm = null;
 
@@ -182,9 +180,7 @@ async function deleteStage(box, job, event, onChange) {
   box.querySelector('[data-key="stage-add"]')?.focus();
 }
 
-// ---------------------------------------------------------------------------
-// Checklist and files
-// ---------------------------------------------------------------------------
+// checklist and files
 /** @returns {boolean} whether a posting's status earns it a checklist and files */
 export function tracksPrep(job) {
   return !UNTRACKED.includes(job.status);

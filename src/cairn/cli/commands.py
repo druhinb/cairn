@@ -32,8 +32,6 @@ def cmd_run(args):
     results, counts = result.results, result.counts
     # the fit colours and the notification's bar follow this run's --fit
     with pipeline.run_settings(opts):
-        # Seeing the best few scored right here is what tells you whether the run
-        # was worth opening the app for.
         ui.postings(results[:TOP_SHOWN], extra=max(0, len(results) - TOP_SHOWN))
         ui.summary([
             ("fetched", counts["total"]),

@@ -97,7 +97,7 @@ def preferences_to_settings(prefs, base):
 
 
 def default_prefs(suggestions):
-    """Answers to start from: the draft's suggestions and the current settings."""
+    """Answers to start from, taken from the draft's suggestions."""
     return {"roles": suggestions.get("roles", []),
             "locations": suggestions.get("locations", []),
             "remote_ok": False,

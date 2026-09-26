@@ -27,7 +27,6 @@ function cancelTimers() {
   clearTimeout(closeTimer);
 }
 
-/** Close the company card, if one is open. */
 export function closeCompanyCard() {
   cancelTimers();
   if (!current) return;

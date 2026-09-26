@@ -1,4 +1,4 @@
-"""Routes for the app's place on this Mac: login item, updates, API keys, backup and
+"""Routes for the app's place on this computer: login item, updates, API keys, backup and
 restore."""
 import contextlib
 import threading

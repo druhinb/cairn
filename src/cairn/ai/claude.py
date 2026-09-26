@@ -1,9 +1,8 @@
-"""One place every model call goes through: the headless `claude` CLI by default,
-or the HTTP provider settings name, through llm.
+"""Every model call goes through run, to the headless `claude` CLI by default or
+through llm to the HTTP provider settings name.
 
-Shared by ranking, onboarding, and job-description distillation, which want
-different models: ranking and onboarding need Sonnet's judgement, distillation is a
-mechanical extraction that Haiku does for a fraction of the cost.
+Ranking and onboarding need Sonnet's judgement. Job-description distillation is
+mechanical extraction, which Haiku does for a fraction of the cost.
 """
 import json
 import os
@@ -28,10 +27,11 @@ def run(prompt, model=None, timeout=240, tier=None):
 
 
 def tier_of(model):
-    """The llm tier a claude model name stands for: cheap for the summary model or Haiku.
+    """The llm tier a claude model name stands for, cheap for the summary model or
+    a Haiku name and strong otherwise.
 
-    Strong when the summary model is also the ranking model; a caller that summarises
-    passes tier="cheap" to run.
+    When the summary model is also the ranking model this says strong, so a caller
+    that summarises passes tier="cheap" to run.
     """
     cfg = settings.get()
     if not model or model == cfg.claude_model:
@@ -42,8 +42,8 @@ def tier_of(model):
 # A one-word prompt to haiku took 3.6-5.5 s and read 17,446 input tokens with
 # `--tools ""` alone, and 1.7-2.3 s and about 400 tokens with every flag below.
 LEAN_FLAGS = [
-    # disables every built-in tool. Without it the model reads files off the disk
-    # instead of answering the prompt: ~9x slower, ~3x dearer, and wrong.
+    # an empty list turns off the built-in tools; with them the model went reading
+    # files off the disk and answered wrong, ~9x slower and ~3x dearer
     "--tools", "",
     # the user's MCP servers start for every call
     "--strict-mcp-config",
@@ -100,12 +100,12 @@ _UNREADABLE = "Claude Code sent back an answer Cairn couldn't read. Try again."
 
 
 def result(stdout):
-    """Extract the model's answer from `claude --output-format json`.
+    """(text, err) from the stdout of `claude --output-format json`.
 
-    The CLI emits a JSON *array* of message objects; the answer lives in the element
-    whose "type" is "result". Treating the array like a dict used to raise, and the
-    raw 26KB transcript was returned as if it were the answer — which is how every
-    posting ended up scored 0. An unrecognised shape is an error, never a fallback.
+    The CLI prints a JSON array of messages, and the answer is the one whose "type"
+    is "result". Code that read the array as a dict once passed the raw 26KB
+    transcript on as the answer, and every posting scored 0. An unrecognised shape
+    is an error.
     """
     try:
         payload = json.loads(stdout)

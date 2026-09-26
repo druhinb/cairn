@@ -1,10 +1,9 @@
 """The run log: one timestamped plain-text line per event, appended to a file.
 
-The file is reopened for every line so each write is on disk before the next event,
-which is what lets a run record the byte range its lines occupy. That range runs
-from the run_start line through the closing run_done or run_failed line. The run
-lock keeps other runs out of it; events from another
-thread in the same process (a server thread, say) can still land inside it.
+attach() reopens the file for every line, so each write is on disk before the next
+event and a run can record the byte range its lines occupy, from run_start through
+run_done or run_failed. The run lock keeps other runs out of that range; a server
+thread in the same process can still write inside it.
 """
 import datetime
 from pathlib import Path

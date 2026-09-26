@@ -1,7 +1,7 @@
-"""Batched ranking: everything we could not score comes back as an unranked id.
+"""Batched ranking: a posting the model did not score comes back as an unranked id.
 
-The bug this guards against is the old fallback that gave unscored postings fit=0,
-which put 833 postings at the bottom of the list and marked them all seen.
+An old fallback gave unscored postings fit=0, which put 833 postings at the bottom
+of the list and marked them all seen.
 """
 import dataclasses
 import json
@@ -64,7 +64,7 @@ class RankTest(RankTestCase):
             return ("not a ranking at all", None) if second else (json.dumps(scored), None)
         self._respond(transform)
         ranked, unranked = rank.rank(_jobs(60))
-        # Batch 2 is retried once (RANK_RETRIES=1) and fails both times.
+        # batch 2 fails, and fails again on its one retry (RANK_RETRIES=1)
         batch_size = settings.get().rank_batch_size
         failed = [f"j{i}" for i in range(batch_size, 2 * batch_size)]
         self.assertEqual(sorted(unranked), sorted(failed))
@@ -98,9 +98,9 @@ class RankTest(RankTestCase):
         self.assertEqual(len(ranked), 8)
 
     def test_no_cap_ranks_every_posting(self):
-        """Default is None. A cap took the N *newest* postings (the feed is sorted
-        newest-first), so the budget got spent on whoever posted most recently while
-        the top quant firms sat in the held-back pile."""
+        """The default is None. A cap took the N newest postings, since the feed sorts
+        newest first, so the budget went to whoever posted last while the top quant
+        firms sat in the held-back pile."""
         self._respond()
         ranked, unranked = rank.rank(_jobs(80))
         self.assertEqual(len(ranked), 80)
@@ -147,8 +147,8 @@ class RankTest(RankTestCase):
         self.assertEqual([r["fit"] for r in ranked], [40, 30, 20, 10, 0])
 
     def test_element_missing_a_fit_key_is_unranked_not_zero(self):
-        """Regression: a scored element with no "fit" key used to default to 0, which
-        buried the posting at the bottom of the list and marked it seen forever."""
+        """A scored element with no "fit" key used to default to 0, which buried the
+        posting at the bottom of the list and marked it seen for good."""
         def transform(_call, scored):
             del scored[0]["fit"]
             return json.dumps(scored), None
@@ -159,8 +159,7 @@ class RankTest(RankTestCase):
         self.assertEqual(len(ranked), 4)
 
     def test_an_explicit_zero_fit_is_still_a_real_score(self):
-        """fit=0 from the model is a genuine judgement and must be kept — only a
-        *missing* fit means unscored."""
+        """fit=0 from the model is a score; only a missing fit means unscored."""
         def transform(_call, scored):
             scored[0]["fit"] = 0
             return json.dumps(scored), None

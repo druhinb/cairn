@@ -1,4 +1,4 @@
-"""Postings are marked seen at exactly one point: after their scores are stored."""
+"""The pipeline marks postings seen only after it stores their scores."""
 import time
 import unittest
 from unittest import mock
@@ -92,7 +92,7 @@ class StateTest(unittest.TestCase):
 
     def test_only_ranked_ids_are_marked_seen(self):
         self._serve([_job("a"), _job("b"), _job("c")])
-        # 'c' is dropped by ranking — a failed rank batch, say.
+        # ranking drops 'c', as a failed rank batch would
         rank.process = lambda jobs, run_id=None: ([j for j in jobs if j["id"] != "c"], ["c"])
         self.assertEqual(pipeline.run(RunOptions()).status, "ok")
         self.assertEqual(store.seen_ids(), {"a", "b"})

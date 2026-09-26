@@ -13,9 +13,6 @@ from cairn import sources, store
 from cairn.core import net, settings
 from cairn.jobs import descriptions, fetch
 
-# --------------------------------------------------------------------------
-# Skills gap
-# --------------------------------------------------------------------------
 _SKILL_ALIASES = {"k8s": "kubernetes", "golang": "go", "js": "javascript",
                   "postgres": "postgresql", "ml": "machine learning"}
 
@@ -53,9 +50,6 @@ def skills_gap(limit=100):
             for s in skills]
 
 
-# --------------------------------------------------------------------------
-# Apply-link checks
-# --------------------------------------------------------------------------
 LINK_WORKERS = 8
 LINK_SECONDS = 8
 LINK_RECHECK_DAYS = 3
@@ -79,8 +73,8 @@ def _workday_root(segments):
     return len(segments) == 1 or (len(segments) == 2 and bool(_LOCALE.fullmatch(segments[0])))
 
 
-# host, or ".suffix" for every host under it: whether a path's segments name the
-# board's root, where the board sends a posting that closed
+# keyed by host, or ".suffix" for every host under it. Each check says whether a
+# path's segments name the board's root, where a board sends a closed posting
 _BOARD_ROOTS = {
     "boards.greenhouse.io": _greenhouse_root,
     "job-boards.greenhouse.io": _greenhouse_root,
@@ -169,9 +163,6 @@ def check_links(limit=60, budget_seconds=30, ids=None):
     return {"checked": len(outcomes), "closed": len(closed), "closed_ids": closed}
 
 
-# --------------------------------------------------------------------------
-# What the relevance filter drops
-# --------------------------------------------------------------------------
 def why_nothing(cfg, days):
     """[{rule, dropped}] for the active, visible postings first seen in the last
     `days` days: how many each relevance rule drops, in the order fetch applies
@@ -191,9 +182,6 @@ def why_nothing(cfg, days):
     return [{"rule": rule, "dropped": n} for rule, n in dropped.items()]
 
 
-# --------------------------------------------------------------------------
-# Companies worth a watchlist board
-# --------------------------------------------------------------------------
 SUGGEST_FIT = 80
 SUGGEST_POSTINGS = 3
 SUGGEST_DAYS = 60
@@ -248,9 +236,6 @@ def suggested_companies(limit=8):
     return found[:limit]
 
 
-# --------------------------------------------------------------------------
-# Application stats
-# --------------------------------------------------------------------------
 STATS_WEEKS = 12
 FUNNEL = ("saved", "applied", "interviewing", "offer", "rejected", "withdrawn")
 

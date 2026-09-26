@@ -75,7 +75,6 @@ export function openPopover(anchor, content, { label, align = "start", onClose, 
 }
 
 /**
- * Toggle a popover on `anchor`: close it when it is the open one, else open it.
  * @param {HTMLElement} anchor @param {() => HTMLElement | HTMLElement[]} build
  * @param {Parameters<typeof openPopover>[2]} [options]
  */

@@ -150,9 +150,7 @@ class Applications {
     ];
   }
 
-  // -------------------------------------------------------------------------
-  // Data
-  // -------------------------------------------------------------------------
+  // data
   async load() {
     try {
       const body = await api(`/api/applications${qs({ status: TRACKED })}`);
@@ -233,9 +231,7 @@ class Applications {
       ])], { label: "Close the application" });
   }
 
-  // -------------------------------------------------------------------------
-  // Rendering
-  // -------------------------------------------------------------------------
+  // rendering
   visibleRows() {
     return this.only ? this.rows.filter((row) => row.status === this.only) : this.rows;
   }

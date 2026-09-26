@@ -19,8 +19,8 @@ def pick_port(host="127.0.0.1"):
 
 
 def page_url(host, port):
-    """The URL that opens the app. Its token buys the session cookie, so only whoever
-    is handed this URL gets in."""
+    """The URL that opens the app. Its token trades for the session cookie, so only
+    whoever holds this URL gets in."""
     netloc = f"[{host}]" if ":" in host else host
     return f"http://{netloc}:{port}/?{TOKEN_PARAM}={SESSION}"
 

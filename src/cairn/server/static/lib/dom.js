@@ -29,7 +29,6 @@ export function safeUrl(url) {
   try {
     return ["http:", "https:"].includes(new URL(url).protocol) ? url : null;
   } catch {
-    // an unparsable url is no link
     return null;
   }
 }

@@ -1,4 +1,4 @@
-/* Insights: skills over companies on the left, the funnel over model calls on the right. Peers in a
+/* skills over companies on the left, the funnel over model calls on the right. Peers in a
    row share a top edge and a height. CSS columns overflowed sideways inside this fixed-height scroller. */
 .insights-view {
   container-type: inline-size;

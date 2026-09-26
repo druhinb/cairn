@@ -81,7 +81,6 @@ def _company_site(url):
     return domain
 
 
-# the legal forms a company name may end in
 _LEGAL_SUFFIXES = frozenset({"inc", "llc", "ltd", "corp", "corporation", "co", "plc", "gmbh",
                              "sa", "ag", "pty"})
 # trailing words a company's domain usually leaves out

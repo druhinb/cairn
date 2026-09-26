@@ -298,9 +298,7 @@ class Settings {
     this.markNav(SECTIONS[0].id);
   }
 
-  // -------------------------------------------------------------------------
-  // The settings form: preferences, sources, ranking, notifications
-  // -------------------------------------------------------------------------
+  // preferences, sources, ranking, notifications
   renderForm() {
     this.fields.clear();
     this.defaultButtons.clear();
@@ -523,13 +521,7 @@ class Settings {
     }
   }
 
-  // -------------------------------------------------------------------------
-  // Sources and the watchlist
-  // -------------------------------------------------------------------------
-
-  // -------------------------------------------------------------------------
-  // Profile, schedule, doctor, advanced
-  // -------------------------------------------------------------------------
+  // profile, schedule, doctor, advanced
   renderProfile(file) {
     const section = SECTIONS[0];
     const box = this.sections.get("profile");
@@ -818,7 +810,6 @@ class Settings {
 }
 
 /**
- * The Settings view.
  * @param {HTMLElement} root
  * @param {object} ctx  see app.js `viewContext`
  * @returns {() => void} unmount

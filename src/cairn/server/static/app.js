@@ -77,9 +77,7 @@ const app = {
   view: null,
 };
 
-// ---------------------------------------------------------------------------
-// Status: counts, the latest run, the schedule
-// ---------------------------------------------------------------------------
+// status counts, the latest run and the schedule
 async function refreshStatus() {
   try {
     const [status, relevant, runs] = await Promise.all([api("/api/status", { quiet: true }),
@@ -120,9 +118,7 @@ async function loadSideFacts() {
   renderRunCard();
 }
 
-// ---------------------------------------------------------------------------
-// Sidebar
-// ---------------------------------------------------------------------------
+// sidebar
 function buildNav() {
   $("nav").replaceChildren(...Object.entries(VIEWS).filter(([, view]) => view.key)
     .map(([name, view]) => [h("a", { href: `#${name}`, id: `nav-${name}`, class: "nav-item",
@@ -135,9 +131,7 @@ function buildNav() {
   renderPins();
 }
 
-// ---------------------------------------------------------------------------
-// Pinned views under Jobs
-// ---------------------------------------------------------------------------
+// pinned views under Jobs
 function pins() {
   const stored = pref("pins", []);
   return Array.isArray(stored) ? stored.filter((pin) => pin?.name && pin?.hash?.startsWith("#jobs")) : [];
@@ -174,9 +168,7 @@ function renderPins() {
   }));
 }
 
-// ---------------------------------------------------------------------------
-// "New since you last looked" badges on Jobs and Latest run
-// ---------------------------------------------------------------------------
+// "new since you last looked" badges on Jobs and Latest run
 const runTime = (run) => Date.parse(run.finished_at || run.started_at) || 0;
 
 function lastVisits() {
@@ -471,9 +463,7 @@ function initSidebar() {
   applySidebar();
 }
 
-// ---------------------------------------------------------------------------
-// Detail pane layout: collapse, resize, sheet
-// ---------------------------------------------------------------------------
+// detail pane collapse, resize and sheet
 function isSheet() {
   return sheetQuery.matches || (app.detail.onSelect && boardSheetQuery.matches);
 }
@@ -549,9 +539,7 @@ function initDetailPane() {
   applyDetail();
 }
 
-// ---------------------------------------------------------------------------
-// Help panel and shortcuts
-// ---------------------------------------------------------------------------
+// help panel and shortcuts
 /** The shortcut groups, the open view's first; its group is named after it. */
 function helpGroups() {
   const groups = [...describe()];
@@ -616,9 +604,7 @@ function registerGlobalShortcuts() {
   $("help-close").addEventListener("click", () => toggleHelp(false));
 }
 
-// ---------------------------------------------------------------------------
-// Command palette entries beyond the shortcuts, and the tour
-// ---------------------------------------------------------------------------
+// palette commands beyond the shortcuts, and the tour
 async function fetchIcons() {
   try {
     await api("/api/icons", { method: "POST" });
@@ -628,9 +614,7 @@ async function fetchIcons() {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Updates, the provider test and a restore that just finished
-// ---------------------------------------------------------------------------
+// updates, the provider test and a restore that just finished
 function renderUpdateBanner(info) {
   const banner = $("update-banner");
   const shown = info?.newer && pref("updateDismissed", null) !== info.latest;
@@ -726,9 +710,7 @@ function registerCommands() {
   ]);
 }
 
-// ---------------------------------------------------------------------------
-// Router
-// ---------------------------------------------------------------------------
+// router
 function parseHash() {
   const raw = location.hash.slice(1);
   const split = raw.indexOf("?");

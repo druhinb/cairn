@@ -130,14 +130,12 @@ EDITABLE_BASE_URL = frozenset({"ollama", "custom"})
 
 
 def valid_base_url(url):
-    """Whether url is an http(s) URL with a host."""
     parts = urlparse(url)
     return parts.scheme in ("http", "https") and bool(parts.hostname)
 
 
 @dataclass(frozen=True)
 class Target:
-    """One resolved destination: which provider, model, URL and key a call uses."""
     provider: str
     model: str
     base_url: str
@@ -202,7 +200,6 @@ def complete(prompt, *, tier, timeout, retries=RETRIES):
 
 
 def _request(t, prompt):
-    """(url, headers, body) for one prompt."""
     headers = {"User-Agent": USER_AGENT, "Content-Type": "application/json"}
     if PROVIDERS[t.provider]["kind"] == "anthropic":
         if t.key:
@@ -223,7 +220,6 @@ def _request(t, prompt):
 
 
 def _answer(t, payload):
-    """(text, err) from a provider's JSON reply."""
     if PROVIDERS[t.provider]["kind"] == "anthropic":
         blocks = payload.get("content") if isinstance(payload, dict) else None
         text = "".join(b.get("text", "") for b in blocks or ()
@@ -303,7 +299,6 @@ def _http_error_message(error):
 
 
 def _refusal(t, code, message):
-    """What went wrong when t answered with HTTP error code, in the user's terms."""
     if code in (401, 403):
         return f"{t.label} didn't accept the key. Check it and paste it again."
     if code == 429:

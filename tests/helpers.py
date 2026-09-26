@@ -35,7 +35,6 @@ def temp_home(**overrides):
     Yields the home directory. Keyword arguments replace individual settings for the
     duration. On exit the home and settings from before come back, so a nested call
     hands its database back to the outer one and nothing is ever loaded from disk.
-    Each call gets its own empty database.
     """
     outer_home, outer_settings = os.environ["CAIRN_HOME"], settings.base()
     with tempfile.TemporaryDirectory() as home:
@@ -57,7 +56,7 @@ def user_home(path):
 def app_client(case, **kwargs):
     """A TestClient for a new app that passes as the app's own window: on this Mac,
     addressed to 127.0.0.1, sending the page's header, and holding the session cookie
-    the launch URL buys."""
+    the launch URL sets."""
     client = case.enterContext(TestClient(
         app.create_app(), base_url="http://127.0.0.1", client=("127.0.0.1", 50000),
         headers={security.APP_HEADER: "1"}, **kwargs))

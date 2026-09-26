@@ -120,10 +120,7 @@ def application_events(posting_id):
 
 
 def applications(statuses=None):
-    """Every application row with its posting, most recently updated first.
-
-    statuses, when given, keeps only the rows holding one of them.
-    """
+    """Every application row with its posting, most recently updated first."""
     where, params = "", []
     if statuses is not None:
         where, params = f"WHERE applications.status IN ({_marks(statuses)})", list(statuses)
@@ -248,7 +245,6 @@ def stages_between(start, end):
 
 
 def upcoming_stages(days=7):
-    """stages_between now and `days` days from now."""
     now = datetime.datetime.now()
     return stages_between(now, now + datetime.timedelta(days=days))
 

@@ -1,7 +1,7 @@
 """Settings come from config.toml, and a file the user typed by hand can be wrong.
 
-A bad key or a bad type must fail loudly at load: a silently ignored `fit_treshold`
-would leave the run using a threshold nobody chose.
+A bad key or type fails at load. Ignoring a misspelt `fit_treshold` would leave runs
+on a threshold nobody chose.
 """
 import dataclasses
 import os
@@ -231,10 +231,10 @@ class OverrideTest(unittest.TestCase):
 
 
 class SuiteGuardTest(unittest.TestCase):
-    """The suite must never read the developer's real config.toml.
+    """The suite never reads the developer's real config.toml.
 
     An earlier fixture loaded it to save and restore it, which installed the real
-    settings for every later test: one bad key there failed 105 tests.
+    settings for every later test; one bad key there failed 105 tests.
     """
 
     def test_a_bad_config_in_the_home_is_never_loaded(self):

@@ -193,7 +193,7 @@ class MenuBar:
         if event.kind == "run_done":
             self._refresh.set()
 
-    # ----- on the main thread
+    # main thread only, through run_now
     def _item(self, title, action=None, enabled=True):
         item = self.appkit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
             title, action, "")
@@ -278,7 +278,7 @@ class MenuBar:
     def run_now(self):
         threading.Thread(target=self._start_run, daemon=True).start()
 
-    # ----- on other threads
+    # worker threads from here on
     def _in_background(self, work, then):
         """Run work() on a thread and then(result) on the main thread; a failure is
         reported as a warn event."""

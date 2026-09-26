@@ -1,10 +1,10 @@
-"""launchd sends stdout to a file, so off a TTY the UI must emit no terminal control
-bytes at all.
+"""launchd sends stdout to a file, so off a TTY the UI writes no terminal control
+bytes.
 
-This is easy to regress: rich's `no_color` strips colour but keeps attributes, so a
-bold style still writes "\\x1b[1m". The guard is `force_terminal=IS_TTY`, and these
-tests run the UI in a subprocess with stdout redirected to prove it holds — including
-with FORCE_COLOR set, which is exactly what defeats naive terminal detection.
+rich's `no_color` strips colour but keeps attributes, so a bold style still writes
+"\\x1b[1m"; ui.py passes `force_terminal=IS_TTY` for that. These tests run the UI in a
+subprocess with stdout redirected, once with FORCE_COLOR set, which makes rich take
+the pipe for a terminal.
 """
 import os
 import subprocess
@@ -17,7 +17,7 @@ import helpers  # noqa: F401 - installs the suite settings guard
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(REPO, "src")
 
-# Every renderer, including the styled paths.
+# every renderer, styled paths included
 EXERCISE_UI = """
 from cairn.core import events, ui
 ui.attach()
@@ -45,7 +45,7 @@ def _env(env_extra, home):
 
 def _run(env_extra=None):
     with tempfile.TemporaryDirectory() as home:
-        # capture_output gives a pipe, not a tty — the same shape as the log redirect.
+        # capture_output gives a pipe, as launchd's log redirect does
         return subprocess.run([sys.executable, "-c", EXERCISE_UI], cwd=REPO,
                               env=_env(env_extra, home), capture_output=True, timeout=60)
 

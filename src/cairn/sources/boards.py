@@ -32,7 +32,6 @@ def _board_json(kind, slug, timeout=web.FETCH_TIMEOUT):
 
 
 def _board_row(kind, slug, company, board_id, title, url, locations, posted, updated):
-    """The posting for one board job, or None when the job lacks an id, title, or url."""
     if board_id is None or not title or not url:
         return None
     return _posting(f"{kind}:{slug}:{board_id}", company, title, url, locations, posted,

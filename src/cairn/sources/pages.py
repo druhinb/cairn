@@ -67,7 +67,6 @@ class _Cut(Exception):
 
 
 def _web_link(base_url, href):
-    """The http(s) URL an href on base_url leads to, less its fragment, or None."""
     href = href.strip()
     if not href or href.startswith("#"):
         return None
@@ -77,9 +76,9 @@ def _web_link(base_url, href):
 
 class _Anchors(html.parser.HTMLParser):
     """The web link, title, and places of up to PAGE_MAX_LINKS anchors on the page at
-    base_url whose title names a role. A card whose anchor wraps a title run and then place runs is split
-    between them; any other anchor takes the places named in the nearest enclosing
-    element that holds no other anchor.
+    base_url whose title names a role. A card whose anchor wraps a title run and then
+    place runs is split between them; any other anchor takes the places named in the
+    nearest enclosing element that holds no other anchor.
 
     Every text run is kept once, in document order, and an element records where
     its runs start, so the work grows with the page. Parsing stops at PAGE_MAX_TAGS

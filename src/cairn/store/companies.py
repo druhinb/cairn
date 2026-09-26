@@ -178,7 +178,6 @@ def logo(domain):
 
 
 def logos():
-    """Every recorded icon fetch, keyed by domain."""
     return {row["domain"]: dict(row) for row in connect().execute(
         "SELECT domain, path, fetched_at, error, source FROM logos")}
 

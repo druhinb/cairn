@@ -158,7 +158,6 @@ def _log_size(log):
 
 
 def _recorded(opts, on_start):
-    """The pipeline wrapped in its runs row, bracketed by run_start and run_done."""
     log = paths.run_log()
     log_start = _log_size(log)
     run_id = store.start_run(str(log))
@@ -238,9 +237,9 @@ def _pipeline(run_id, opts):
     # a posting's score is its group's, so the members ranking skipped get it too
     scored = results + [{**r, "id": other} for r in results for other in r.get("also_ids", ())]
     store.save_scores(scored, run_id)
-    # The one commit point. Ids are marked seen only after their scores are stored,
-    # and only for postings that were ranked: anything dropped by --limit, the rank
-    # cap, or a failed rank batch stays unseen and retries.
+    # the one commit point. Only ranked postings are marked seen, after their scores
+    # are stored, so whatever --limit, the rank cap or a failed batch dropped stays
+    # unseen and retries
     store.mark_seen(r.get("id") for r in scored)
     if opts.first_run:
         fetch.fetch_icons_later()

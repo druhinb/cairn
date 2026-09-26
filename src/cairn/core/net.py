@@ -190,8 +190,7 @@ def _request(url, method, headers, data, limit, deadline, header_seconds, reques
     """(status, headers, body) of one request, redirects unfollowed. The body is
     read for a 2xx reply to a method other than HEAD, and is empty otherwise. The
     headers must arrive within header_seconds and the body within request_seconds
-    of the start, when given, and neither after `deadline`. data, when given, is
-    sent as the request body."""
+    of the start, when given, and neither after `deadline`."""
     scheme, host, port = _public_host(url)
     family, sockaddr = _public_address(host, port)
     start = time.monotonic()

@@ -1,8 +1,7 @@
-"""Notifications are best-effort and must never take a run down with them.
+"""A failed notification never fails the run.
 
-By the time these fire the ranked postings are already stored, so a failed push is
-an inconvenience. An exception escaping here would turn that into a failed run — and,
-worse, one that failed *after* the commit point.
+By the time these fire the ranked postings are stored, so an exception escaping here
+would fail the run after its commit point.
 """
 import dataclasses
 import datetime
@@ -48,7 +47,7 @@ class FailureTest(unittest.TestCase):
         def boom(*_a, **_kw):
             raise urllib.error.URLError("no route to host")
         notify._ntfy = boom
-        self.assertEqual(notify.send("t", "m"), [])   # must not raise
+        self.assertEqual(notify.send("t", "m"), [])
 
     def test_a_timeout_is_swallowed(self):
         def boom(*_a, **_kw):
@@ -57,8 +56,8 @@ class FailureTest(unittest.TestCase):
         self.assertEqual(notify.send("t", "m"), [])
 
     def test_a_header_value_urllib_refuses_to_send_is_swallowed(self):
-        """A CR/LF or non-latin-1 posting URL used to raise past this point and take
-        the run down with it, after the run's own commit."""
+        """A CR/LF or non-latin-1 posting URL used to raise here and fail the run after
+        its commit."""
         def boom(*_a, **_kw):
             raise ValueError("Invalid return character or leading space in header")
         notify._ntfy = boom
@@ -210,11 +209,10 @@ class FollowUpLineTest(unittest.TestCase):
 
 
 class SuiteIsolationTest(unittest.TestCase):
-    """The temp_home fixture must leave every notification channel off.
+    """The temp_home fixture leaves every notification channel off.
 
-    test_state drives cmd_run end to end, and against the real config.toml that
-    sent a live push to a real phone on every `unittest discover` — small fixtures
-    produced a stream of "1 new, none above your bar" alerts.
+    test_state drives cmd_run end to end, and against the real config.toml every
+    `unittest discover` pushed "1 new, none above your bar" alerts to a real phone.
     """
 
     def test_the_test_fixture_disables_notifications(self):

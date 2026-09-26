@@ -50,7 +50,7 @@ def logo_file(domain):
     return path if path.is_file() else None
 
 
-# what a failed request raises: a refusal, a failed request, a malformed reply
+# net.Failure for a refused or failed request, ValueError for a malformed reply
 _FAILURES = (net.Failure, ValueError)
 
 
@@ -174,7 +174,6 @@ Download = collections.namedtuple("Download", "path error source transient")
 
 
 def _icon(domain, deadline):
-    """The Download of a domain's icon."""
     try:
         body, extension, source = _find_icon(domain, deadline)
         return Download(_save(domain, body, extension), None, source, False)

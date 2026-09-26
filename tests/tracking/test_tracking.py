@@ -38,7 +38,6 @@ def _at(when, call, *args):
 
 
 def _settings_with(**changes):
-    """The current settings with changes applied."""
     return dataclasses.replace(settings.get(), **changes)
 
 

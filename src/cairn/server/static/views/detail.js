@@ -485,9 +485,7 @@ export async function changeStatus(job, next) {
   return updated;
 }
 
-// ---------------------------------------------------------------------------
-// Rendering
-// ---------------------------------------------------------------------------
+// rendering
 function renderEmpty() {
   state.parts = {};
   const { title, keys } = EMPTY_HINTS[state.emptyKind];
@@ -809,9 +807,7 @@ async function explainScores(job) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Score feedback
-// ---------------------------------------------------------------------------
+// score feedback
 function renderFeedback() {
   const box = state.parts.feedback;
   const job = state.job;

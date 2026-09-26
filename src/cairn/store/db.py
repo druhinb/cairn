@@ -32,7 +32,7 @@ def sqlite_library():
 
 def _stop_memory_stats():
     """Turn off SQLite's allocation statistics, which put every allocation of every
-    thread behind one mutex: four request threads each took 1,030 ms over a query
+    thread behind one mutex. Four request threads each took 1,030 ms over a query
     that took 80 ms alone.
 
     SQLite takes the setting only while shut down, and the sqlite3 module starts it

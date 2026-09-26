@@ -26,10 +26,9 @@ def _specs():
 def _load_all():
     """(source name, rows) for every source that answered, first occurrence wins.
 
-    `sources` is ordered richest-schema-first: the earlier feed keeps its `category`
-    and other fields rather than being overwritten by a sparser duplicate. A source
-    that fails to download is left out entirely, so its stored postings are not
-    mistaken for delisted ones.
+    `sources` comes richest schema first, so the earlier feed's `category` and other
+    fields survive a sparser duplicate. A source that fails to download is left out,
+    so its stored postings are not mistaken for delisted ones.
     """
     batches, keys = [], set()
     for name, rows in sources.fetch_all(_specs()):
@@ -63,7 +62,6 @@ def _fold(text):
 
 @dataclass(frozen=True)
 class _Rules:
-    """The relevance filter's settings, lowercased and set-ified once per fetch."""
     excluded: tuple
     field_excluded: tuple
     keywords: tuple
@@ -98,12 +96,12 @@ def _field_ok(job, title, rules):
 
 
 def _internship_ok(job, title, rules):
-    """Internships pass only for a term you can actually take.
+    """An internship passes only with off-season internships on and a term in
+    wanted_intern_terms.
 
-    The season is in the feed's `terms` field, not the title — nearly every title
-    is a bare "Software Engineer Intern", so matching on the title found nothing
-    and silently hid 446 Fall 2026 postings. A posting with no terms at all is the
-    summer cohort by default and is dropped.
+    The season comes from the feed's `terms` field. Nearly every title is a bare
+    "Software Engineer Intern", and matching on the title hid 446 Fall 2026
+    postings. A posting with no terms is the summer cohort and is dropped.
     """
     if not any(t in title for t in rules.intern_terms):
         return True
@@ -114,11 +112,9 @@ def _internship_ok(job, title, rules):
 
 
 def _category_ok(job, title, rules):
-    # Both signals required: docs/tuning.md lists the junk either one lets through
-    # on its own. Not every source carries a category (vanshb03/New-Grad-2026 omits
-    # it), and requiring one would silently discard everything from those feeds —
-    # so an absent category falls back to the title, which still has both exclude
-    # lists applied to it.
+    # category and title keyword must both pass; docs/tuning.md lists the junk either
+    # lets through alone. vanshb03/New-Grad-2026 carries no category, so a posting
+    # without one passes here and rests on the title rules
     category = job.get("category")
     return not category or category in rules.categories
 
@@ -174,12 +170,12 @@ def _refresh(dry_run=False, icons=True):
 
     Legacy rows came from the GitHub feeds, so they are deactivated only when every
     enabled feed answered, since a legacy posting may belong to a feed that is down.
-    Watchlist boards do not count: each covers one company, and a board that is down
+    Watchlist boards do not count. Each covers one company, so a board that is down
     or gone says nothing about the legacy rows.
 
-    dry_run skips icon lookups and the ranked-link check: both write to the store
-    and neither is worth their time when nothing here will be ranked. icons=False
-    skips the icon lookup alone, for a caller that starts it later.
+    dry_run skips the icon lookup and the ranked-link check, which write to the
+    store and serve nothing when no posting gets ranked. icons=False skips the icon
+    lookup alone, for a caller that starts it later.
     """
     specs = _specs()
     _rename_url_sources(specs)
@@ -262,13 +258,12 @@ def _check_ranked_links():
 
 
 def fetch_new(dry_run=False, icons=True):
-    """Return (postings, counts): relevant, recent and unseen, newest first.
+    """(postings, counts) for the relevant, recent and unseen postings, newest first.
 
-    The whole feed is stored, but nothing is marked seen here. A crash in ranking
-    must leave the seen set untouched so the run retries in full. The failure
-    mode is a duplicate listing, never a posting silently lost. `total` and
-    `relevant` describe this fetch; `new` is every unseen relevant posting stored.
-    icons=False leaves the icon lookup to the caller.
+    The whole feed is stored and nothing is marked seen here, so a crash in ranking
+    leaves the seen set untouched and the next run retries in full, at worst listing
+    a posting twice. `total` and `relevant` describe this fetch; `new` is every
+    unseen relevant posting stored. icons=False leaves the icon lookup to the caller.
     """
     cfg = settings.get()
     stored = _refresh(dry_run=dry_run, icons=icons)

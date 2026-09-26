@@ -206,9 +206,7 @@ class Runs {
     return live.run?.status === "running" || this.holder.running;
   }
 
-  // -------------------------------------------------------------------------
-  // Run now
-  // -------------------------------------------------------------------------
+  // run now
   renderSchedule(schedule) {
     const link = h("a", { href: "#settings?section=schedule", class: "link", text: "Settings" });
     if (!schedule) {
@@ -269,9 +267,7 @@ class Runs {
         : "A run is already going. You can start another when it ends."] : []));
   }
 
-  // -------------------------------------------------------------------------
-  // The live run
-  // -------------------------------------------------------------------------
+  // the live run
   renderLive() {
     const run = live.run;
     this.livePanel.hidden = !run;
@@ -328,9 +324,7 @@ class Runs {
       h("button", { type: "button", class: "btn btn-primary", text: "Show the latest run", onclick: () => this.ctx.navigate("latest") }));
   }
 
-  // -------------------------------------------------------------------------
-  // Past runs
-  // -------------------------------------------------------------------------
+  // past runs
   renderPast(runs) {
     const shown = detail.shownRun();
     const title = h("h2", { id: "past-runs-title", class: "section-label past-title", text: "Past runs" });
