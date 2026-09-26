@@ -13,7 +13,7 @@ def _list(text):
 _POSTING_COLUMNS = ("id", "source", "company", "title", "url", "url_key", "locations",
                     "category", "terms", "degrees", "sponsorship", "company_url",
                     "active", "visible", "posted_at", "updated_at", "first_seen_at",
-                    "last_seen_at", "link_status", "relevant")
+                    "found_at", "last_seen_at", "link_status", "relevant")
 
 
 def _fold_detail(job):
@@ -34,7 +34,8 @@ def _posting(row):
            "company_url": row["company_url"], "active": bool(row["active"]),
            "is_visible": bool(row["visible"]),
            "date_posted": row["posted_at"], "date_updated": row["updated_at"],
-           "first_seen_at": row["first_seen_at"], "last_seen_at": row["last_seen_at"],
+           "first_seen_at": row["first_seen_at"], "found_at": row["found_at"],
+           "last_seen_at": row["last_seen_at"],
            "closed": row["link_status"] == "closed"}
     for name in sorted(set(row.keys()) - set(_POSTING_COLUMNS)):
         job[name] = row[name]

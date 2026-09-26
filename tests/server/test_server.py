@@ -110,12 +110,11 @@ class JobsTest(ServerTestCase):
         self.assertEqual([r["id"] for r in body["rows"]], ["alpha", "zeta", "beta", "gamma"])
         self.assertEqual(body["total"], 4)
         alpha = body["rows"][0]
-        first_seen = store.get_posting("alpha")["first_seen_at"]
         self.assertEqual(alpha, {
             "id": "alpha", "company": "Alpha", "title": "Software Engineer",
             "url": "https://jobs.test/alpha", "locations": ["New York, NY"],
             "category": "Software", "terms": ["Winter 2027"], "source": "feed-one",
-            "posted_at": NOW, "first_seen_at": first_seen, "fit": 90,
+            "posted_at": NOW, "found_at": None, "fit": 90,
             "tier": 80, "fit_reason": "strong", "tier_reason": "top firm",
             "below_floor": False, "status": None, "note": None,
             "applied_at": None, "updated_at": None, "seen": True, "run_id": None,
@@ -184,10 +183,12 @@ class JobsTest(ServerTestCase):
             with self.subTest(params=params):
                 self.assertEqual(self.ids(**params), expected)
 
-    def test_found_within_hours_keeps_what_was_first_stored_that_recently(self):
+    def test_found_within_hours_keeps_what_appeared_that_recently(self):
         with store.connect() as conn:
-            conn.execute("UPDATE postings SET first_seen_at = '2020-01-01T00:00:00' "
-                         "WHERE id != 'zeta'")
+            conn.execute("UPDATE postings SET found_at = '2020-01-01T00:00:00' "
+                         "WHERE id = 'alpha'")
+            conn.execute("UPDATE postings SET found_at = ? WHERE id = 'zeta'",
+                         (store.db.now(),))
         self.assertEqual(self.ids(found_within_hours=24), ["zeta"])
         self.assertEqual(self.client.get("/api/jobs", params={"found_within_hours": 0})
                          .status_code, 400)

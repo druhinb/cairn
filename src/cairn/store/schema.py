@@ -3,7 +3,7 @@ from pathlib import Path
 
 from cairn.store.keys import _GROUP_COLUMNS, _assign_groups, url_key
 
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 13
 
 # pipeline order; a posting with no applications row has no status, and `passed`
 # keeps it out of the default jobs list
@@ -128,6 +128,9 @@ CREATE TABLE IF NOT EXISTS postings (
     posted_at REAL,
     updated_at REAL,
     first_seen_at TEXT,
+    -- first_seen_at of a posting its source listed after Cairn first read that
+    -- source; NULL for the backlog that first read brought in
+    found_at TEXT,
     last_seen_at TEXT,
     -- postings of one company and title across sources share it; see group_key()
     group_key TEXT,
@@ -311,6 +314,21 @@ def _split_score_reason(conn):
         conn.execute("ALTER TABLE scores ADD COLUMN tier_reason TEXT")
 
 
+def _add_found_at(conn):
+    present = {row["name"] for row in conn.execute("PRAGMA table_info(postings)")}
+    if "found_at" in present:
+        return
+    conn.execute("ALTER TABLE postings ADD COLUMN found_at TEXT")
+    # a source's first read stores its whole backlog within seconds
+    conn.execute("""
+        WITH first_read AS (
+            SELECT source, strftime('%Y-%m-%dT%H:%M:%S', min(first_seen_at), '+10 minutes') AS until
+            FROM postings GROUP BY source)
+        UPDATE postings SET found_at = first_seen_at
+        FROM first_read
+        WHERE first_read.source = postings.source AND postings.first_seen_at > first_read.until""")
+
+
 def _add_relevant(conn):
     # a postings table created by this connect() already has the column
     present = {row["name"] for row in conn.execute("PRAGMA table_info(postings)")}
@@ -346,6 +364,8 @@ _MIGRATIONS = {
     11: (_split_score_reason,),
     # relevance is stored per posting; connect() computes it once the column exists
     12: (_add_relevant,),
+    # the time a posting appeared, kept apart from the backlog a source's first read stored
+    13: (_add_found_at,),
 }
 
 

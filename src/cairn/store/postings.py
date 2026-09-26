@@ -28,10 +28,10 @@ def _stored_id(conn, job, key):
 _UPSERT = """
 INSERT INTO postings (id, source, company, title, url, url_key, locations, category,
                       terms, degrees, sponsorship, company_url, active, visible,
-                      posted_at, updated_at, first_seen_at, last_seen_at)
+                      posted_at, updated_at, first_seen_at, found_at, last_seen_at)
 VALUES (:id, :source, :company, :title, :url, :url_key, :locations, :category,
         :terms, :degrees, :sponsorship, :company_url, :active, :visible, :posted_at,
-        :updated_at, :now, :now)
+        :updated_at, :now, CASE WHEN :known THEN :now END, :now)
 ON CONFLICT(id) DO UPDATE SET
     source = excluded.source, company = excluded.company, title = excluded.title,
     url = excluded.url, url_key = excluded.url_key, locations = excluded.locations,
@@ -57,6 +57,8 @@ def upsert_postings(rows, source):
     now = db.now()
     stored = []
     unsafe = 0
+    known = conn.execute("SELECT 1 FROM postings WHERE source = ? LIMIT 1",
+                         (source,)).fetchone() is not None
     with conn:
         for job in rows:
             if not job.get("id"):
@@ -77,7 +79,8 @@ def upsert_postings(rows, source):
                 "active": int(bool(job.get("active"))),
                 "visible": int(bool(job.get("is_visible"))),
                 "posted_at": job.get("date_posted"), "updated_at": job.get("date_updated"),
-                "date_is_relative": int(bool(job.get("date_is_relative"))), "now": now})
+                "date_is_relative": int(bool(job.get("date_is_relative"))), "now": now,
+                "known": known})
             stored.append(posting_id)
         _flag_relevance(conn, "id IN (SELECT value FROM json_each(?))", [json.dumps(stored)])
         _regroup(conn, stored)

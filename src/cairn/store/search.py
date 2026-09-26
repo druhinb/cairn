@@ -135,7 +135,7 @@ def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=Non
         params.append(time.time() - posted_within_days * 86400)
     if found_within_hours is not None:
         found_since = datetime.datetime.now() - datetime.timedelta(hours=found_within_hours)
-        clauses.append("postings.first_seen_at >= ?")
+        clauses.append("postings.found_at >= ?")
         params.append(found_since.isoformat(timespec="seconds"))
     return " AND ".join(clauses) or "1", params
 

@@ -9,7 +9,7 @@ def make_row(job):
             "url": store.web_url(job["url"]), "locations": job["locations"],
             "category": job["category"], "terms": job["terms"],
             "source": job["source"], "posted_at": job["date_posted"],
-            "first_seen_at": job["first_seen_at"],
+            "found_at": job["found_at"],
             "fit": job.get("fit"), "tier": job.get("tier"),
             "fit_reason": job.get("fit_reason"), "tier_reason": job.get("tier_reason"),
             "below_floor": job.get("below_floor"), "status": job.get("status"),

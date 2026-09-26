@@ -97,9 +97,12 @@ function dayText(isoDay) {
  * @param {{selected?: boolean, unread?: boolean}} [options]
  * @returns {HTMLElement}
  */
-/** The posting's age, or how long ago Cairn found it when that was in the last day. */
+/**
+ * The posting's age, or how long ago Cairn saw it appear when that was in the last
+ * day. The backlog of a source's first read has no found_at.
+ */
 function rowAge(job) {
-  const found = fmt.since(job.first_seen_at);
+  const found = fmt.since(job.found_at);
   const posted = fmt.full(job.posted_at);
   if (!found) return h("span", { class: "row-age mono", text: fmt.age(job.posted_at), title: posted });
   return h("span", { class: "row-age row-found mono", text: found,

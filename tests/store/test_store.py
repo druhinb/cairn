@@ -567,6 +567,29 @@ class ThreadTest(StoreTestCase):
 
 
 class UpsertTest(StoreTestCase):
+    def _found(self, posting_id):
+        return self.conn.execute("SELECT found_at FROM postings WHERE id = ?",
+                                 (posting_id,)).fetchone()[0]
+
+    def test_only_what_appears_after_a_sources_first_read_is_found(self):
+        store.upsert_postings([_row("a")], "feed")
+        store.upsert_postings([_row("a"), _row("b", title="Backend Engineer")], "feed")
+        store.upsert_postings([_row("c", title="Data Engineer")], "board")
+        self.assertIsNone(self._found("a"))
+        self.assertEqual(self._found("b"), store.get_posting("b")["first_seen_at"])
+        self.assertIsNone(self._found("c"))
+
+    def test_the_migration_leaves_each_sources_first_read_unfound(self):
+        store.upsert_postings([_row("a"), _row("b", title="Backend Engineer")], "feed")
+        with self.conn:
+            self.conn.execute("UPDATE postings SET first_seen_at = '2026-09-01T00:00:00', "
+                              "found_at = NULL")
+            self.conn.execute("UPDATE postings SET first_seen_at = '2026-09-02T00:00:00' "
+                              "WHERE id = 'b'")
+            self.conn.execute("ALTER TABLE postings DROP COLUMN found_at")
+            store.schema._add_found_at(self.conn)
+        self.assertEqual((self._found("a"), self._found("b")), (None, "2026-09-02T00:00:00"))
+
     def _times(self, posting_id):
         row = self.conn.execute("SELECT first_seen_at, last_seen_at FROM postings "
                                 "WHERE id = ?", (posting_id,)).fetchone()
