@@ -525,10 +525,11 @@ class Settings {
   renderProfile(file) {
     const section = SECTIONS[0];
     const box = this.sections.get("profile");
-    const redo = h("button", { type: "button", class: "btn btn-sm", text: "Redo setup",
+    const redo = h("button", { type: "button", class: "btn btn-sm", text: "Run setup again",
+      title: "Draft your profile from a resume again, then go over your preferences, companies and phone alerts",
       onclick: () => this.ctx.navigate("setup") });
     if (!file) {
-      box.replaceChildren(this.sectionHead(section), h("p", { class: "muted", text: "Couldn't load your profile." }), redo);
+      box.replaceChildren(this.sectionHead(section, redo), h("p", { class: "muted", text: "Couldn't load your profile." }));
       return;
     }
     this.profileText = file.text;
@@ -553,10 +554,10 @@ class Settings {
       edit.setValue(this.profileText);
       save.disabled = discard.disabled = true;
     });
-    box.replaceChildren(this.sectionHead(section),
+    box.replaceChildren(this.sectionHead(section, redo),
       h("p", { class: "field-help", text: "Cairn compares every job to this profile. Lines that start with TODO still need your answer." }),
       edit.element,
-      h("div", { class: "section-actions" }, save, discard, h("span", { class: "filter-spacer" }), redo));
+      h("div", { class: "section-actions" }, save, discard));
   }
 
   renderSchedule(schedule) {
