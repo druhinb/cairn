@@ -83,8 +83,8 @@ out of the summary budget while leaving them visible. Postings below
 The list sorts by `fit + tier`, above-floor companies first, so a top firm at
 fit 85 outranks an unremarkable company at fit 95.
 
-Ranking is one call to `claude_model` (`sonnet`) per `rank_batch_size` (25, 1 to
-100) postings. A batch whose reply does not parse gets `rank_retries` (1, 0 to 5)
+Ranking is one call to `llm_model` (`sonnet` on Claude Code) per `rank_batch_size`
+(25, 1 to 100) postings. A batch whose reply does not parse gets `rank_retries` (1, 0 to 5)
 extra attempts. After that its postings stay unseen and come back on the next run;
 none of them shows up at fit 0.
 
@@ -104,8 +104,8 @@ to bound the daily runs after it.
 
 The feeds carry no description text. With `fetch_descriptions` on, the default, a
 run fetches the posting page for the top `max_summaries_per_run` (25, 0 to 500)
-postings at or above `fit_threshold` and `tier_floor`, and `description_model`
-(`haiku`) distills each to a TECH / DOMAIN / MUST / SIGNALS / TIMING block roughly 11 times smaller than
+postings at or above `fit_threshold` and `tier_floor`, and `llm_model_cheap`
+(`haiku` on Claude Code) distills each to a TECH / DOMAIN / MUST / SIGNALS / TIMING block roughly 11 times smaller than
 the page. Workday and Ashby serve their text through JSON APIs; everything else is
 a plain HTML read, and about 95% of a typical feed succeeds. The run discards a
 reply in any other shape, so a model's prose apology never lands as a requirement.
@@ -274,8 +274,10 @@ also shows a local banner on a Mac. A failed notification never fails a run.
 
 ## Claude
 
-Every model call runs through the Claude Code CLI named by `claude_bin` (`claude`);
-set an absolute path when it is not on `PATH`. `claude_model` (`sonnet`) ranks
-postings and drafts the profile at setup, and `description_model` writes the
-requirements summaries. Raising `fit_threshold` or `tier_floor`, or lowering
+Every model call goes to `llm_provider` (`claude-code`). Claude Code runs through
+the CLI named by `claude_bin` (`claude`); set an absolute path when it is not on
+`PATH`. `llm_model` ranks postings and drafts the profile at setup, and
+`llm_model_cheap` writes the requirements summaries. Left empty, the default, they
+pick the provider's own models: `sonnet` and `haiku` for Claude Code. Settings ›
+AI provider sets all three. Raising `fit_threshold` or `tier_floor`, or lowering
 `max_summaries_per_run`, shrinks the number of summary calls.
