@@ -17,10 +17,11 @@ from cairn import (descriptions, events, fetch, locks, logfile, paths, pipeline,
 from cairn.pipeline import RunInProgress, RunOptions
 
 HOLD_LOCK = """
+import os
 import sys
 from cairn import pipeline
 with pipeline.run_lock():
-    print("locked", flush=True)
+    print("locked", os.getpid(), flush=True)
     sys.stdin.read()
 """
 
@@ -52,15 +53,19 @@ def _no_link_check(ids=None, wait=0):
 
 @contextlib.contextmanager
 def _lock_held_by_child():
-    """Yield the pid of a child process holding the run lock until the block exits."""
+    """Yield the pid of a child process holding the run lock until the block exits.
+
+    The pid comes from the child, because on Windows a venv's python.exe starts the
+    real interpreter as a separate process and Popen's pid is the launcher's."""
     src = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
     proc = subprocess.Popen([sys.executable, "-c", HOLD_LOCK], stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE, text=True,
                             env={**os.environ, "PYTHONPATH": src})
     try:
-        if proc.stdout.readline().strip() != "locked":
+        said, _, pid = proc.stdout.readline().partition(" ")
+        if said != "locked":
             raise RuntimeError("child never took the run lock")
-        yield proc.pid
+        yield int(pid)
     finally:
         proc.stdin.close()
         proc.wait(timeout=30)
