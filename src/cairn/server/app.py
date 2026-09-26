@@ -17,6 +17,7 @@ import hmac
 import http.cookies
 import ipaddress
 import json
+import mimetypes
 import os
 import queue
 import re
@@ -48,6 +49,11 @@ from cairn.server import tracking as tracking_routes
 from cairn.server.rows import make_row
 
 STATIC = Path(__file__).parent / "static"
+# Windows takes these from the registry, which can call .js text/plain, and nosniff
+# then blocks every module script
+for _ext, _kind in ((".js", "text/javascript"), (".css", "text/css"), (".html", "text/html"),
+                    (".svg", "image/svg+xml"), (".woff2", "font/woff2"), (".txt", "text/plain")):
+    mimetypes.add_type(_kind, _ext)
 KEEPALIVE = 15.0  # seconds of silence before the event stream sends a comment
 POLL = 0.2  # seconds between event queue checks
 START_TIMEOUT = 10  # seconds a background job gets to take the run lock
