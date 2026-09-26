@@ -6,6 +6,8 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+## [0.0.3] — 2026-09-26
+
 - Cairn runs on Windows 10 and 11. Install it with uv; the daily run uses Task
   Scheduler. The app download is still for Macs only.
 - The first run ranks every posting that matches your preferences, where it used
@@ -66,4 +68,5 @@ The first release.
 - All data stays in `~/.cairn` on your Mac. The app only answers the window it
   opened.
 
+[0.0.3]: https://github.com/druhinb/cairn/releases/tag/v0.0.3
 [0.0.2]: https://github.com/druhinb/cairn/releases/tag/v0.0.2
