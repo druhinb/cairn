@@ -73,16 +73,16 @@ def _json(data):
 
 
 def _clearbit_url(name):
-    return logos._CLEARBIT + urlencode({"query": name})
+    return logos.websites._CLEARBIT + urlencode({"query": name})
 
 
 def _wikidata_search_url(name):
-    return logos._WIKIDATA + urlencode({"action": "wbsearchentities", "search": name,
+    return logos.websites._WIKIDATA + urlencode({"action": "wbsearchentities", "search": name,
                                         "language": "en", "format": "json", "limit": 5})
 
 
 def _wikidata_claims_url(entity):
-    return logos._WIKIDATA + urlencode({"action": "wbgetclaims", "entity": entity,
+    return logos.websites._WIKIDATA + urlencode({"action": "wbgetclaims", "entity": entity,
                                         "property": "P856", "format": "json"})
 
 
@@ -175,7 +175,7 @@ class ResolveDomainTest(_WebTest):
                  "Example": []}
         for name, guesses in cases.items():
             with self.subTest(name):
-                self.assertEqual(logos._guesses(name), guesses)
+                self.assertEqual(logos.websites._guesses(name), guesses)
 
     def test_a_job_site_guess_is_never_requested(self):
         self.assertEqual(self._resolve("Workable"), (
@@ -516,7 +516,7 @@ class FetchTest(_WebTest):
         self.web.replies = {"https://acme.com/favicon.ico": (503, {}, b""),
                             "https://acme.com/": (500, {}, b""),
                             "https://icons.duckduckgo.com/ip3/acme.com.ico": (429, {}, b""),
-                            logos._GSTATIC.format(domain="acme.com"): (502, {}, b"")}
+                            logos.icons._GSTATIC.format(domain="acme.com"): (502, {}, b"")}
         self.assertIsNone(logos.fetch("acme.com"))
         self.assertIsNone(store.logo("acme.com"))
 
@@ -525,9 +525,9 @@ class FetchTest(_WebTest):
         self.assertIn("https://acme.com/favicon.ico: HTTP 404", store.logo("acme.com")["error"])
 
     def test_the_widest_image_of_an_ico_is_its_width(self):
-        self.assertEqual(logos._width(_ico(16, 32)), 32)
-        self.assertEqual(logos._width(_ico(48, 16, 0)), 256)
-        self.assertIsNone(logos._width(b"GIF89a"))
+        self.assertEqual(logos.icons._width(_ico(16, 32)), 32)
+        self.assertEqual(logos.icons._width(_ico(48, 16, 0)), 256)
+        self.assertIsNone(logos.icons._width(b"GIF89a"))
         self.web.replies = {"https://acme.com/favicon.ico": _image(_ico(16, 32), "image/x-icon")}
         self.assertEqual(logos.fetch("acme.com").read_bytes(), _ico(16, 32))
         self.assertEqual(self.web.requested, ["https://acme.com/favicon.ico"])
@@ -653,7 +653,7 @@ class FetchMissingTest(_WebTest):
         def resolve(name, urls, company_url=None, deadline=None):
             release.wait(10)
             return logos.Resolution(None, "late", False)
-        with mock.patch.object(logos, "resolve_domain", resolve):
+        with mock.patch.object(logos.websites, "resolve_domain", resolve):
             logos.fetch_missing(budget_seconds=0.1)
         self.assertEqual(self._line(), "[logos] resolved 0 companies (feed 0, apply-url 0, "
                                        "clearbit 0, wikidata 0, verified guess 0), "
@@ -678,8 +678,8 @@ class FetchMissingTest(_WebTest):
             icon_deadlines.append(deadline)
             return logos.Download(None, "none", None, False)
         start = time.monotonic()
-        with (mock.patch.object(logos, "resolve_domain", resolve),
-              mock.patch.object(logos, "_icon", icon)):
+        with (mock.patch.object(logos.websites, "resolve_domain", resolve),
+              mock.patch.object(logos.icons, "_icon", icon)):
             result = logos.fetch_missing(budget_seconds=1)
         self.assertEqual((result.looked_up, result.failed), (0, 1))
         self.assertTrue(all(d <= start + 0.61 for d in resolve_deadlines), resolve_deadlines)
@@ -693,7 +693,7 @@ class FetchMissingTest(_WebTest):
             deadlines.append(deadline)
             return logos.Resolution(None, "none", False)
         start = time.monotonic()
-        with mock.patch.object(logos, "resolve_domain", resolve):
+        with mock.patch.object(logos.websites, "resolve_domain", resolve):
             logos.fetch_missing(budget_seconds=2)
         self.assertEqual(len(deadlines), 4)
         self.assertTrue(all(start < d <= start + 2.1 for d in deadlines), deadlines)
@@ -852,7 +852,7 @@ class TransientTest(_WebTest):
             passes.append(fetch_missing(*args, **kwargs))
             return passes[-1]
         with (mock.patch("socket.getaddrinfo", down),
-              mock.patch.object(logos, "fetch_missing", counted)):
+              mock.patch.object(logos.passes, "fetch_missing", counted)):
             job = logos.fetch_all()
         self.assertEqual(job, (0, True))
         self.assertEqual([(p.looked_up, p.offline) for p in passes], [(9, True)])
@@ -903,7 +903,7 @@ class RegistrableTest(unittest.TestCase):
                      "acme.weebly.com", "acme.godaddysites.com"):
             with self.subTest(host):
                 self.assertIsNone(logos.registrable(host))
-                self.assertIsNone(logos._company_site(f"https://{host}/"))
+                self.assertIsNone(logos.websites._company_site(f"https://{host}/"))
 
 
 class NameRulesTest(_WebTest):
@@ -1005,7 +1005,7 @@ class FetchAllTest(unittest.TestCase):
             result, tries = passes.pop(0)
             tried.companies.update(f"{len(calls)}-{i}" for i in range(tries))
             return result
-        with mock.patch.object(logos, "fetch_missing", fetch_missing):
+        with mock.patch.object(logos.passes, "fetch_missing", fetch_missing):
             job = logos.fetch_all(lambda *args: heard.append(args), limit=limit)
         return job, calls, heard
 
@@ -1020,7 +1020,7 @@ class FetchAllTest(unittest.TestCase):
         self.assertEqual(heard, [(150, 200), (300, 50), (300, 50)])
 
     def test_a_limit_caps_the_companies_looked_up(self):
-        with mock.patch.object(logos, "MAX_PER_RUN", 3):
+        with mock.patch.object(logos.passes, "MAX_PER_RUN", 3):
             job, calls, heard = self._fetch_all(
                 [(logos.Pass(3, 3, 0, 3, 0, 9, False), 3),
                  (logos.Pass(1, 1, 0, 1, 0, 8, False), 1)], limit=4)
