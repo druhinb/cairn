@@ -6,6 +6,8 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+- `cairn ui` shows as Cairn, with the Cairn icon, in the Dock and the app
+  switcher, where it used to show the Python version.
 - On Python 3.11 releases before 3.11.10, Cairn no longer turns away your own
   browser when it connects over IPv6.
 

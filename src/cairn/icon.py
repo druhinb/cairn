@@ -1,10 +1,11 @@
-"""Draw the 1024 px app icon as a PNG with the standard library alone.
+"""Draw the app icon as a PNG with the standard library alone.
 
 The icon is the Cairn mark on the paper rounded square of a macOS icon: ink stones
-and a brand-coloured sun, 40 px to a grid cell. Only the square's corners are
-anti-aliased; the mark's cells keep hard edges, as in the sidebar and the menu bar.
+and a brand-coloured sun on a 1024-unit canvas, 40 units to a grid cell. Only the
+square's corners are anti-aliased; the mark's cells keep hard edges, as in the
+sidebar and the menu bar.
 
-    python packaging/make_icon.py OUT.png
+    python -m cairn.icon OUT.png
 """
 import math
 import struct
@@ -13,7 +14,7 @@ import zlib
 
 from cairn import mark
 
-SIZE = 1024
+CANVAS = 1024
 BODY = (100, 100, 924, 924, 185)  # left, top, right, bottom, corner radius
 CELL = 40
 MARK_ORIGIN = (BODY[0] + BODY[2] - CELL * mark.SIZE) // 2  # left and top, centred in BODY
@@ -40,17 +41,21 @@ def _coverage(x, y, shape, radius):
 
 
 def _cell(x, y):
-    column, row = (x - MARK_ORIGIN) // CELL, (y - MARK_ORIGIN) // CELL
+    column = math.floor((x - MARK_ORIGIN) / CELL)
+    row = math.floor((y - MARK_ORIGIN) / CELL)
     if 0 <= column < mark.SIZE and 0 <= row < mark.SIZE:
         return mark.ROWS[row][column]
     return None
 
 
-def _pixel(x, y):
-    body = _coverage(x, y, BODY[:4], BODY[4])
+def _pixel(x, y, scale):
+    left, top, right, bottom, radius = (edge * scale for edge in BODY)
+    body = _coverage(x, y, (left, top, right, bottom), radius)
     if body == 0.0:
         return b"\0\0\0\0"
-    return bytes([*COLOURS.get(_cell(x, y), PAPER), round(body * 255)])
+    # the cell under the pixel's centre, in canvas units
+    cell = _cell((x + 0.5) / scale, (y + 0.5) / scale)
+    return bytes([*COLOURS.get(cell, PAPER), round(body * 255)])
 
 
 def _chunk(kind, data):
@@ -58,10 +63,12 @@ def _chunk(kind, data):
             + struct.pack(">I", zlib.crc32(kind + data)))
 
 
-def png():
+def png(size=CANVAS):
+    scale = size / CANVAS
     # filter type 0 (none) opens every row
-    rows = b"".join(b"\0" + b"".join(_pixel(x, y) for x in range(SIZE)) for y in range(SIZE))
-    header = struct.pack(">IIBBBBB", SIZE, SIZE, 8, 6, 0, 0, 0)  # 8-bit RGBA
+    rows = b"".join(b"\0" + b"".join(_pixel(x, y, scale) for x in range(size))
+                    for y in range(size))
+    header = struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)  # 8-bit RGBA
     return (b"\x89PNG\r\n\x1a\n" + _chunk(b"IHDR", header)
             + _chunk(b"IDAT", zlib.compress(rows, 9)) + _chunk(b"IEND", b""))
 
