@@ -11,6 +11,7 @@ import json
 import os
 import re
 import sqlite3
+import sys
 import threading
 import time
 from pathlib import Path
@@ -378,6 +379,16 @@ _connections_lock = threading.Lock()
 _SQLITE_CONFIG_MEMSTATUS = 9
 
 
+def sqlite_library():
+    """The SQLite library the sqlite3 module runs on."""
+    if sys.platform == "win32":
+        # _sqlite3.pyd exports none of SQLite; a bare name finds the sqlite3.dll it
+        # already loaded
+        return ctypes.CDLL("sqlite3")
+    # uv's Pythons build _sqlite3 into the interpreter, which CDLL(None) opens
+    return ctypes.CDLL(getattr(_sqlite3, "__file__", None))
+
+
 def _stop_memory_stats():
     """Turn off SQLite's allocation statistics, which put every allocation of every
     thread behind one mutex: four request threads each took 1,030 ms over a query
@@ -388,8 +399,7 @@ def _stop_memory_stats():
     once, at import, before this module has opened any.
     """
     try:
-        # uv's Pythons build _sqlite3 into the interpreter, which CDLL(None) opens
-        lib = ctypes.CDLL(getattr(_sqlite3, "__file__", None))
+        lib = sqlite_library()
         config = lib.sqlite3_config
         # the option is the one fixed parameter; on arm64 the value after it is
         # read from the stack

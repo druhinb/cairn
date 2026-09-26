@@ -4,7 +4,6 @@ The relevance rule exists twice, as fetch._relevant and as store.relevant_query.
 The UI filters in SQL and the pipeline was built on the Python rule, so the two
 are checked against each other on a fixture that reaches every branch.
 """
-import _sqlite3
 import ctypes
 import dataclasses
 import datetime
@@ -272,7 +271,7 @@ SQLITE_STATUS_MEMORY_USED = 0
 
 class MemoryStatisticsTest(unittest.TestCase):
     def test_sqlite_counts_no_allocations(self):
-        status = ctypes.CDLL(getattr(_sqlite3, "__file__", None)).sqlite3_status64
+        status = store.sqlite_library().sqlite3_status64
         status.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int64),
                            ctypes.POINTER(ctypes.c_int64), ctypes.c_int]
         used, peak = ctypes.c_int64(), ctypes.c_int64()
@@ -282,6 +281,7 @@ class MemoryStatisticsTest(unittest.TestCase):
                                     ctypes.byref(peak), 0), 0)
         self.assertEqual(used.value, 0)
 
+    @unittest.skipIf(sys.platform == "win32", "Windows Pythons load SQLite from sqlite3.dll")
     def test_a_python_with_sqlite_built_in_turns_the_statistics_off_without_a_warning(self):
         # uv's Pythons link _sqlite3 into the interpreter, so the module has no file
         opened = []
