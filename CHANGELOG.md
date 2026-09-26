@@ -24,6 +24,12 @@ This file lists every notable change to this project. It follows
   matches and are never scored.
 - A new setting, Only jobs in the US, hides postings that list only places
   outside the US.
+- Setup picks the title keywords and the titles and fields to skip from your
+  resume, in place of the Roles checkboxes. You can change the lists before you
+  finish.
+- Pick the ranking and summary models in one place, Settings › AI provider.
+  With Claude Code, the models set there used to be ignored. Models set in
+  Ranking before this version carry over.
 - Search also looks at location, category and internship term, so Winter 2027
   lists the postings for that term.
 - A role taken down and posted again carries a Reposted mark.
