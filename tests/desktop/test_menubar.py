@@ -9,7 +9,7 @@ from unittest import mock
 
 from cairn.core import events
 from cairn.desktop import menubar
-from cairn.server.app import SESSION
+from cairn.server.security import SESSION
 
 
 def _run(run_id, finished_at, ranked):

@@ -12,7 +12,7 @@ import webbrowser
 from cairn import server
 from cairn.core import logfile, paths, ui
 from cairn.desktop import icon, menubar
-from cairn.server.app import own_headers
+from cairn.server.security import own_headers
 
 HOST = "127.0.0.1"
 READY_TIMEOUT = 5  # seconds the server gets to answer /api/status

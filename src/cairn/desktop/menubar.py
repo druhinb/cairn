@@ -18,7 +18,7 @@ import webbrowser
 from cairn.core import events
 from cairn.desktop import mark
 from cairn.system import schedule, update
-from cairn.server.app import own_headers
+from cairn.server.security import own_headers
 
 POLL_SECONDS = 30
 PYWEBVIEW_HOOKS = ("AppDelegate", "_shared_app_delegate")

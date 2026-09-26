@@ -7,7 +7,8 @@ import webbrowser
 import uvicorn
 
 from cairn.core import ui
-from cairn.server.app import SESSION, TOKEN_PARAM, create_app
+from cairn.server.app import create_app
+from cairn.server.security import SESSION, TOKEN_PARAM
 
 
 def pick_port(host="127.0.0.1"):

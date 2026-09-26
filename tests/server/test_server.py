@@ -29,10 +29,14 @@ from cairn import cli, server, sources, store
 from cairn.ai import claude, onboard
 from cairn.core import events, paths, settings
 from cairn.jobs import descriptions, fetch, logos, pipeline
-from cairn.system import doctor
+from cairn.system import doctor, schedule
 from cairn.core import secrets
 from cairn.system import backup
-from cairn.server import app as server_app
+from cairn.server import background
+from cairn.server import onboard as onboard_routes
+from cairn.server import runs as run_routes
+from cairn.server import security
+from cairn.server import status as status_routes
 from cairn.server import system
 from cairn.server.app import create_app
 
@@ -572,7 +576,7 @@ class RunTest(ServerTestCase):
             self.assertEqual(self.client.post("/api/run").status_code, 409)
 
     def test_a_job_that_never_starts_is_a_500(self):
-        self.patch(server_app, "START_TIMEOUT", 0.1)
+        self.patch(background, "START_TIMEOUT", 0.1)
         self.patch(pipeline, "run", lambda opts, on_start=None: self.release.wait(10))
         response = self.client.post("/api/run")
         self.assertEqual(response.status_code, 500)
@@ -702,7 +706,7 @@ class RunsTest(ServerTestCase):
         store.finish_run(run_id, "failed", {}, log_start=0, log_end=21)
         crafted = store.start_run(str(secret))
         store.finish_run(crafted, "failed", {}, log_start=-5, log_end=3)
-        self.patch(server_app, "MAX_RUN_LOG_BYTES", 11)
+        self.patch(run_routes, "MAX_RUN_LOG_BYTES", 11)
         self.assertEqual(self.client.get(f"/api/runs/{run_id}/log").text, "abcdefghij\n")
         self.assertEqual(self.client.get(f"/api/runs/{crafted}/log").text, "012")
         running = store.start_run(str(secret))
@@ -747,9 +751,9 @@ class StatusTest(ServerTestCase):
 
     def test_doctor(self):
         self.patch(doctor.shutil, "which", lambda name, **kwargs: None)
-        self.patch(server_app.schedule, "plist_path", lambda: self.home / "absent.plist")
-        self.patch(server_app.schedule, "autostart_plist_path", lambda: self.home / "absent-ui.plist")
-        self.patch(server_app.schedule.subprocess, "run",
+        self.patch(schedule, "plist_path", lambda: self.home / "absent.plist")
+        self.patch(schedule, "autostart_plist_path", lambda: self.home / "absent-ui.plist")
+        self.patch(schedule.subprocess, "run",
                    lambda cmd, **kwargs: SimpleNamespace(returncode=0, stdout="", stderr=""))
         self.assertEqual(self.client.get("/api/doctor").status_code, 404)
         checks = self.client.post("/api/doctor").json()["checks"]
@@ -766,8 +770,8 @@ class StatusTest(ServerTestCase):
     @unittest.skipIf(sys.platform == "win32", "launchd is macOS only")
     def test_schedule(self):
         plist = self.home / "app.cairn.daily.plist"
-        self.patch(server_app.schedule, "plist_path", lambda: plist)
-        self.patch(server_app.schedule.subprocess, "run",
+        self.patch(schedule, "plist_path", lambda: plist)
+        self.patch(schedule.subprocess, "run",
                    lambda cmd, **kwargs: SimpleNamespace(returncode=0, stdout="", stderr=""))
         body = self.client.get("/api/schedule").json()
         self.assertEqual(body, {"installed": False, "loaded": False, "plist": str(plist),
@@ -1000,7 +1004,7 @@ class WantedIconsTest(ServerTestCase):
             return {name: f"{key}.example" for key, names in wanted.items() if key != "beta"
                     for name in names}
         self.patch(logos, "fetch_wanted", fetch_wanted)
-        self.patch(server_app, "WANTED_WAIT", 0.01)
+        self.patch(status_routes, "WANTED_WAIT", 0.01)
 
     def _want(self, companies):
         return self.client.post("/api/icons/wanted", json={"companies": companies})
@@ -1127,7 +1131,7 @@ class OnboardTest(ServerTestCase):
         self.assertEqual(self.prompts, [])
 
     def test_an_oversized_body_is_413_without_reading_it(self):
-        self.patch(server_app, "MAX_RESUME_BYTES", 64)
+        self.patch(onboard_routes, "MAX_RESUME_BYTES", 64)
         response = self.client.post("/api/onboard/draft", content=b'{"text": "Sam"}',
                                     headers={"content-type": "application/json",
                                              "content-length": str(10**9)})
@@ -1233,20 +1237,20 @@ class GuardTest(ServerTestCase):
         """A client that opened the launch URL, and so holds the cookie, but sends no
         x-cairn header."""
         client = self.bare_client()
-        client.get(f"/?t={server_app.SESSION}")
+        client.get(f"/?t={security.SESSION}")
         return client
 
     def test_the_launch_url_trades_its_token_for_a_strict_http_only_cookie(self):
         for path in ("/", "/index.html"):
             with self.subTest(path):
-                response = self.bare_client().get(f"{path}?t={server_app.SESSION}",
+                response = self.bare_client().get(f"{path}?t={security.SESSION}",
                                                   follow_redirects=False)
                 self.assertEqual((response.status_code, response.headers["location"]),
                                  (303, "/"))
                 self.assertEqual(response.headers["set-cookie"],
-                                 f"cairn_session_80={server_app.SESSION}; HttpOnly; "
+                                 f"cairn_session_80={security.SESSION}; HttpOnly; "
                                  f"SameSite=Strict; Path=/")
-        page = self.bare_client().get(f"/?t={server_app.SESSION}")
+        page = self.bare_client().get(f"/?t={security.SESSION}")
         self.assertEqual(page.status_code, 200)
         self.assertIn('src="/app.js"', page.text)
 
@@ -1255,11 +1259,11 @@ class GuardTest(ServerTestCase):
         names = []
         for port in (8001, 8002):
             response = self.bare_client(f"{LOCAL}:{port}").get(
-                f"/?t={server_app.SESSION}", follow_redirects=False)
+                f"/?t={security.SESSION}", follow_redirects=False)
             names.append(response.headers["set-cookie"].partition("=")[0])
         self.assertEqual(names, ["cairn_session_8001", "cairn_session_8002"])
         client = self.bare_client(f"{LOCAL}:8002")
-        client.cookies.set("cairn_session_8001", server_app.SESSION)
+        client.cookies.set("cairn_session_8001", security.SESSION)
         self.assertEqual(client.get("/api/status").status_code, 403)
 
     def test_the_page_without_the_token_says_how_to_open_the_app(self):
@@ -1286,7 +1290,7 @@ class GuardTest(ServerTestCase):
         client.cookies.set("cairn_session_80", "guessed")
         self.assertEqual(client.get("/api/status").status_code, 403)
         client.cookies.clear()
-        client.get(f"/?t={server_app.SESSION}")
+        client.get(f"/?t={security.SESSION}")
         self.assertEqual(client.get("/api/status").status_code, 200)
 
     def test_a_change_needs_the_app_header(self):
@@ -1338,7 +1342,7 @@ class GuardTest(ServerTestCase):
             with self.subTest(host):
                 response = self.client.get("/api/status", headers={"Host": host})
                 self.assertEqual(response.status_code, 421)
-        response = self.bare_client("http://evil.example").get(f"/?t={server_app.SESSION}")
+        response = self.bare_client("http://evil.example").get(f"/?t={security.SESSION}")
         self.assertEqual(response.status_code, 421)
         self.assertNotIn("set-cookie", response.headers)
 
@@ -1356,15 +1360,15 @@ class GuardTest(ServerTestCase):
         for address in ("192.168.1.46", "10.0.0.2", "fe80::1", "testclient"):
             with self.subTest(address):
                 client = self.bare_client(client=(address, 50000))
-                client.cookies.set("cairn_session_80", server_app.SESSION)
-                for path in ("/api/status", f"/?t={server_app.SESSION}", "/app.js"):
+                client.cookies.set("cairn_session_80", security.SESSION)
+                for path in ("/api/status", f"/?t={security.SESSION}", "/app.js"):
                     response = client.get(path, headers={"x-cairn": "1"})
                     self.assertEqual((response.status_code, response.json()), (403, {
                         "error": "this server answers only requests from this computer"}))
         for address in ("::1", "::ffff:127.0.0.1", "127.0.0.2"):
             with self.subTest(address):
                 client = self.bare_client(client=(address, 50000))
-                client.get(f"/?t={server_app.SESSION}")
+                client.get(f"/?t={security.SESSION}")
                 self.assertEqual(client.get("/api/status").status_code, 200)
 
     def test_every_response_carries_the_security_headers(self):
@@ -1507,7 +1511,7 @@ class DroppedEventsTest(unittest.TestCase):
             is_disconnected=is_disconnected)
 
         async def frames():
-            return [frame async for frame in server_app._event_stream(request)]
+            return [frame async for frame in run_routes._event_stream(request)]
 
         got = asyncio.run(frames())
         self.assertEqual(got[0], ": keepalive\n\n")
@@ -1531,7 +1535,7 @@ class EventStreamTest(unittest.TestCase):
         self.addCleanup(setattr, srv, "should_exit", True)
         url = f"http://127.0.0.1:{port}/api/run/events"
         self.assertEqual(httpx.get(url, timeout=5).status_code, 403)
-        with httpx.stream("GET", url, headers=server_app.own_headers(url),
+        with httpx.stream("GET", url, headers=security.own_headers(url),
                           timeout=5) as response:
             self.assertEqual(response.headers["content-type"],
                              "text/event-stream; charset=utf-8")

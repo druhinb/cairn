@@ -19,7 +19,7 @@ from fastapi.testclient import TestClient
 
 from cairn import store
 from cairn.core import settings
-from cairn.server import app
+from cairn.server import app, security
 
 SUITE_HOME = tempfile.mkdtemp(prefix="cairn-tests-")
 atexit.register(shutil.rmtree, SUITE_HOME, ignore_errors=True)
@@ -60,6 +60,6 @@ def app_client(case, **kwargs):
     the launch URL buys."""
     client = case.enterContext(TestClient(
         app.create_app(), base_url="http://127.0.0.1", client=("127.0.0.1", 50000),
-        headers={app.APP_HEADER: "1"}, **kwargs))
-    client.get(f"/?{app.TOKEN_PARAM}={app.SESSION}")
+        headers={security.APP_HEADER: "1"}, **kwargs))
+    client.get(f"/?{security.TOKEN_PARAM}={security.SESSION}")
     return client
