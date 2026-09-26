@@ -27,6 +27,7 @@ const WHY_RULES = {
   "exclude": ["title_exclude", "Skip titles with"],
   "field exclude": ["title_exclude_field", "Skip field roles with"],
   "intern term": ["wanted_intern_terms", "Internship terms"],
+  "experience": ["max_years_required", "Most years a job can ask for"],
   "category": ["allowed_categories", "Categories"],
   "title keyword": ["title_keywords", "Title keywords"],
   "degree": ["degrees_held", "Degrees"],

@@ -71,6 +71,7 @@ class _Rules:
     intern_terms: tuple
     off_season_internships: bool
     wanted_terms: frozenset
+    max_years: int | None
 
 
 def relevance_rules(cfg):
@@ -84,6 +85,7 @@ def relevance_rules(cfg):
         intern_terms=tuple(k.lower() for k in cfg.intern_terms),
         off_season_internships=cfg.include_off_season_internships,
         wanted_terms=frozenset(t.casefold() for t in cfg.wanted_intern_terms),
+        max_years=cfg.max_years_required,
     )
 
 
@@ -103,12 +105,26 @@ def _internship_ok(job, title, rules):
     "Software Engineer Intern", and matching on the title hid 446 Fall 2026
     postings. A posting with no terms is the summer cohort and is dropped.
     """
-    if not any(t in title for t in rules.intern_terms):
+    if not _is_internship(title, rules):
         return True
     if not rules.off_season_internships:
         return False
     terms = {_fold(str(t).strip(" ")) for t in (job.get("terms") or [])}
     return bool(terms & rules.wanted_terms)
+
+
+def _is_internship(title, rules):
+    return any(t in title for t in rules.intern_terms)
+
+
+def is_internship(job):
+    return _is_internship(_fold(job.get("title") or ""), relevance_rules(settings.get()))
+
+
+def _experience_ok(job, title, rules):
+    years = job.get("years_required")
+    return (rules.max_years is None or years is None or years <= rules.max_years
+            or _is_internship(title, rules))
 
 
 def _category_ok(job, title, rules):
@@ -142,6 +158,7 @@ RULES = (
     ("exclude", _seniority_ok),
     ("field exclude", _field_ok),
     ("intern term", _internship_ok),
+    ("experience", _experience_ok),
     ("category", _category_ok),
     ("title keyword", _keyword_ok),
     ("degree", _degree_ok),

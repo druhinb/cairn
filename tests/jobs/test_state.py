@@ -7,8 +7,16 @@ from helpers import temp_home
 
 from cairn import store
 from cairn.core import paths, settings
-from cairn.jobs import fetch, logos, pipeline, rank
+from cairn.jobs import descriptions, fetch, logos, pipeline, rank
 from cairn.jobs.pipeline import RunOptions
+
+
+def setUpModule():
+    # a run reads each new posting's description for its years; the fixtures' urls
+    # are not real
+    offline = mock.patch.object(descriptions, "fetch_one", return_value=(None, None, "offline"))
+    offline.start()
+    unittest.addModuleCleanup(offline.stop)
 
 
 def _job(job_id, company="Acme"):

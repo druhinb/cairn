@@ -274,6 +274,7 @@ class WhyNothingTest(unittest.TestCase):
                 _row("field", "Mechanical Engineer"),
                 _row("senior-field", "Senior Mechanical Engineer"),
                 _row("intern", "Software Engineer Intern", terms=["Summer 2026"]),
+                _row("years", "Backend Engineer"),
                 _row("category", category="Marketing"),
                 _row("keyword", "Accountant"),
                 _row("degree", degrees=["PhD"]),
@@ -281,6 +282,7 @@ class WhyNothingTest(unittest.TestCase):
                 _row("stale", date_posted=NOW - 40 * DAY, date_updated=NOW - 40 * DAY),
                 _row("inactive", "Senior Engineer", active=False),
             ], "feed")
+            store.set_years_required({"years": 5})
             with store.connect() as conn:
                 conn.execute("UPDATE postings SET first_seen_at = '2000-01-01' "
                              "WHERE id = 'kept'")
@@ -288,7 +290,8 @@ class WhyNothingTest(unittest.TestCase):
                              "first_seen_at) VALUES ('ancient', 'Senior', 1, 1, '2000-01-01')")
             self.assertEqual(insights.why_nothing(settings.get(), 30), [
                 {"rule": "exclude", "dropped": 2}, {"rule": "field exclude", "dropped": 1},
-                {"rule": "intern term", "dropped": 1}, {"rule": "category", "dropped": 1},
+                {"rule": "intern term", "dropped": 1}, {"rule": "experience", "dropped": 1},
+                {"rule": "category", "dropped": 1},
                 {"rule": "title keyword", "dropped": 1}, {"rule": "degree", "dropped": 1},
                 {"rule": "location", "dropped": 1}, {"rule": "recent", "dropped": 1}])
 

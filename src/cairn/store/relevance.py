@@ -51,6 +51,13 @@ def _relevance_rule(cfg):
     else:
         add(f"NOT {internship}", values)
 
+    # rules recorded before this setting existed lack it
+    most_years = getattr(cfg, "max_years_required", None)
+    if most_years is not None:
+        internship, values = _any_substring(_TITLE, [k.lower() for k in cfg.intern_terms])
+        add(f"(postings.years_required IS NULL OR {internship} "
+            f"OR postings.years_required <= ?)", values + [most_years])
+
     categories = sorted(set(cfg.allowed_categories))
     add(f"(coalesce(postings.category, '') = '' "
         f"OR postings.category IN ({_marks(categories)}))", categories)
@@ -73,7 +80,7 @@ def _relevance_rule(cfg):
 _RELEVANCE_SETTINGS = ("title_exclude", "title_exclude_field", "intern_terms",
                        "wanted_intern_terms", "include_off_season_internships",
                        "allowed_categories", "title_keywords", "degrees_held",
-                       "location_allow")
+                       "location_allow", "max_years_required")
 
 
 def _relevance_rules(cfg):

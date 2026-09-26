@@ -90,6 +90,26 @@ def upsert_postings(rows, source):
     return stored
 
 
+def set_years_required(years):
+    """Store {posting id: years or None} as read from each posting's description."""
+    conn = connect()
+    with conn:
+        conn.executemany("UPDATE postings SET years_required = ?, years_read_at = ? "
+                         "WHERE id = ?",
+                         [(n, db.now(), posting_id) for posting_id, n in years.items()])
+        _flag_relevance(conn, "id IN (SELECT value FROM json_each(?))", [json.dumps(list(years))])
+
+
+def ranked_without_years(limit):
+    """Up to limit relevant, active postings with a score whose description was never
+    read for its years, in the raw feed shape."""
+    rows = connect().execute(
+        "SELECT * FROM postings WHERE relevant = 1 AND active = 1 AND visible = 1 "
+        "AND years_read_at IS NULL AND id IN (SELECT posting_id FROM scores) "
+        "ORDER BY coalesce(posted_at, 0) DESC LIMIT ?", (limit,)).fetchall()
+    return [_posting(row) for row in rows]
+
+
 def source_ids(source):
     return {row[0] for row in connect().execute("SELECT id FROM postings WHERE source = ?",
                                                 (source,))}

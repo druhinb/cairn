@@ -27,6 +27,7 @@ const BUILT_IN_OPTIONS = { roles: Object.keys(ROLE_LABELS),
   work_authorization: ["US citizen", "F-1 OPT", "needs sponsorship", "unknown"] };
 const GRADUATION_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const DEFAULT_GRADUATION_MONTH = "06";
+const DEFAULT_MAX_YEARS = 2;
 const READ_LINE = /^\[setup\] read (\d+) words/;
 const SLOW_DRAFT_SECONDS = 60;
 // long enough to see the draft pass its check before Review replaces the screen
@@ -47,6 +48,15 @@ function readGraduation(input) {
   const year = Number(match[1]);
   if (year < 2000 || year > 2100) return { error: "Enter a year from 2000 to 2100" };
   return { year };
+}
+
+/** A 0-50 number box; an empty one reports null. */
+function yearsInput(id, value, label, onChange) {
+  return h("input", { type: "number", class: "input input-num", id, min: "0", max: "50", step: "1",
+    value: value ?? "", "aria-label": label, oninput: (event) => {
+      const n = event.target.valueAsNumber;
+      onChange(Number.isInteger(n) && n >= 0 && n <= 50 ? n : null);
+    } });
 }
 
 function sizeText(bytes) {
@@ -360,6 +370,8 @@ class Setup {
       locations: either(suggestions.locations, allow.filter((place) => !isRemote(place))),
       remote_ok: allow.some(isRemote),
       graduation_year: year,
+      experience_years: current?.experience_years ?? 0,
+      max_years_required: current ? current.max_years_required : DEFAULT_MAX_YEARS,
       degrees_held: either(suggestions.degrees_held, current?.degrees_held),
       internship_terms: either(suggestions.internship_terms, current?.wanted_intern_terms),
       work_authorization: suggestions.work_authorization || "unknown",
@@ -571,6 +583,14 @@ class Setup {
       field("Work authorization", "Cairn weighs this when it ranks jobs.", auth, "pref-auth"),
       field("Graduation month", "Cairn flags jobs that start before you graduate.",
         h("div", { class: "field-stack" }, month, monthError), "pref-month"),
+      field("Experience", "For full-time jobs. Cairn reads each job's description and hides the ones asking for more years. Leave the second box empty to show them all.",
+        h("div", { class: "years-row" },
+          "I have", yearsInput("pref-years", p.experience_years, "Years of full-time experience you have",
+            (n) => { p.experience_years = n ?? 0; }),
+          "years of full-time experience. Show jobs asking for up to",
+          yearsInput("pref-max-years", p.max_years_required, "Most years a job can ask for",
+            (n) => { p.max_years_required = n; }),
+          "years."), "pref-years"),
       field("Degrees", "Cairn hides jobs that accept none of these degrees.",
         tagInput(p.degrees_held, { id: "pref-degrees", placeholder: "Bachelor's, Master's…", onChange: (tags) => { p.degrees_held = tags; } }), "pref-degrees"),
       field("Internship terms", "Terms you can intern in, such as “Fall 2026”. Leave empty to skip internships.",

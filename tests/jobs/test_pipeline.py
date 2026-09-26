@@ -27,6 +27,14 @@ with pipeline.run_lock():
 """
 
 
+def setUpModule():
+    # a run reads each new posting's description for its years; the fixtures' urls
+    # are not real
+    offline = mock.patch.object(descriptions, "fetch_one", return_value=(None, None, "offline"))
+    offline.start()
+    unittest.addModuleCleanup(offline.stop)
+
+
 def _job(job_id):
     return {"id": job_id, "company_name": "Acme", "title": "Software Engineer, New Grad",
             "category": "Software", "locations": ["Seattle, WA"], "active": True,

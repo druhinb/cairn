@@ -228,3 +228,12 @@
 .setup-card .step + .step::before {
   width: 16px;
 }
+
+.years-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: var(--text-sm);
+}

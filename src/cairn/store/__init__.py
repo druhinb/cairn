@@ -49,9 +49,11 @@ from cairn.store.postings import (
     get_posting,
     links_to_check,
     mark_inactive_missing,
+    ranked_without_years,
     rename_sources,
     resolve,
     save_link_checks,
+    set_years_required,
     source_ids,
     upsert_postings,
 )

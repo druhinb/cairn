@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 
 from cairn import store, tracking
 from cairn.core import events, locks, paths, settings
-from cairn.jobs import descriptions, fetch, rank
+from cairn.jobs import descriptions, experience, fetch, rank
 from cairn.tracking import applications
 
 
@@ -74,6 +74,7 @@ def check():
     """
     with run_lock():
         new, fetched = fetch.fetch_watchlist()
+        new = experience.within_limit(new)
         results = _ranked(new, run_id=None)[0] if new else []
     return results, {"fetched": fetched, "new": len(new), "ranked": len(results)}
 
@@ -244,7 +245,8 @@ def _pipeline(run_id, opts):
                          elapsed=time.monotonic() - started)
 
     with _phase("rank"):
-        results, unranked = _ranked(new, run_id)
+        results, unranked = _ranked(experience.within_limit(new), run_id)
+        experience.read_ranked()
     store.claim_check_scores(run_id)
     if opts.first_run:
         fetch.fetch_icons_later()

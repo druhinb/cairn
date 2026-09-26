@@ -3,7 +3,7 @@ from pathlib import Path
 
 from cairn.store.keys import _GROUP_COLUMNS, _assign_groups, url_key
 
-SCHEMA_VERSION = 13
+SCHEMA_VERSION = 14
 
 # pipeline order; a posting with no applications row has no status, and `passed`
 # keeps it out of the default jobs list
@@ -137,6 +137,10 @@ CREATE TABLE IF NOT EXISTS postings (
     -- open or closed from the last apply-link check, NULL before one decided
     link_status TEXT,
     link_checked_at TEXT,
+    -- the fewest years of experience the description asks for, NULL when it states
+    -- none; years_read_at is set once the description was read for it
+    years_required INTEGER,
+    years_read_at TEXT,
     -- 1 when the posting passes the relevance rule, active and visible aside, under
     -- the settings meta's relevance_rules records; see relevant_query()
     relevant INTEGER
@@ -329,6 +333,13 @@ def _add_found_at(conn):
         WHERE first_read.source = postings.source AND postings.first_seen_at > first_read.until""")
 
 
+def _add_years(conn):
+    present = {row["name"] for row in conn.execute("PRAGMA table_info(postings)")}
+    for column, kind in (("years_required", "INTEGER"), ("years_read_at", "TEXT")):
+        if column not in present:
+            conn.execute(f"ALTER TABLE postings ADD COLUMN {column} {kind}")
+
+
 def _add_relevant(conn):
     # a postings table created by this connect() already has the column
     present = {row["name"] for row in conn.execute("PRAGMA table_info(postings)")}
@@ -366,6 +377,8 @@ _MIGRATIONS = {
     12: (_add_relevant,),
     # the time a posting appeared, kept apart from the backlog a source's first read stored
     13: (_add_found_at,),
+    # the years of experience a full-time posting's description asks for
+    14: (_add_years,),
 }
 
 

@@ -24,6 +24,8 @@ SETTING_FOR_PREF = {
     "degrees_held": "degrees_held",
     "internship_terms": "wanted_intern_terms",
     "ntfy_topic": "notify_ntfy_topic",
+    "experience_years": "experience_years",
+    "max_years_required": "max_years_required",
 }
 
 PREF_SHAPES = {
@@ -38,6 +40,9 @@ PREF_SHAPES = {
     "calibre_anchors": (lambda v: _str_list(v) and len(v) <= MAX_ANCHORS,
                         f"a list of up to {MAX_ANCHORS} strings"),
     "ntfy_topic": (lambda v: isinstance(v, str), "a string"),
+    "experience_years": (lambda v: type(v) is int and 0 <= v <= 50, "a whole number from 0 to 50"),
+    "max_years_required": (lambda v: v is None or (type(v) is int and 0 <= v <= 50),
+                           "a whole number from 0 to 50, or null"),
     "watchlist": (_str_list, "a list of strings"),
     "starter_watchlists": (lambda v: _str_list(v) and set(v) <= set(STARTERS),
                            f"a list drawn from {', '.join(STARTERS)}"),

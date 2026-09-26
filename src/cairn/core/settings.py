@@ -102,6 +102,12 @@ class Settings:
     # does. None disables it.
     graduation_year: int | None = None
 
+    # The ranker weighs a posting's stated years against experience_years. A
+    # full-time posting whose description asks for more than max_years_required is
+    # left out; None keeps them all.
+    experience_years: int = 0
+    max_years_required: int | None = 2
+
     # A posting's `degrees` are the ones it accepts, so omitting yours excludes you.
     # Empty disables the check.
     degrees_held: list[str] = field(default_factory=list)
@@ -238,6 +244,8 @@ _RANGES = {
     "fit_threshold": (0, 100),
     "tier_floor": (0, 100),
     "recent_days": (1, 365),
+    "experience_years": (0, 50),
+    "max_years_required": (0, 50),
     "rank_batch_size": (1, 100),
     "rank_retries": (0, 5),
     "model_concurrency": (1, 8),

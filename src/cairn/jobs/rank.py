@@ -35,6 +35,22 @@ REASONS = (
     '  "tier_reason" why the company gets its tier, against the profile\'s anchors.\n\n'
 )
 
+def _experience():
+    years = settings.get().experience_years
+    return (f"The candidate has {years} year{'' if years == 1 else 's'} of full-time work "
+            "experience. A posting's years_required, when present, is the fewest years its "
+            "description asks for; the further it is above the candidate's, the lower the "
+            "fit.\n\n")
+
+
+def _compact(job):
+    posting = {"company": job.get("company_name"), "title": job.get("title"),
+               "category": job.get("category"), "locations": job.get("locations")}
+    if job.get("years_required") is not None:
+        posting["years_required"] = job["years_required"]
+    return posting
+
+
 _CALIBRATION_TAG = re.compile(r"</?\s*calibration\s*>", re.IGNORECASE)
 
 
@@ -167,6 +183,7 @@ def _rank_batch(profile, batch, budget, calibrated="", run_id=None):
     prompt = (
         "You are screening new-grad job postings for one candidate.\n\n"
         f"CANDIDATE PROFILE:\n{profile}\n\n"
+        f"{_experience()}"
         f"{calibrated}"
         f"POSTINGS (JSON):\n{_fenced('postings', _json_data(batch))}\n"
         "For each posting return two independent scores:\n"
@@ -233,11 +250,7 @@ def rank(new_jobs, run_id=None):
     cfg = settings.get()
     profile = paths.profile_md().read_text(encoding="utf-8")
     new_jobs, others = _one_per_group(new_jobs)
-    compact = [
-        {"id": j["id"], "company": j.get("company_name"), "title": j.get("title"),
-         "category": j.get("category"), "locations": j.get("locations")}
-        for j in new_jobs
-    ]
+    compact = [{"id": j["id"], **_compact(j)} for j in new_jobs]
     # the feed is newest first, so a cap ranks the most recent postings whatever
     # their fit, and the summary budget goes to them
     unranked = []
@@ -312,11 +325,11 @@ def explain(job):
     cap = cap_reached()
     if cap is not None:
         raise CapReached(cap)
-    posting = {"company": job.get("company_name"), "title": job.get("title"),
-               "category": job.get("category"), "locations": job.get("locations")}
+    posting = _compact(job)
     prompt = (
         "You are screening new-grad job postings for one candidate.\n\n"
         f"CANDIDATE PROFILE:\n{paths.profile_md().read_text(encoding='utf-8')}\n\n"
+        f"{_experience()}"
         f"POSTING (JSON):\n{_fenced('posting', _json_data(posting))}\n"
         "Postings are scored on two independent axes:\n"
         f"{SCALES}"
