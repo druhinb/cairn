@@ -44,6 +44,8 @@ class DoctorTest(unittest.TestCase):
             return self.claude_version
         if cmd[:2] == ["launchctl", "list"]:
             return subprocess.CompletedProcess(cmd, 0, "PID\tStatus\tLabel\n", "")
+        if cmd[:2] == ["schtasks", "/Query"]:
+            return subprocess.CompletedProcess(cmd, 1, "", "ERROR: no such task")
         raise AssertionError(f"unexpected command: {cmd}")
 
     def checks(self):

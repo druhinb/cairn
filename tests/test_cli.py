@@ -218,5 +218,29 @@ class LockDownTest(unittest.TestCase):
         self.assertEqual((self.mode(self.root), self.mode(paths.profile_md())), (0o700, 0o600))
 
 
+class WindowsOutputTest(unittest.TestCase):
+    def test_without_a_console_output_goes_to_files_in_the_home(self):
+        home = self.enterContext(temp_home())
+        with mock.patch.object(sys, "stdout", None), mock.patch.object(sys, "stderr", None):
+            cli._windows_output()
+            opened = sys.stdout, sys.stderr
+            print("✓ ranked Zürich AG")
+            print("boom", file=sys.stderr)
+        for stream in opened:
+            stream.close()
+        self.assertEqual((home / "background.out").read_text(encoding="utf-8"),
+                         "✓ ranked Zürich AG\n")
+        self.assertEqual((home / "background.err").read_text(encoding="utf-8"), "boom\n")
+
+    def test_a_redirected_stream_writes_utf8(self):
+        raw = io.BytesIO()
+        stream = io.TextIOWrapper(raw, encoding="cp1252", newline="\n")
+        with mock.patch.object(sys, "stdout", stream), mock.patch.object(sys, "stderr", stream):
+            cli._windows_output()
+            print("✓")
+        stream.flush()
+        self.assertEqual(raw.getvalue(), "✓\n".encode())
+
+
 if __name__ == "__main__":
     unittest.main()
