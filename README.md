@@ -114,7 +114,10 @@ is how many AI requests Cairn made in the last 30 days.
 
 **Jobs** lists every posting that matches your preferences, best first. Turn off
 *Matches my preferences* to see the whole feed. Postings posted more than
-*Recent days* ago stay out of both unless you gave them a status. Filters
+*Recent days* ago stay out of both unless you gave them a status. Postings with
+a fit under your fit threshold are hidden too; *Show them*, beside the match
+count, brings them back. A role one company lists in several cities is one row,
+and its details link to the other places. Filters
 narrow the list by fit, company score, source, category, location, age and
 status. *Hide passed* is on by default. Search looks at the company, title,
 requirements, location, category and internship term, so *Winter 2027* lists the

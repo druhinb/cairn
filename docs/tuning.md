@@ -33,6 +33,8 @@ feeds.
 To widen the net, add to `title_keywords`. To drop a kind of junk you keep seeing,
 add to `title_exclude_field`. `location_allow` narrows by location substring
 (`["CA", "New York", "Remote"]`) and is empty, keeping every location, by default.
+`us_only` (off) drops postings whose every location names a place outside the
+US; a posting that lists no place, or only Remote or Hybrid, stays.
 
 `recent_days` (21, 1 to 365) ignores postings posted before that window. A
 posting with no posted date counts from its last update.
