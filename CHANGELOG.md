@@ -6,7 +6,19 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
-## [0.0.1] — 2026-09-25
+## [0.0.2] — 2026-09-26
+
+- Each release now includes the app for Apple silicon Macs as
+  `Cairn-<version>.zip`.
+- One spelling per city: NYC, New York City and New York, NY all count as New
+  York, NY, and SF and LA work the same way.
+- The Skills to close card on Today keeps its counts inside the card.
+- On Python 3.11, an interview set in the hour the clocks skip in spring shows at
+  the right time in the calendar export.
+- Guides for contributing and for reporting security problems, and checks that
+  run on every pull request.
+
+## 0.0.1 — 2026-09-25
 
 The first release.
 
@@ -17,8 +29,6 @@ The first release.
   same job listed in several places shows once.
 - Filters for role, location, degree, graduation date, internship term,
   sponsorship and pay, saved as your preferences.
-- One spelling per city: NYC, New York City and New York, NY all count as New
-  York, NY, and SF and LA work the same way.
 - Each new posting gets a fit score and a company score with a short reason, from
   the AI provider you pick: Claude Code, the Anthropic API, Google Gemini, Groq,
   Mistral, OpenRouter, Ollama or any OpenAI-compatible service. Agree or Too high
@@ -40,4 +50,4 @@ The first release.
 - All data stays in `~/.cairn` on your Mac. The app only answers the window it
   opened.
 
-[0.0.1]: https://github.com/druhinb/cairn/releases/tag/v0.0.1
+[0.0.2]: https://github.com/druhinb/cairn/releases/tag/v0.0.2

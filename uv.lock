@@ -52,6 +52,38 @@ wheels = [
 ]
 
 [[package]]
+name = "cairn-jobs"
+version = "0.0.2"
+source = { editable = "." }
+dependencies = [
+    { name = "fastapi" },
+    { name = "python-multipart" },
+    { name = "pywebview" },
+    { name = "rich" },
+    { name = "uvicorn" },
+]
+
+[package.optional-dependencies]
+app = [
+    { name = "pyinstaller" },
+]
+test = [
+    { name = "httpx" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "httpx", marker = "extra == 'test'", specifier = ">=0.27" },
+    { name = "pyinstaller", marker = "extra == 'app'", specifier = ">=6.16,<7" },
+    { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "pywebview", specifier = ">=5,<7" },
+    { name = "rich", specifier = ">=13" },
+    { name = "uvicorn", specifier = ">=0.30" },
+]
+provides-extras = ["test", "app"]
+
+[[package]]
 name = "certifi"
 version = "2026.7.22"
 source = { registry = "https://pypi.org/simple" }
@@ -180,38 +212,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/f5/08/8eea9d4b8302028f3
 wheels = [
     { url = "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl", hash = "sha256:ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c", size = 69583, upload-time = "2026-09-17T14:11:03.168Z" },
 ]
-
-[[package]]
-name = "cairn-jobs"
-version = "0.0.1"
-source = { editable = "." }
-dependencies = [
-    { name = "fastapi" },
-    { name = "python-multipart" },
-    { name = "pywebview" },
-    { name = "rich" },
-    { name = "uvicorn" },
-]
-
-[package.optional-dependencies]
-app = [
-    { name = "pyinstaller" },
-]
-test = [
-    { name = "httpx" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "fastapi", specifier = ">=0.115" },
-    { name = "httpx", marker = "extra == 'test'", specifier = ">=0.27" },
-    { name = "pyinstaller", marker = "extra == 'app'", specifier = ">=6.16,<7" },
-    { name = "python-multipart", specifier = ">=0.0.9" },
-    { name = "pywebview", specifier = ">=5,<7" },
-    { name = "rich", specifier = ">=13" },
-    { name = "uvicorn", specifier = ">=0.30" },
-]
-provides-extras = ["test", "app"]
 
 [[package]]
 name = "macholib"
