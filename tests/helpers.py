@@ -31,10 +31,11 @@ def temp_home(**overrides):
     """Run a test against its own empty CAIRN_HOME with the default settings.
 
     Yields the home directory. Keyword arguments replace individual settings for the
-    duration. On exit the suite baseline comes back: the suite home and a fresh
-    `settings.defaults()`, so nothing is ever loaded from disk. Each call gets its
-    own empty database.
+    duration. On exit the home and settings from before come back, so a nested call
+    hands its database back to the outer one and nothing is ever loaded from disk.
+    Each call gets its own empty database.
     """
+    outer_home, outer_settings = os.environ["CAIRN_HOME"], settings.base()
     with tempfile.TemporaryDirectory() as home:
         try:
             os.environ["CAIRN_HOME"] = home
@@ -42,8 +43,8 @@ def temp_home(**overrides):
             yield Path(home)
         finally:
             store.close()
-            os.environ["CAIRN_HOME"] = SUITE_HOME
-            settings.use(settings.defaults())
+            os.environ["CAIRN_HOME"] = outer_home
+            settings.use(outer_settings)
 
 
 def app_client(case, **kwargs):

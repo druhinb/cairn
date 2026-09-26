@@ -1518,28 +1518,29 @@ class EventStreamTest(unittest.TestCase):
     """The stream never ends, which TestClient cannot read, so a real server runs."""
 
     def test_streams_emitted_events(self):
-        with temp_home():
-            self.baseline = len(events._subscribers)
-            port = server.pick_port()
-            srv, thread = server.start_in_thread("127.0.0.1", port)
-            self.addCleanup(thread.join, 10)
-            self.addCleanup(setattr, srv, "should_exit", True)
-            url = f"http://127.0.0.1:{port}/api/run/events"
-            self.assertEqual(httpx.get(url, timeout=5).status_code, 403)
-            with httpx.stream("GET", url, headers=server_app.own_headers(url),
-                              timeout=5) as response:
-                self.assertEqual(response.headers["content-type"],
-                                 "text/event-stream; charset=utf-8")
-                lines = response.iter_lines()
-                self.assertEqual(next(lines), ": keepalive")
-                self.assertEqual(next(lines), "")
-                events.emit("info", text="hello")
-                received = [next(lines) for _ in range(3)]
-            self.assertEqual(received[0], "event: info")
-            self.assertTrue(received[1].startswith("data: {"))
-            self.assertIn('"text": "hello"', received[1])
-            self.assertEqual(received[2], "")
-            self.assertTrue(self.unsubscribed_within(5))
+        # entered before the server starts, so the server stops before the home goes
+        self.enterContext(temp_home())
+        self.baseline = len(events._subscribers)
+        port = server.pick_port()
+        srv, thread = server.start_in_thread("127.0.0.1", port)
+        self.addCleanup(thread.join, 10)
+        self.addCleanup(setattr, srv, "should_exit", True)
+        url = f"http://127.0.0.1:{port}/api/run/events"
+        self.assertEqual(httpx.get(url, timeout=5).status_code, 403)
+        with httpx.stream("GET", url, headers=server_app.own_headers(url),
+                          timeout=5) as response:
+            self.assertEqual(response.headers["content-type"],
+                             "text/event-stream; charset=utf-8")
+            lines = response.iter_lines()
+            self.assertEqual(next(lines), ": keepalive")
+            self.assertEqual(next(lines), "")
+            events.emit("info", text="hello")
+            received = [next(lines) for _ in range(3)]
+        self.assertEqual(received[0], "event: info")
+        self.assertTrue(received[1].startswith("data: {"))
+        self.assertIn('"text": "hello"', received[1])
+        self.assertEqual(received[2], "")
+        self.assertTrue(self.unsubscribed_within(5))
 
     def unsubscribed_within(self, seconds):
         deadline = time.monotonic() + seconds
