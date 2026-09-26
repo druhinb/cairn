@@ -97,6 +97,15 @@ function dayText(isoDay) {
  * @param {{selected?: boolean, unread?: boolean}} [options]
  * @returns {HTMLElement}
  */
+/** The posting's age, or how long ago Cairn found it when that was in the last day. */
+function rowAge(job) {
+  const found = fmt.since(job.first_seen_at);
+  const posted = fmt.full(job.posted_at);
+  if (!found) return h("span", { class: "row-age mono", text: fmt.age(job.posted_at), title: posted });
+  return h("span", { class: "row-age row-found mono", text: found,
+    title: `Cairn found this ${found} ago${posted ? `. Posted ${posted}` : ""}` });
+}
+
 export function jobRow(job, { selected = false, unread = false } = {}) {
   const repeat = job.applied_before && !SENT.has(job.status);
   const loc = locationText(job.locations);
@@ -134,7 +143,7 @@ export function jobRow(job, { selected = false, unread = false } = {}) {
       { label: "tier", belowFloor: Boolean(job.below_floor), selected }),
     h("div", { class: "row-tail" },
       h("span", { class: "row-status" }, job.status && statusPill(job.status)),
-      h("span", { class: "row-age mono", text: fmt.age(job.posted_at), title: fmt.full(job.posted_at) }),
+      rowAge(job),
       h("div", { class: "row-actions" },
         action("external", "Open posting (Enter)", "open"),
         action("saved", "Save (S)", "saved"),

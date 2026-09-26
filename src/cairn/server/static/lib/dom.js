@@ -111,6 +111,13 @@ export const fmt = {
     if (days < 56) return `${Math.floor(days / 7)}w`;
     return MONTH_DAY.format(toDate(value));
   },
+  /** "12m" or "5h" for a time in the last day, else null. */
+  since(value) {
+    const date = toDate(value);
+    const minutes = date ? Math.floor((Date.now() - date.getTime()) / 60000) : -1;
+    if (minutes < 0 || minutes >= 24 * 60) return null;
+    return minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h`;
+  },
   date(value) {
     const date = toDate(value);
     return date ? date.toLocaleDateString(undefined,

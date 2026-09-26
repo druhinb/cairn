@@ -1,4 +1,5 @@
 """The jobs list: search, sort, filters, and facet counts."""
+import datetime
 import time
 
 from cairn.core import settings
@@ -97,8 +98,8 @@ def _status_clauses(status, hide_passed, column="applications.status"):
 
 def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
              hide_passed=True, category=None, location=None, source=None,
-             posted_within_days=None, active_only=True, run_id=None, sponsorship=None,
-             salary_min=None):
+             posted_within_days=None, found_within_hours=None, active_only=True, run_id=None,
+             sponsorship=None, salary_min=None):
     """(where, params) over _FILTERED for search's filters."""
     # active first: SQLite tests the terms in order, and the same test after the
     # relevance rule's substring matches made a search four times slower
@@ -131,18 +132,23 @@ def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=Non
     if posted_within_days is not None:
         clauses.append(f"{_RECENCY} >= ?")
         params.append(time.time() - posted_within_days * 86400)
+    if found_within_hours is not None:
+        found_since = datetime.datetime.now() - datetime.timedelta(hours=found_within_hours)
+        clauses.append("postings.first_seen_at >= ?")
+        params.append(found_since.isoformat(timespec="seconds"))
     return " AND ".join(clauses) or "1", params
 
 
 def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
            hide_passed=True, category=None, location=None, source=None,
-           posted_within_days=None, active_only=True, run_id=None, sponsorship=None,
-           salary_min=None, sort="score", limit=50, offset=0):
+           posted_within_days=None, found_within_hours=None, active_only=True, run_id=None,
+           sponsorship=None, salary_min=None, sort="score", limit=50, offset=0):
     """(rows, total): one page of matching postings and the count across all pages.
 
     status lists STATUSES entries, and "none" for postings that have no status.
     hide_passed drops `passed` postings unless status names that status. category
     and source take one value or a list; run_id keeps the postings scored in that run.
+    found_within_hours keeps the postings Cairn first stored that recently.
     sponsorship is "yes" or "no". salary_min is a yearly USD amount that the stated
     maximum, hourly pay scaled by 2080 hours, must reach; pay stated in another
     currency counts as unstated, here and for sort="salary".
@@ -155,7 +161,8 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
     where, params = _filters(
         q=q, relevant_only=relevant_only, fit_min=fit_min, tier_min=tier_min,
         status=status, hide_passed=hide_passed, category=category, location=location,
-        source=source, posted_within_days=posted_within_days, active_only=active_only,
+        source=source, posted_within_days=posted_within_days,
+        found_within_hours=found_within_hours, active_only=active_only,
         run_id=run_id, sponsorship=sponsorship, salary_min=salary_min)
     chosen = _representatives(where)
     conn = connect()

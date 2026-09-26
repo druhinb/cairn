@@ -336,6 +336,11 @@
   text-align: right;
 }
 
+.row-found {
+  color: var(--good);
+  font-weight: 500;
+}
+
 /* the hover actions sit over the status and age, clear of the meters */
 .row-tail {
   position: relative;

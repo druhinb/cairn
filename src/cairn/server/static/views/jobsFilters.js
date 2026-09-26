@@ -8,13 +8,14 @@ const STATUSES = Object.keys(STATUS_LABELS);
 export const SORTS = [["score", "Best match"], ["newest", "Newest"], ["company", "Company"],
   ["updated", "Recently updated"], ["salary", "Pay"]];
 const POSTED = [[7, "7 days"], [14, "14 days"], [30, "30 days"]];
+export const FOUND = [[1, "Last hour"], [24, "Last 24 hours"], [72, "Last 3 days"]];
 const QUICK = { fit: [60, 70, 80], tier: [40, 55, 70] };
 const QUICK_PAY_K = [80, 100, 120, 150];
 const PAY_MAX = 10000000;
 const SPONSORSHIP = [[null, "Any"], ["yes", "Yes"], ["no", "No"]];
 
 export const DEFAULTS = { q: "", rel: true, fit: null, tier: null, pay: null, source: [], category: [],
-  sponsor: null, loc: "", posted: null, status: [], passed: false, sort: "score" };
+  sponsor: null, loc: "", posted: null, found: null, status: [], passed: false, sort: "score" };
 
 /** The filter state a hash's params describe; anything unrecognised is dropped. */
 export function readFilters(params) {
@@ -35,6 +36,7 @@ export function readFilters(params) {
     category: [...new Set(params.getAll("category").filter(Boolean))],
     loc: params.get("loc") || "",
     posted: int("posted", 1, 3650),
+    found: int("found", 1, 720),
     status: (params.get("status") || "").split(",")
       .filter((s) => s === "none" || STATUSES.includes(s)),
     passed: params.get("passed") === "1",
@@ -46,7 +48,7 @@ export function writeFilters(f) {
   const params = new URLSearchParams();
   if (f.q) params.set("q", f.q);
   if (!f.rel) params.set("rel", "0");
-  for (const key of ["fit", "tier", "pay", "posted"]) if (f[key] != null) params.set(key, String(f[key]));
+  for (const key of ["fit", "tier", "pay", "posted", "found"]) if (f[key] != null) params.set(key, String(f[key]));
   for (const key of ["source", "category"]) for (const value of f[key]) params.append(key, value);
   if (f.sponsor) params.set("sponsor", f.sponsor);
   if (f.loc) params.set("loc", f.loc);
@@ -219,6 +221,12 @@ export function postedPanel(list) {
   return radioPanel(list, "Posted within",
     [{ value: null, label: "Any time" }, ...POSTED.map(([value, label]) => ({ value, label }))],
     list.filters.posted, (posted) => pick(list, { posted }));
+}
+
+export function foundPanel(list) {
+  return radioPanel(list, "Cairn found it in the",
+    [{ value: null, label: "Any time" }, ...FOUND.map(([value, label]) => ({ value, label }))],
+    list.filters.found, (found) => pick(list, { found }));
 }
 
 export function statusPanel(list) {
