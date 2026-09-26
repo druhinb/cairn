@@ -3,6 +3,7 @@ routes behind them."""
 import dataclasses
 import datetime
 import os
+import sys
 import tempfile
 import time
 import unittest
@@ -289,6 +290,7 @@ class CalendarTest(unittest.TestCase):
         self.assertEqual(_unescape(event["DESCRIPTION"]),
                          "line one   tab  \nline two\n\nhttps://jobs.test/a")
 
+    @unittest.skipIf(sys.platform == "win32", "Windows has no time.tzset to switch zones")
     def test_local_times_across_dst_changes_convert_by_the_zone_rules(self):
         # tzset runs again once TZ is restored; cleanups run last in, first out
         self.addCleanup(time.tzset)

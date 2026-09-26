@@ -82,13 +82,13 @@ class OffTtyOutputTest(unittest.TestCase):
     def test_no_escape_bytes_when_stdout_is_not_a_tty(self):
         out = _run().stdout
         self.assertNotIn(b"\x1b", out)
-        self.assertNotIn(b"\r", out)
+        self.assertNotIn(b"\r", out.replace(b"\r\n", b"\n"))
 
     def test_force_color_does_not_reintroduce_escapes(self):
         """FORCE_COLOR makes rich's own is_terminal true; isatty must still win."""
         out = _run({"FORCE_COLOR": "1"}).stdout
         self.assertNotIn(b"\x1b", out)
-        self.assertNotIn(b"\r", out)
+        self.assertNotIn(b"\r", out.replace(b"\r\n", b"\n"))
 
     def test_markup_in_a_title_is_not_swallowed(self):
         out = _run().stdout
