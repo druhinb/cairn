@@ -1,0 +1,40 @@
+name: Bug report
+description: Something in Cairn doesn't work the way it should.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen again
+      description: The steps, one per line. Leave it empty if you don't know.
+      placeholder: |
+        1. Open Jobs
+        2. Filter by location
+        3. ...
+  - type: input
+    id: cairn-version
+    attributes:
+      label: Cairn version
+      description: The app shows it in Settings.
+    validations:
+      required: true
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      description: Apple menu › About This Mac.
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of cairn doctor
+      description: Optional. Run `cairn doctor` in Terminal and paste what it prints. Remove anything you'd rather keep private.
+      render: text
