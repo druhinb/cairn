@@ -12,8 +12,9 @@ This file lists every notable change to this project. It follows
 - Each row shows when the job was posted, with how long ago Cairn found it
   underneath. Postings from a source's first read have no found age.
 - The Found filter is gone.
-- Postings not posted or updated within Recent days no longer show in Jobs,
-  unless you saved, applied to or otherwise tracked them.
+- Postings posted more than Recent days ago no longer show in Jobs, unless
+  you saved, applied to or otherwise tracked them. A board editing its
+  listings no longer makes old postings count as new.
 - Search also looks at location, category and internship term, so Winter 2027
   lists the postings for that term.
 

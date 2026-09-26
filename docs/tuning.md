@@ -34,8 +34,8 @@ To widen the net, add to `title_keywords`. To drop a kind of junk you keep seein
 add to `title_exclude_field`. `location_allow` narrows by location substring
 (`["CA", "New York", "Remote"]`) and is empty, keeping every location, by default.
 
-`recent_days` (21, 1 to 365) ignores postings not posted or updated in that
-window.
+`recent_days` (21, 1 to 365) ignores postings posted before that window. A
+posting with no posted date counts from its last update.
 
 ### Internships
 

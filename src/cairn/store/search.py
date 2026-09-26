@@ -150,7 +150,7 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
     maximum, hourly pay scaled by 2080 hours, must reach; pay stated in another
     currency counts as unstated, here and for sort="salary".
 
-    Postings not posted or updated in the last recent_days stay out unless they have
+    Postings posted more than recent_days ago stay out unless they have
     a status. The postings of one group come back as a single row, the one _representatives
     picks, with also_on listing the others, and total counts groups. Status
     filters read the group's application, so a posting applied to through one

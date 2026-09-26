@@ -175,7 +175,7 @@ def why_nothing(cfg, days):
     dropped["recent"] = 0
     for job in store.active_postings_since(since.isoformat(timespec="seconds")):
         rule = fetch.dropped_by(job, rules)
-        if rule is None and max(job["date_posted"] or 0, job["date_updated"] or 0) < cutoff:
+        if rule is None and (job["date_posted"] or job["date_updated"] or 0) < cutoff:
             rule = "recent"
         if rule is not None:
             dropped[rule] += 1

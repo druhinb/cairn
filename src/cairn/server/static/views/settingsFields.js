@@ -41,7 +41,7 @@ export const SECTIONS = [
     { key: "intern_terms", label: "Internship words", type: "tags",
       help: "Words in a title that mark a posting as an internship." },
     { key: "recent_days", label: "Recent days", type: "number", unit: "days", min: 1,
-      help: "Cairn skips postings that haven't been posted or updated in this many days." },
+      help: "Cairn skips postings posted more than this many days ago." },
   ] },
   { id: "sources", title: "Sources" },
   { id: "icons", title: "Company icons", fields: [

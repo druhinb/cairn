@@ -16,7 +16,9 @@ _TITLE = "lower(coalesce(postings.title, ''))"
 # fetch._relevant joins the locations with a space before matching, so this does too
 _LOCATIONS = ("lower(coalesce((SELECT group_concat(value, ' ') "
               "FROM json_each(postings.locations)), ''))")
-_RECENCY = "max(coalesce(postings.posted_at, 0), coalesce(postings.updated_at, 0))"
+# a board bumps updated_at on every posting when it edits its listings, so the
+# update counts only for a posting with no posted date
+_RECENCY = "coalesce(postings.posted_at, postings.updated_at, 0)"
 
 
 def _any_substring(column, needles):

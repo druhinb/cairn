@@ -692,6 +692,7 @@ class NewPostingsTest(StoreTestCase):
         store.upsert_postings([
             _row("old", date_posted=NOW - 60 * DAY, date_updated=NOW - 60 * DAY),
             _row("bumped", date_posted=NOW - 60 * DAY, date_updated=NOW),
+            _row("undated", date_posted=None, date_updated=NOW),
             _row("older", date_posted=NOW - DAY),
             _row("newest", date_posted=NOW),
             _row("seen"),
@@ -699,7 +700,7 @@ class NewPostingsTest(StoreTestCase):
         ], "feed")
         store.mark_seen(["seen"])
         got = store.new_postings(settings.get(), 21)
-        self.assertEqual([j["id"] for j in got], ["newest", "older", "bumped"])
+        self.assertEqual([j["id"] for j in got], ["newest", "older", "undated"])
         self.assertEqual(got[0]["company_name"], "Acme")
 
 

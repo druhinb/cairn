@@ -116,7 +116,7 @@ class Settings:
     # ["CA", "New York", "Remote"]. Empty keeps every location.
     location_allow: list[str] = field(default_factory=list)
 
-    recent_days: int = 21            # only consider postings posted/updated this recently
+    recent_days: int = 21            # only consider postings posted this recently
     fit_threshold: int = 60          # 0-100; below this no summary and no mention in the push
     # each costs one page fetch and one description_model call
     max_summaries_per_run: int = 25
