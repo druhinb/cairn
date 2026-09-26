@@ -1,39 +1,68 @@
 # Cairn
 
-A job feed for new-grad and early-career engineers that runs on your Mac. Each run
-pulls postings from public GitHub feeds and from the job boards of companies you
-follow, drops the ones outside your preferences, and ranks the rest for fit and
-company tier. Cairn then summarises the requirements of the top matches,
-and the run pushes the day's picks to your phone. The app tracks each application
-from saved to offer.
+Cairn is a job feed for new-grad and early-career engineers. It runs on your Mac.
 
-It won't apply for you or scrape LinkedIn or Indeed. It needs no cloud service or
+Each day it collects new postings from public job lists and from the job boards of
+companies you follow. It hides the ones that don't match what you're looking for,
+scores the rest on how well they fit you and how strong the company is, and can
+send the best ones to your phone. It also tracks every application, from saved to offer.
+
+Cairn doesn't apply for you, and it doesn't scrape LinkedIn or Indeed. It needs no
 account, and everything stays in one folder on your Mac.
 
 ![Jobs](docs/screenshots/jobs.png)
 
-![Applications](docs/screenshots/applications.png)
+## What you need
 
-## Requirements
-
-- macOS 13 or later. The window and the daily schedule are macOS-only.
-- Python 3.11 or later. [uv](https://docs.astral.sh/uv/) installs both Python and
-  the app; get it with `brew install uv`.
-- [Claude Code](https://claude.com/claude-code), installed and logged in, with
-  `claude` on your `PATH`, or an API key for another provider (see
-  [AI providers](#ai-providers)).
-- `pdftotext`, if you want setup to read a PDF resume. `brew install poppler`
-  installs it.
+- A Mac with macOS 13 or later.
+- Something to score postings with. The default is
+  [Claude Code](https://claude.com/claude-code), installed and logged in. You can
+  pick another provider instead; see [AI providers](#ai-providers).
+- Optional: `pdftotext`, so setup can read a PDF resume. Install it with
+  `brew install poppler`. Without it, paste your resume text instead.
 
 ## Install
+
+### The app
+
+1. Download `Cairn-<version>.zip` from the
+   [latest release](https://github.com/druhinb/cairn/releases/latest).
+2. Unzip it and move Cairn into Applications.
+3. Open it. macOS will say it can't check the app for malicious software, because
+   Cairn isn't signed with an Apple developer certificate yet. Go to
+   System Settings › Privacy & Security, scroll down, and click Open Anyway.
+
+The app runs on Macs with Apple silicon. On an Intel Mac, use the command line
+install below.
+
+### The command line
+
+Install [uv](https://docs.astral.sh/uv/) with `brew install uv`, then:
 
 ```
 uv tool install git+https://github.com/druhinb/cairn
 ```
 
-or `pipx install git+https://github.com/druhinb/cairn`.
+`pipx install git+https://github.com/druhinb/cairn` works too. This needs Python
+3.11 or later; uv installs it for you. Then run `cairn ui` to open the app.
 
-Then:
+## Getting started
+
+The first time Cairn opens, setup walks you through three steps:
+
+1. Upload your resume. Cairn drafts a profile from it: the roles you want, where
+   you want to work, and which companies you rate highly.
+2. Check the profile and fix anything it got wrong.
+3. Answer a few questions: roles, locations, work authorization and graduation
+   date.
+
+Then the first search runs, and you can watch its progress. It scores the most
+recent postings only, and the rest of today's backlog counts as seen, so later runs
+only bring new postings.
+
+To run setup again, open Settings and click Redo setup.
+
+From the command line, the same steps are:
 
 ```
 cairn init --from-resume resume.pdf   # draft profile.md and config.toml
@@ -42,68 +71,91 @@ cairn seed                            # mark today's backlog seen
 cairn ui                              # open the app
 ```
 
-`init --from-resume` makes one call to your AI provider, then asks a few questions (roles,
-locations, work authorization, graduation date). `.txt` and `.md` resumes work too.
-To do the same in the app, run `cairn ui` first and follow the setup wizard.
-Plain `cairn init` writes example files for a made-up candidate to edit by
-hand. `seed` makes the first run rank only postings that appear after it, and
-`doctor` prints the fix for every failed check.
+`init --from-resume` makes one call to your AI provider, then asks the setup
+questions. `.txt` and `.md` resumes work too. Plain `cairn init` writes example
+files for a made-up candidate that you edit by hand. `seed` makes the first run
+score only postings that appear after it, and `doctor` prints the fix for every
+check that fails.
 
-### Updating
+## Updating
 
-When it opens, Cairn checks for a new version, at most once a day, and shows it
-in the sidebar and the menu bar. To update, run `uv tool upgrade cairn-jobs`, or `pipx upgrade cairn-jobs`
-if you installed with pipx. Your jobs, notes and settings stay as they are.
+When Cairn opens, it checks for a new version, at most once a day. A new version
+shows up in the sidebar and in the menu bar.
 
-## The app
+- The app: download the new zip from the release page and replace Cairn in
+  Applications.
+- The command line: run `uv tool upgrade cairn-jobs`, or `pipx upgrade cairn-jobs`
+  if you installed with pipx.
 
-`cairn ui` opens a window; `cairn ui --no-window` opens the same app in
-your browser. A sidebar holds the views and a run card, the middle pane lists
-postings, and the right pane shows the selected one.
+Your jobs, notes and settings stay as they are.
 
-**Jobs** lists every posting that matches your preferences, ranked by fit plus
-tier. Turn off *Matches my preferences* to see the whole feed. Filter chips narrow
-by fit, tier, source, category, location, posting age, and status; *Hide passed* is
-on by default. Search covers company, title, and requirements. Group by date or
-company, or sort by newest, company, or recently updated. Scores show as
-coloured meters and statuses as coloured pills. The detail pane shows both scores
-with the ranker's reason, the requirements summary (or a *Summarise requirements*
-button), a note that saves as you type, the status history, and the raw posting
-fields.
+## Using Cairn
 
-**Latest run** shows the day's picks, the postings the newest run ranked.
-**Saved** shows everything you saved.
+`cairn ui` opens Cairn in its own window, and `cairn ui --no-window` opens it in
+your browser. The sidebar lists the views and the current run. The middle pane
+lists postings, and the right pane shows the one you picked.
 
-**Applications** tracks each posting through saved → applied → interviewing →
-offer, or rejected or withdrawn. The board view has a column per stage, with
-rejected and withdrawn in one Closed column; drag a card, or focus it and press
-`[` or `]`, to move it. The list view is a sortable table. Passing on a posting
-hides it here and in Jobs; the Status filter still finds it.
+**Today** is where Cairn opens. It lists today's picks, with a button that opens
+the next one, and four cards: how many postings the latest run scored,
+applications that have waited two weeks without a reply, this week's interviews,
+and the skills your best matches ask for that your profile lacks. Under the cards
+is how many AI requests Cairn made in the last 30 days.
 
-**Runs** starts a run (with an optional limit, fit threshold, or dry run), shows
-its phases, counters, and live log while it runs, and lists past runs; click one
-to read its log.
+![Today](docs/screenshots/today.png)
 
-**Settings** edits every setting in `config.toml` with inline validation, and
-`profile.md` in an editor that highlights the `TODO:` lines left to fill. It also
-manages the feeds and the watchlist, installs or removes the daily schedule, and
-runs the doctor checks.
+**Jobs** lists every posting that matches your preferences, best first. Turn off
+*Matches my preferences* to see the whole feed. Filters narrow it by fit, company
+score, source, category, location, age and status. *Hide passed* is on by default.
+Search looks at the company, title and requirements. You can group by date or
+company, or sort by newest, company or recently updated.
 
-**Setup** opens on first launch. You upload a resume, check the profile Cairn
-drafts from it, and answer a few questions. *Redo setup* in Settings opens it again.
+Click a posting to see both scores and the reason for each, a summary of its
+requirements (or a *Summarize requirements* button), a note that saves as you
+type, its status history and the original posting details.
 
-**Command palette.** `⌘K` opens a palette of every action, grouped by view, with
-recent actions first: go to a view, pin the current filters, switch theme, fetch
-company icons, run now, open a Settings section, or search Jobs for what you
-typed. The sidebar footer switches between Auto, Light, Dark and Contrast themes
-(Auto follows your system's contrast setting) and between comfortable and compact
-rows. A five-step tour shows the main controls on your first visit; *Take the
-tour* in the palette or the shortcuts panel replays it. In Jobs, Shift+click or
-`⇧J`/`⇧K` selects several postings, and `x`, `s` or `a` then acts on all of them
-with one Undo. After you open a posting and come back within half an hour, the
-detail pane asks whether you applied. Applications has *Export CSV* and *Import
-CSV*: the import shows a preview first, matches rows to postings by id or by url,
-and lists the rows it could not match.
+**Latest run** shows the postings the newest run scored. **Saved** shows everything
+you saved.
+
+**Applications** follows each application from saved to applied, interviewing and
+offer, or rejected or withdrawn. The board has a column for each stage, with
+rejected and withdrawn together under Closed. Drag a card to move it, or select it
+and press `[` or `]`. The list view is a table you can sort. Export CSV saves your
+applications, and Import CSV shows a preview first, matches rows to postings by id
+or link, and lists the rows it couldn't match.
+
+![Applications](docs/screenshots/applications.png)
+
+**Insights** has the full list of missing skills, how far your applications got,
+how fast replies came, how many you sent each week, which lists your applications
+and interviews came from, companies with several strong postings that you don't
+follow yet, and your AI requests by kind.
+
+**Runs** starts a run and shows its progress and log as it goes. You can limit how
+many postings it takes, change the fit cutoff for that run, or do a dry run that
+changes nothing. Past runs are listed below; click one to read its log.
+
+**Settings** has every setting in `config.toml`, and checks each value as you
+type. It also has an editor for `profile.md`, which highlights the `TODO:` lines you
+still need to fill in. From Settings you can add feeds and companies, turn the
+daily run on or off, and run the checkup.
+
+### Other things worth knowing
+
+- `⌘K` opens a list of every action: go to a view, pin the current filters, switch
+  theme, fetch company icons, run now, open a Settings section, or search Jobs.
+- The sidebar footer switches between the Auto, Light, Dark and Contrast themes
+  (Auto follows your Mac's contrast setting), and between comfortable and compact
+  rows.
+- A five-step tour shows the main controls on your first visit. Take the tour, in
+  the `⌘K` list or the shortcuts panel, shows it again.
+- In Jobs, Shift-click or `⇧J`/`⇧K` selects several postings. Then `x`, `s` or `a`
+  acts on all of them, and one Undo reverses it.
+- If you open a posting and come back within half an hour, Cairn asks whether you
+  applied.
+- Passing on a posting hides it in Jobs and Applications. The Status filter still
+  finds it.
+
+### Keyboard shortcuts
 
 | Key | Action |
 |---|---|
@@ -123,18 +175,25 @@ and lists the rows it could not match.
 | `r` | Run now |
 | `?` | Show every shortcut |
 
-## Sources
+## Where postings come from
 
-Runs read four GitHub feeds by default:
+By default Cairn reads five public lists:
 
-| Feed | Carries |
+| List | What's in it |
 |---|---|
 | SimplifyJobs `New-Grad-Positions` | new-grad and early-career full-time roles |
 | SimplifyJobs `Summer2027-Internships` | internships, with their terms |
 | vanshb03 `New-Grad-2026` | new-grad roles, without categories |
 | vanshb03 `Summer2027-Internships` | internships, one season each |
+| speedyapply `2027-SWE-College-Jobs` | new-grad software roles in the US |
 
-The watchlist adds a company's own public job board:
+The same job listed in several places shows up once. Cities are matched however a
+list spells them, so NYC, New York City and New York, NY are the same place.
+
+### Companies you follow
+
+Add a company in Settings › Sources by name or by the link to its job board. Cairn
+reads that company's public board:
 
 | Board | Add by | Board URL |
 |---|---|---|
@@ -146,21 +205,9 @@ The watchlist adds a company's own public job board:
 | BambooHR | name or URL | `rei.bamboohr.com/careers` |
 | Workday | URL only | `nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite` |
 
-Feeds and pages, added under `[[sources]]` in `config.toml` or in Settings › Sources:
-
-| Kind | Location | Carries |
-|---|---|---|
-| `github_readme` | raw URL of a Markdown file | Every table with Company and Role, Job Title or Position columns; "↳" repeats the company above; a heading naming Software, Data or Quant sets the category |
-| `hn_hiring` | `whoishiring` or a thread URL | Each top-level comment in Hacker News' monthly "Who is hiring?" thread; `whoishiring` follows the newest thread, plus last month's in the thread's first week |
-| `yc_waas` | a `www.ycombinator.com/jobs` URL | YC startup jobs that take new grads or ask for at most a year, from the page and each city page it links |
-| `remoteok` | `https://remoteok.com/api` | Remote jobs tagged for engineering or data |
-| `usajobs` | a search keyword | Federal jobs in series 2210, 1550, 0854 and 1515; needs `usajobs_email` and the USAJOBS API key saved under API keys in Settings |
-| `page` | a careers page URL, plus `company` | Each link whose text names a role; links that appear or disappear between runs become new or delisted postings. Pages that render with JavaScript show nothing |
-
-Add a company in Settings › Sources by name or board URL. The app tries a name on
-each board in the order above, and the first board that lists a job wins. Workday
-needs the URL, because a name says nothing about its tenant, shard (`wd1`, `wd5`,
-...) or site. In `config.toml` a Workday board's location takes the form
+Cairn tries a name on each board in this order and uses the first one that lists a
+job. Workday needs the link, because a name doesn't say which tenant, shard (`wd1`,
+`wd5`, ...) or site to use. In `config.toml` a Workday board is written as
 `<tenant>.<wdN>/<site>`:
 
 ```toml
@@ -170,7 +217,75 @@ location = "nvidia.wd5/NVIDIAExternalCareerSite"
 company = "NVIDIA"
 ```
 
-## Daily schedule
+### More sources
+
+Add these in Settings › Sources, or under `[[sources]]` in `config.toml`:
+
+| Kind | Location | What it reads |
+|---|---|---|
+| `github_readme` | raw URL of a Markdown file | Every table with Company and Role, Job Title or Position columns; "↳" repeats the company above; a heading naming Software, Data or Quant sets the category |
+| `hn_hiring` | `whoishiring` or a thread URL | Each top-level comment in Hacker News' monthly "Who is hiring?" thread; `whoishiring` follows the newest thread, plus last month's in the thread's first week |
+| `yc_waas` | a `www.ycombinator.com/jobs` URL | YC startup jobs that take new grads or ask for at most a year, from the page and each city page it links |
+| `remoteok` | `https://remoteok.com/api` | Remote jobs tagged for engineering or data |
+| `usajobs` | a search keyword | Federal jobs in series 2210, 1550, 0854 and 1515; needs `usajobs_email` and the USAJOBS API key saved under API keys in Settings |
+| `page` | a careers page URL, plus `company` | Each link whose text names a role; links that appear or disappear between runs become new or delisted postings. Pages that render with JavaScript show nothing |
+
+## AI providers
+
+Cairn scores postings with Claude Code by default. To use something else, pick it
+in Settings › AI provider, or run `cairn llm set`. The choices:
+
+- the Anthropic API, paid as you go ($5 minimum),
+- the free tier of Google Gemini, Groq, Mistral or OpenRouter,
+- Ollama, which runs models on your Mac, offline and free.
+
+Each provider's panel shows how to get a key and has a Test button. Keys are
+saved in `~/.cairn/secrets.toml`, which only you can read, or can be set in
+`CAIRN_<PROVIDER>_KEY`. A key is only ever sent to its own provider. Free tiers
+limit how many requests you can make, and Cairn slows its calls to stay under the
+limit. Gemini's free tier uses what you send to improve Google's products, and
+that includes your profile.
+
+## What it costs
+
+Cairn is free. Scoring and summaries use the provider you picked, and count against
+its subscription, credit or free tier:
+
+- Scoring: one `sonnet` call for every 25 new postings (`rank_batch_size`), up to
+  4 at once (`model_concurrency`). After `seed`, a normal day is a handful of
+  calls.
+- Summaries: one fetch of the posting page and one `haiku` call each, for at most
+  25 postings a run (`max_summaries_per_run`). A summary is never made twice.
+- Setup: one `sonnet` call per resume.
+
+To spend less, raise `fit_threshold`, lower `max_summaries_per_run`, or turn off
+`fetch_descriptions`.
+
+## Privacy
+
+Your notes, statuses and application history never leave your Mac. The app's pages
+load nothing from the internet.
+
+Your profile, resume text and postings go only to the AI provider you chose in
+setup: the local `claude` command, which sends them to Claude under your own
+account; a hosted API under your own key; or Ollama on your Mac.
+
+Cairn also connects to:
+
+- the GitHub lists and the job boards you follow;
+- the posting pages of the jobs it summarizes;
+- company icon lookups. Cairn sends company names to Clearbit's autocomplete and
+  to Wikidata to find each company's website. It fetches that site's home page
+  (and a guessed one, to confirm the guess) and its icon. When a site has no icon
+  or only a 16-pixel one, it sends the domain to DuckDuckGo's and Google's icon
+  services. It only contacts public addresses, never ones on your own network. To
+  stop these requests, turn off Fetch icons in Settings, or set
+  `company_icons = false`;
+- ntfy.sh, if you set `notify_ntfy_topic`. Each push holds the top companies,
+  titles, both scores and the posting links. Anyone who knows the topic can read
+  your pushes, so treat it like a password and make it long and random.
+
+## Daily run
 
 ```
 cairn schedule install --hour 7    # --minute too; 7:00 by default
@@ -178,19 +293,36 @@ cairn schedule status
 cairn schedule remove
 ```
 
-`install` writes a launchd job, `~/Library/LaunchAgents/app.cairn.daily.plist`,
-that runs `cairn run` once a day while you are logged in. Its output goes to
-`~/.cairn/launchd.out` and `launchd.err`; each run's events also go to
-`~/.cairn/run.log` and the Runs view.
+`install` adds a launchd job, `~/Library/LaunchAgents/app.cairn.daily.plist`, that
+runs `cairn run` once a day while you're logged in. Its output goes to
+`~/.cairn/launchd.out` and `launchd.err`. Each run's events also go to
+`~/.cairn/run.log` and the Runs view. You can also turn the daily run on or off in
+Settings.
 
-## CLI reference
+## Where your data lives
+
+```
+~/.cairn/
+  config.toml      settings; only the keys you changed
+  profile.md       what you want: roles, locations, authorization, company tiers
+  pipeline.db      postings, scores, summaries, applications, runs
+  run.log          what each run did
+  logos/           company icons
+  launchd.out      output of the scheduled run
+  launchd.err
+```
+
+Set `CAIRN_HOME` to use a different folder. `cairn backup` saves your settings,
+profile, database and icons to one zip, and `cairn restore` brings them back.
+
+## Command line
 
 | Command | What it does |
 |---|---|
 | `init` | Write the example `config.toml` and `profile.md`; never overwrites |
 | `init --from-resume FILE [--yes] [--overwrite]` | Draft `profile.md` from a `.pdf`, `.txt` or `.md` resume; `--yes` accepts the suggested answers, `--overwrite` replaces an edited profile |
 | `init --apply-draft [--overwrite]` | Apply the draft a previous `--from-resume` saved |
-| `run [--limit N] [--fit N] [--dry-run]` | Fetch, rank and summarise new postings; `--limit` takes the N newest, `--fit` changes the cutoff for this run, `--dry-run` changes nothing |
+| `run [--limit N] [--fit N] [--dry-run]` | Fetch, rank and summarize new postings; `--limit` takes the N newest, `--fit` changes the cutoff for this run, `--dry-run` changes nothing |
 | `fetch [--limit N]` | List new postings without ranking them (25 by default) |
 | `seed` | Mark the current backlog seen |
 | `status` | Postings stored, applications logged, last run |
@@ -209,89 +341,25 @@ that runs `cairn run` once a day while you are logged in. Its output goes to
 | `restore ZIP [--yes]` | Replace your data with a backup's; the old files move to `~/.cairn.bak-<stamp>`, which Cairn never deletes |
 | `settings export` | Print `config.toml` |
 
-The API also serves `GET /api/calendar.ics`, a calendar of your interview stages.
+Cairn also serves `GET /api/calendar.ics`, a calendar of your interview stages.
 
-## Where things live
+## Tuning
 
-```
-~/.cairn/
-  config.toml      settings; only the keys you changed
-  profile.md       what you want: roles, locations, authorization, company tiers
-  pipeline.db      postings, scores, summaries, applications, runs
-  run.log          what each run did
-  logos/           company icons
-  launchd.out      output of the scheduled run
-  launchd.err
-```
+[docs/tuning.md](docs/tuning.md) explains every setting: the filters, both scores,
+summaries, sources, icons, notifications and cost.
 
-Set `CAIRN_HOME` to use a different folder.
+## Contributing
 
-## AI providers
+To report a bug, suggest a feature or send a change, see
+[CONTRIBUTING.md](CONTRIBUTING.md). It covers setting up, running the tests and
+opening a pull request. Report security problems privately, as described in
+[SECURITY.md](SECURITY.md).
 
-Cairn ranks postings with Claude Code by default. Without it, pick another
-provider in Settings › AI provider or with `cairn llm set`: the Anthropic
-API (pay as you go, $5 minimum) or a free tier from Google Gemini, Groq, Mistral
-or OpenRouter. Ollama runs models on your Mac, offline and free. Each provider's
-panel walks you through getting a key and has a Test button. Keys go in
-`~/.cairn/secrets.toml`, readable only by you, or in
-`CAIRN_<PROVIDER>_KEY`; they never go anywhere but the provider's own
-endpoint. Free tiers limit requests, and the app paces its calls to stay under
-them. Gemini's free tier uses prompts to improve Google's products, which
-includes your profile text.
+## License
 
-## Cost
+Copyright (C) 2026 Druhin Bhowal.
 
-The software is free. Model calls go through the provider you chose and count
-against its subscription, credit or free tier:
-
-- **Ranking**: one `sonnet` call per `rank_batch_size` (25) new postings. After
-  `seed`, a normal day is a handful of calls.
-- **Summaries**: one posting-page fetch and one `haiku` call each, for at most
-  `max_summaries_per_run` (25) postings a run. A run never redoes a stored summary.
-- **Onboarding**: one `sonnet` call per resume.
-
-A typical day is a few ranking calls and up to 25 short summary calls. Raise
-`fit_threshold`, lower `max_summaries_per_run`, or turn off `fetch_descriptions`
-to spend less.
-
-## Privacy
-
-What leaves your Mac:
-
-- requests to the GitHub feeds and the job-board APIs you follow,
-- the posting pages of the roles it summarises,
-- lookups for company icons. The app sends company names to Clearbit's
-  autocomplete and to Wikidata to find each company's website, fetches the home
-  page of that site (and of a guessed one, to confirm the guess) and its favicon,
-  and sends the domain to DuckDuckGo's and Google's favicon services when the
-  site has no icon or only a 16-pixel one. It contacts only public addresses and
-  skips any on your own network. Turn off Fetch icons in Settings, or set
-  `company_icons = false`, to stop these requests,
-- if you set `notify_ntfy_topic`, a push to ntfy.sh with the top companies, titles,
-  fit and tier scores, and posting links. Treat the topic as a password. Anyone who
-  knows it can read your pushes, so use a long random one.
-
-Your profile, resume text, and postings go only to the AI provider you picked in
-setup: the local `claude` CLI, which sends them to Claude under your own account,
-a hosted API under your own key, or Ollama running on your Mac. Your notes, statuses
-and application history never leave the machine. The app's pages load nothing from the internet.
-
-## Developing
-
-```
-git clone https://github.com/druhinb/cairn && cd cairn
-uv venv && uv pip install -e ".[test]"
-.venv/bin/python -m unittest discover -s tests
-CAIRN_HOME=$(mktemp -d) .venv/bin/cairn init && .venv/bin/cairn serve --port 8766
-```
-
-The frontend is plain ES modules under `src/cairn/server/static`, and the
-app serves them with no build step. Set `CAIRN_HOME` to keep test data
-away from your own.
-
-## Tuning and license
-
-[docs/tuning.md](docs/tuning.md) explains every setting, from the relevance filters
-to fit and tier, summaries, sources, icons, notifications and cost.
-
-AGPL-3.0-or-later. See [LICENSE](LICENSE).
+Cairn is free software under the [GNU Affero General Public License v3.0 or
+later](LICENSE). You can use, change and share it, even for money. If you share a
+changed version, or run one as a website for other people, you have to give those
+people its source code under the same license.
