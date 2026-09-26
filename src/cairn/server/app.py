@@ -212,7 +212,7 @@ def own_headers(url):
 def _refusal(scope, headers):
     """(status, message) when a request must not reach the app, else None."""
     if not _loopback_client(scope):
-        return 403, "this server answers only requests from this Mac"
+        return 403, "this server answers only requests from this computer"
     host = headers.get("host", "")
     if not _local_host(host):
         return 421, "this server answers only requests to 127.0.0.1, localhost, or [::1]"

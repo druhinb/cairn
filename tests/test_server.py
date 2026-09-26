@@ -1353,7 +1353,7 @@ class GuardTest(ServerTestCase):
                 for path in ("/api/status", f"/?t={server_app.SESSION}", "/app.js"):
                     response = client.get(path, headers={"x-cairn": "1"})
                     self.assertEqual((response.status_code, response.json()), (403, {
-                        "error": "this server answers only requests from this Mac"}))
+                        "error": "this server answers only requests from this computer"}))
         for address in ("::1", "::ffff:127.0.0.1", "127.0.0.2"):
             with self.subTest(address):
                 client = self.bare_client(client=(address, 50000))

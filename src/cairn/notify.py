@@ -14,6 +14,7 @@ time this is called, and the app still shows them.
 import json
 import re
 import subprocess
+import sys
 import urllib.error
 import urllib.request
 
@@ -55,7 +56,7 @@ def _ntfy(title, message, link=None, priority=None, tags=None, actions=None):
 
 
 def _macos_banner(title, message):
-    if not settings.get().notify_macos:
+    if sys.platform != "darwin" or not settings.get().notify_macos:
         return False
     # json.dumps does the AppleScript string quoting for us, including embedded
     # quotes in a company name.

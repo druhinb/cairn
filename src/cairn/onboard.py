@@ -197,7 +197,7 @@ def _pdf_text(path):
         out = subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True,
                              text=True, encoding="utf-8", timeout=PDFTOTEXT_TIMEOUT)
     except FileNotFoundError:
-        raise OnboardError("Cairn can't read PDFs on this Mac yet. Paste the resume "
+        raise OnboardError("Cairn can't read PDFs on this computer yet. Paste the resume "
                            "text instead") from None
     except subprocess.TimeoutExpired:
         raise OnboardError(f"reading {path.name} took too long. Paste the resume text "
