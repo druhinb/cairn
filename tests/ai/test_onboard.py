@@ -43,19 +43,19 @@ def envelope(profile=PROFILE, suggestions=None):
 class ValidatedTest(unittest.TestCase):
     def rejects(self, out, *fragments):
         with self.assertRaises(onboard.OnboardError) as caught:
-            onboard._validated(out)
+            onboard.resume._validated(out)
         for fragment in fragments:
             self.assertIn(fragment, str(caught.exception))
 
     def test_a_well_formed_envelope_is_a_draft(self):
-        draft = onboard._validated(envelope())
+        draft = onboard.resume._validated(envelope())
         self.assertEqual(draft.profile_md, PROFILE)
         self.assertEqual(draft.suggestions, SUGGESTIONS)
 
     def test_fences_are_stripped_and_unknown_keys_and_roles_dropped(self):
         extra = {**SUGGESTIONS, "roles": ["backend", "astronaut"], "hobby": "chess",
                  "header": {"name": "Sam Lee"}}
-        draft = onboard._validated(envelope(
+        draft = onboard.resume._validated(envelope(
             profile=f"```markdown\n{PROFILE}```\n",
             suggestions=f"```json\n{json.dumps(extra)}\n```"))
         self.assertEqual(draft.profile_md, PROFILE)
@@ -64,7 +64,7 @@ class ValidatedTest(unittest.TestCase):
     def test_placeholder_lines_are_dropped(self):
         todo = PROFILE.replace("Computer Science.", "Computer Science.\n- GPA: TODO: not stated\n"
                                                     "- TODO: add work authorization")
-        self.assertEqual(onboard._validated(envelope(profile=todo)).profile_md, PROFILE)
+        self.assertEqual(onboard.resume._validated(envelope(profile=todo)).profile_md, PROFILE)
 
     def test_each_missing_marker_is_named(self):
         for marker in onboard.MARKERS:
@@ -208,18 +208,18 @@ class ResumeTextTest(unittest.TestCase):
             calls.append((cmd, kwargs["timeout"]))
             return subprocess.CompletedProcess(cmd, 0, stdout="Sam Lee\n", stderr="")
 
-        with mock.patch.object(onboard.subprocess, "run", fake_run):
+        with mock.patch.object(onboard.resume.subprocess, "run", fake_run):
             self.assertEqual(onboard.resume_text(pdf), "Sam Lee")
         self.assertEqual(calls, [(["pdftotext", "-layout", str(pdf), "-"], 30)])
 
     def test_pdftotext_missing_or_failing(self):
         pdf = self.home / "resume.pdf"
         pdf.write_bytes(b"%PDF-1.4")
-        with mock.patch.object(onboard.subprocess, "run", side_effect=FileNotFoundError):
+        with mock.patch.object(onboard.resume.subprocess, "run", side_effect=FileNotFoundError):
             with self.assertRaisesRegex(onboard.OnboardError, "Paste the resume text instead"):
                 onboard.resume_text(pdf)
         failed = subprocess.CompletedProcess([], 1, stdout="", stderr="Syntax Error")
-        with mock.patch.object(onboard.subprocess, "run", return_value=failed):
+        with mock.patch.object(onboard.resume.subprocess, "run", return_value=failed):
             with self.assertRaisesRegex(onboard.OnboardError, "couldn't read resume.pdf"):
                 onboard.resume_text(pdf)
 

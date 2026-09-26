@@ -1086,7 +1086,7 @@ class OnboardTest(ServerTestCase):
             received.append(Path(cmd[2]).read_bytes())
             return subprocess.CompletedProcess(cmd, 0, stdout="Sam Lee from PDF", stderr="")
 
-        self.patch(onboard.subprocess, "run", fake_pdftotext)
+        self.patch(onboard.resume.subprocess, "run", fake_pdftotext)
         response = self.client.post("/api/onboard/draft",
                                     files={"resume": ("cv.pdf", pdf_bytes, "application/pdf")})
         self.assertEqual(response.status_code, 200, response.text)
@@ -1182,7 +1182,7 @@ class OnboardTest(ServerTestCase):
         self.assertEqual(self.prompts, [])
 
     def test_apply_refuses_own_content_until_overwrite(self):
-        self.patch(onboard.sources, "resolve_company", lambda name: None)
+        self.patch(onboard.files.sources, "resolve_company", lambda name: None)
         paths.profile_md().write_text("mine", encoding="utf-8")
         body = {"profile_md": PROFILE,
                 "prefs": {"roles": ["ml"], "graduation_year": 2027, "watchlist": ["Nope"]}}
