@@ -147,7 +147,7 @@ class FollowUpTest(PipelineTestCase):
         store.upsert_postings([{**_job("old"), "company_name": "Globex"}], "feed")
         month_ago = (datetime.datetime.now() - datetime.timedelta(days=30)).isoformat(
             timespec="seconds")
-        with mock.patch.object(store, "_now", return_value=month_ago):
+        with mock.patch.object(store.db, "now", return_value=month_ago):
             store.set_status("old", "applied")
         result = pipeline.run(RunOptions())
         self.assertEqual([row["id"] for row in result.follow_ups], ["old"])

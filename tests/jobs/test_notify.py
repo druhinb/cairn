@@ -170,7 +170,7 @@ class FollowUpLineTest(unittest.TestCase):
             store.upsert_postings([{"id": f"p{n}", "company_name": company, "title": "SWE",
                                     "url": f"https://x.test/{n}", "active": True,
                                     "is_visible": True}], "feed")
-            with mock.patch.object(store, "_now", return_value=month_ago):
+            with mock.patch.object(store.db, "now", return_value=month_ago):
                 store.set_status(f"p{n}", "applied")
 
     def test_the_push_names_the_applications_waiting_on_a_follow_up(self):

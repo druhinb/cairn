@@ -334,7 +334,7 @@ class ApplicationTest(ServerTestCase):
         self.assertNotIn("zeta", self.ids())
         self.assertIn("zeta", self.ids(hide_passed="false"))
         self.assertEqual(self.ids(status="passed"), ["zeta"])
-        self.patch(store, "_now", lambda: "2099-01-01T00:00:00")
+        self.patch(store.db, "now", lambda: "2099-01-01T00:00:00")
         self.put("gamma", {"status": "saved"})
         self.assertEqual(self.ids(sort="updated"), ["gamma", "beta", "alpha"])
 
@@ -581,10 +581,10 @@ class RunTest(ServerTestCase):
     def test_a_finished_job_closes_its_connections(self):
         self.assertEqual(self.client.post("/api/run").status_code, 202)
         (ident,) = self.run_threads
-        self.assertIn(ident, [key[1] for key in store._connections])
+        self.assertIn(ident, [key[1] for key in store.db._connections])
         self.release.set()
         deadline = time.monotonic() + 5
-        while ident in [key[1] for key in store._connections]:
+        while ident in [key[1] for key in store.db._connections]:
             self.assertLess(time.monotonic(), deadline, "the job kept its connection")
             time.sleep(0.02)
 

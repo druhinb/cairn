@@ -32,8 +32,8 @@ def _in(days=0, hours=0):
 
 
 def _at(when, call, *args):
-    """call(*args) with store._now() reading when."""
-    with mock.patch.object(store, "_now", return_value=when):
+    """call(*args) with store.db.now() reading when."""
+    with mock.patch.object(store.db, "now", return_value=when):
         return call(*args)
 
 

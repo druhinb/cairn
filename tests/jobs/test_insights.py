@@ -329,7 +329,7 @@ class StatsTest(unittest.TestCase):
 
     def _move(self, posting_id, status, days):
         at = (self.clock + datetime.timedelta(days=days)).isoformat(timespec="seconds")
-        with mock.patch.object(store, "_now", lambda: at):
+        with mock.patch.object(store.db, "now", lambda: at):
             store.set_status(posting_id, status)
 
     def test_funnel_response_times_weeks_and_sources(self):

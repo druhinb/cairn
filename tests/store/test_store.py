@@ -79,14 +79,14 @@ def _v9_schema():
     """store.SCHEMA as version 9 had it, without stages, checklists, or files."""
     schema = re.sub(r"CREATE TABLE IF NOT EXISTS application_events \(.*?\);", V9_EVENTS,
                     store.SCHEMA, flags=re.S)
-    for gone in (store._CHECKLIST + ";", store._ATTACHMENTS + ";",
+    for gone in (store.schema._CHECKLIST + ";", store.schema._ATTACHMENTS + ";",
                  "CREATE INDEX IF NOT EXISTS checklist_posting ON checklist(posting_id);"):
         schema = schema.replace(gone, "")
     return schema
 
 
 def _in(days=0, hours=0):
-    """A local ISO time days and hours from now, in store._now()'s format."""
+    """A local ISO time days and hours from now, in store.db.now()'s format."""
     return (datetime.datetime.now() + datetime.timedelta(days=days, hours=hours)).isoformat(
         timespec="seconds")
 
@@ -292,10 +292,10 @@ class MemoryStatisticsTest(unittest.TestCase):
             opened.append(name)
             return mock.Mock(**{f"sqlite3_{call}.return_value": 0
                                 for call in ("config", "shutdown", "initialize")})
-        with mock.patch.object(store, "_sqlite3", mock.Mock(spec=[])), \
-                mock.patch.object(store.ctypes, "CDLL", cdll), \
-                mock.patch.object(store.ui, "warn") as warn:
-            store._stop_memory_stats()
+        with mock.patch.object(store.db, "_sqlite3", mock.Mock(spec=[])), \
+                mock.patch.object(store.db.ctypes, "CDLL", cdll), \
+                mock.patch.object(store.db.ui, "warn") as warn:
+            store.db._stop_memory_stats()
         self.assertEqual(opened, [None])
         warn.assert_not_called()
 
@@ -407,8 +407,8 @@ class SchemaTest(StoreTestCase):
         store.close()
         paths.db_file().unlink()
         v5 = sqlite3.connect(paths.db_file())
-        v5.executescript(V5_POSTINGS + store.SCHEMA.replace(store._LOGOS + ";", "")
-                         .replace(store._COMPANIES + ";", "") + """
+        v5.executescript(V5_POSTINGS + store.SCHEMA.replace(store.schema._LOGOS + ";", "")
+                         .replace(store.schema._COMPANIES + ";", "") + """
             INSERT INTO meta VALUES ('schema_version', '5');
             INSERT INTO postings (id, company, title, active, visible)
                 VALUES ('a', 'Acme', 'SWE', 1, 1);
@@ -428,7 +428,7 @@ class SchemaTest(StoreTestCase):
         store.close()
         paths.db_file().unlink()
         v6 = sqlite3.connect(paths.db_file())
-        v6.executescript(store.SCHEMA.replace(store._COMPANIES + ";", "") + """
+        v6.executescript(store.SCHEMA.replace(store.schema._COMPANIES + ";", "") + """
             INSERT INTO meta VALUES ('schema_version', '6');
             INSERT INTO postings (id, company, title, active, visible)
                 VALUES ('a', 'Acme', 'SWE', 1, 1);
@@ -442,7 +442,7 @@ class SchemaTest(StoreTestCase):
         store.close()
         paths.db_file().unlink()
         v7 = sqlite3.connect(paths.db_file())
-        v7.executescript(store.SCHEMA.replace(store._LOGOS, V7_LOGOS) + """
+        v7.executescript(store.SCHEMA.replace(store.schema._LOGOS, V7_LOGOS) + """
             INSERT INTO meta VALUES ('schema_version', '7');
             INSERT INTO logos VALUES ('acme.example', '/old/home/logos/acme.example.png', 1.0,
                                       NULL);
@@ -518,7 +518,7 @@ class SchemaTest(StoreTestCase):
         store.close()
         paths.db_file().unlink()
         v10 = sqlite3.connect(paths.db_file())
-        v10.executescript(store.SCHEMA.replace(store._SCORES, V10_SCORES) + """
+        v10.executescript(store.SCHEMA.replace(store.schema._SCORES, V10_SCORES) + """
             INSERT INTO meta VALUES ('schema_version', '10');
             INSERT INTO postings (id, company, title, active, visible)
                 VALUES ('a', 'Acme', 'SWE', 1, 1), ('b', 'Globex', 'SRE', 1, 1);
@@ -560,7 +560,7 @@ class ThreadTest(StoreTestCase):
 
         store.close()
         path = paths.db_file().resolve()
-        self.assertEqual([k for k in store._connections if k[0] == path], [])
+        self.assertEqual([k for k in store.db._connections if k[0] == path], [])
         for conn in (opened[0], self.conn):
             with self.assertRaises(sqlite3.ProgrammingError):
                 conn.execute("SELECT 1")
@@ -573,11 +573,11 @@ class UpsertTest(StoreTestCase):
         return tuple(row)
 
     def test_insert_then_update(self):
-        real_now = store._now
-        self.addCleanup(setattr, store, "_now", real_now)
-        store._now = lambda: "2026-09-01T00:00:00"
+        real_now = store.db.now
+        self.addCleanup(setattr, store.db, "now", real_now)
+        store.db.now = lambda: "2026-09-01T00:00:00"
         self.assertEqual(store.upsert_postings([_row("a")], "feed"), ["a"])
-        store._now = lambda: "2026-09-02T00:00:00"
+        store.db.now = lambda: "2026-09-02T00:00:00"
         store.upsert_postings([_row("a", "Software Engineer II")], "feed")
         self.assertEqual(self._times("a"), ("2026-09-01T00:00:00", "2026-09-02T00:00:00"))
         self.assertEqual(store.get_posting("a")["title"], "Software Engineer II")
@@ -774,10 +774,10 @@ class RecordsTest(StoreTestCase):
         self.assertEqual(store.applications(), [])
 
     def test_applications_join_the_posting_and_filter_by_status(self):
-        self.enterContext(mock.patch.object(store, "_now", return_value="2026-09-01T09:00:00"))
+        self.enterContext(mock.patch.object(store.db, "now", return_value="2026-09-01T09:00:00"))
         store.set_status("a", "applied", "referred")
         store.save_scores([{"id": "a", "fit": 80, "tier": 40, "below_floor": True}])
-        store._now.return_value = "2026-09-02T09:00:00"
+        store.db.now.return_value = "2026-09-02T09:00:00"
         store.set_status("b", "saved")
         self.assertEqual([r["id"] for r in store.applications()], ["b", "a"])
         self.assertEqual(store.applications(["applied"]), [{
@@ -865,11 +865,11 @@ class StageTest(StoreTestCase):
         self.assertEqual(store.application("a")["status"], "applied")
 
     def test_status_changes_and_stages_come_back_in_time_order(self):
-        with mock.patch.object(store, "_now", return_value="2026-09-01T09:00:00"):
+        with mock.patch.object(store.db, "now", return_value="2026-09-01T09:00:00"):
             store.set_status("a", "applied")
         store.add_stage("a", "onsite", "2026-09-20T10:00")
         store.add_stage("a", "screen", "2026-09-05T10:00")
-        with mock.patch.object(store, "_now", return_value="2026-09-10T09:00:00"):
+        with mock.patch.object(store.db, "now", return_value="2026-09-10T09:00:00"):
             store.set_status("a", "interviewing")
         self.assertEqual([(e["status"] or e["stage"], e["at"])
                           for e in store.application_events("a")],
@@ -930,7 +930,7 @@ class StageTest(StoreTestCase):
         self.assertEqual(upcoming[0]["company"], "Globex")
 
     def test_past_due_is_a_passed_stage_with_nothing_after_it(self):
-        with mock.patch.object(store, "_now", return_value=_in(days=-10)):
+        with mock.patch.object(store.db, "now", return_value=_in(days=-10)):
             store.set_status("a", "interviewing")
             store.set_status("b", "interviewing")
         store.add_stage("a", "screen", _in(days=-3))
@@ -942,7 +942,7 @@ class StageTest(StoreTestCase):
         self.assertEqual(store.past_due_stages(), [])
 
     def test_past_due_counts_from_the_time_given(self):
-        with mock.patch.object(store, "_now", return_value=_in(days=-10)):
+        with mock.patch.object(store.db, "now", return_value=_in(days=-10)):
             store.set_status("a", "interviewing")
         store.add_stage("a", "screen", _in(days=-3))
         before = datetime.datetime.now()
@@ -961,9 +961,9 @@ class StageTest(StoreTestCase):
         self.assertEqual(store.stages_between(now - wide, now + wide), [])
 
     def test_a_stage_records_when_it_was_written_and_changed(self):
-        with mock.patch.object(store, "_now", return_value="2026-09-01T09:00:00"):
+        with mock.patch.object(store.db, "now", return_value="2026-09-01T09:00:00"):
             event = store.add_stage("a", "screen", "2026-10-01T09:00")
-        with mock.patch.object(store, "_now", return_value="2026-09-02T10:00:00"):
+        with mock.patch.object(store.db, "now", return_value="2026-09-02T10:00:00"):
             store.update_stage(event["id"], note="moved")
         row = store.stages_between(datetime.datetime(2026, 10, 1),
                                    datetime.datetime(2026, 10, 2))[0]
@@ -1236,7 +1236,7 @@ class SearchTest(StoreTestCase):
     def test_sorts(self):
         self.assertEqual(self._ids(sort="newest"), ["other", "citadel", "jane", "acme"])
         self.assertEqual(self._ids(sort="company"), ["acme", "citadel", "other", "jane"])
-        with mock.patch.object(store, "_now", return_value="2099-01-01T00:00:00"):
+        with mock.patch.object(store.db, "now", return_value="2099-01-01T00:00:00"):
             store.set_status("acme", "saved")
         self.assertEqual(self._ids(sort="updated"), ["acme", "jane", "citadel", "other"])
 
@@ -1375,7 +1375,7 @@ class FeedbackTest(StoreTestCase):
         store.save_scores([{"id": f"p{n}", "fit": 50 + n, "tier": 60} for n in range(8)])
 
     def _feedback(self, posting_id, verdict, at, reason=None):
-        with mock.patch.object(store, "_now", lambda: f"2026-09-{at:02d}T00:00:00"):
+        with mock.patch.object(store.db, "now", lambda: f"2026-09-{at:02d}T00:00:00"):
             store.set_feedback(posting_id, verdict, reason)
 
     def test_set_replace_clear_and_count(self):
@@ -1504,7 +1504,7 @@ class CallCountTest(StoreTestCase):
         store.record_call("rank", "sonnet", 1000, 200, run_id=None)
         store.record_call("rank", "sonnet", 500, 100)
         store.record_call("summary", "haiku", 300, 50)
-        with mock.patch.object(store, "_now", lambda: "2000-01-01T00:00:00"):
+        with mock.patch.object(store.db, "now", lambda: "2000-01-01T00:00:00"):
             store.record_call("onboard", "sonnet", 9000, 900)
         self.assertEqual(store.call_counts(30), {"rank": 2, "summary": 1, "onboard": 0,
                                                  "total": 3, "prompt_chars": 1800})
@@ -1618,12 +1618,12 @@ class ImportLegacyTest(unittest.TestCase):
         self.assertEqual(store.counts()["seen"], 0)
 
     def test_the_connection_is_cached_only_after_the_import(self):
-        real = store._import_legacy
-        self.addCleanup(setattr, store, "_import_legacy", real)
-        store._import_legacy = lambda conn, state_dir: 1 / 0
+        real = store.legacy._import_legacy
+        self.addCleanup(setattr, store.legacy, "_import_legacy", real)
+        store.legacy._import_legacy = lambda conn, state_dir: 1 / 0
         with self.assertRaises(ZeroDivisionError):
             store.connect()
-        store._import_legacy = real
+        store.legacy._import_legacy = real
         self.assertEqual(store.counts()["postings"], 3)
 
     def test_a_missing_state_dir_imports_nothing(self):
