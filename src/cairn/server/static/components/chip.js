@@ -56,6 +56,20 @@ export function sourceChip(name) {
     sourceDot(kind), h("span", { class: "chip-text", text: label }));
 }
 
+const SEASONS = new Set(["winter", "spring", "summer", "fall"]);
+
+/**
+ * An internship's season, as "Summer 2027 +1" when the posting lists more than one.
+ * @param {string[]} terms @returns {HTMLElement}
+ */
+export function termChip(terms) {
+  const season = terms[0].split(" ")[0].toLowerCase();
+  const text = terms.length > 1 ? `${terms[0]} +${terms.length - 1}` : terms[0];
+  return h("span", { class: "chip chip-term", title: terms.join("\n") },
+    h("span", { class: `chip-dot${SEASONS.has(season) ? ` season-${season}` : ""}`, "aria-hidden": "true" }),
+    h("span", { class: "chip-text", text }));
+}
+
 const CATEGORY_TINTS = { "Software": "blue", "AI/ML/Data": "violet", "AI/ML": "violet", "Quant": "ok" };
 
 /** @param {string} category @returns {HTMLElement} */

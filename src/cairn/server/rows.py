@@ -7,7 +7,7 @@ def make_row(job):
     """A store.search or store.get_posting result as an /api/jobs row."""
     return {"id": job["id"], "company": job["company_name"], "title": job["title"],
             "url": store.web_url(job["url"]), "locations": job["locations"],
-            "category": job["category"],
+            "category": job["category"], "terms": job["terms"],
             "source": job["source"], "posted_at": job["date_posted"],
             "fit": job.get("fit"), "tier": job.get("tier"),
             "fit_reason": job.get("fit_reason"), "tier_reason": job.get("tier_reason"),

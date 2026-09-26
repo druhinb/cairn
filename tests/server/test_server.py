@@ -55,7 +55,7 @@ def _row(posting_id, title="Software Engineer", company="Acme", **fields):
 
 def _seed():
     store.upsert_postings([
-        _row("alpha", company="Alpha", locations=["New York, NY"]),
+        _row("alpha", company="Alpha", locations=["New York, NY"], terms=["Winter 2027"]),
         _row("beta", company="Beta", category="Quant", title="Quant Developer"),
         _row("gamma", company="Gamma", date_posted=NOW - 40 * DAY,
              date_updated=NOW - 40 * DAY),
@@ -113,7 +113,8 @@ class JobsTest(ServerTestCase):
         self.assertEqual(alpha, {
             "id": "alpha", "company": "Alpha", "title": "Software Engineer",
             "url": "https://jobs.test/alpha", "locations": ["New York, NY"],
-            "category": "Software", "source": "feed-one", "posted_at": NOW, "fit": 90,
+            "category": "Software", "terms": ["Winter 2027"], "source": "feed-one",
+            "posted_at": NOW, "fit": 90,
             "tier": 80, "fit_reason": "strong", "tier_reason": "top firm",
             "below_floor": False, "status": None, "note": None,
             "applied_at": None, "updated_at": None, "seen": True, "run_id": None,

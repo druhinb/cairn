@@ -1,6 +1,6 @@
 import { fmt, h } from "../lib/dom.js";
 import { avatar } from "./avatar.js";
-import { categoryChip, sourceChip, timingChip } from "./chip.js";
+import { categoryChip, termChip, timingChip } from "./chip.js";
 import { icon } from "./icons.js";
 import { meter } from "./meter.js";
 import { statusPill } from "./pill.js";
@@ -124,7 +124,7 @@ export function jobRow(job, { selected = false, unread = false } = {}) {
       job.timing && timingChip(job.timing, job.starts_before_graduation),
       repeat && h("span", { class: "row-repeat", text: `applied before · ${dayText(job.applied_before)}`,
         title: `You applied to ${job.company || "this company"} on ${dayText(job.applied_before)}` }),
-      sourceChip(job.source), job.category && categoryChip(job.category))),
+      job.terms.length > 0 && termChip(job.terms), job.category && categoryChip(job.category))),
   h("div", { class: "row-right" },
     verdict && h("span", { class: `row-verdict verdict-${job.feedback.verdict}`, title: verdict[1] },
       icon(verdict[0], verdict[1])),

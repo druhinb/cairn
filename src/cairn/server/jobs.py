@@ -39,7 +39,7 @@ def _relevant(posting_id):
 def _detail(job):
     description = store.get_description(job["id"])
     return {**make_row(job), "relevant": _relevant(job["id"]),
-            "terms": job["terms"], "degrees": job["degrees"],
+            "degrees": job["degrees"],
             "feed_sponsorship": job["sponsorship"], "active": job["active"],
             "gap": descriptions.gap(job.get("keywords")),
             "posting_updated_at": job["date_updated"], "first_seen_at": job["first_seen_at"],
