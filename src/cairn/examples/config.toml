@@ -1,0 +1,156 @@
+# Cairn settings. Each key below sits at its default; uncomment one to change it.
+# Anything left out keeps its default, so a short file is normal.
+# The UI rewrites this file with only the keys you changed.
+
+# ---- Who you are, which the filters need ---------------------------------
+# The run log flags postings whose stated start year is EARLIER than this.
+# Leave unset to accept any start date.
+#graduation_year = 2027
+
+# The feed's `degrees` field lists the degrees a posting ACCEPTS, so a list that
+# omits yours excludes you. Empty disables the check.
+#degrees_held = ["Bachelor's"]
+
+# Keep internships only for the terms named here. Empty means no internship
+# passes. Update the list as terms roll over.
+#wanted_intern_terms = ["fall 2026", "winter 2027", "spring 2027"]
+
+# Keep only postings whose location contains one of these. Empty keeps all.
+#location_allow = ["CA", "New York", "Austin", "Remote"]
+
+# ---- Notifications ------------------------------------------------------
+# ntfy.sh needs no account. Pick a long, unguessable topic and subscribe the phone
+# app to the same string. Anyone who knows it can read your run summaries.
+#notify_ntfy_topic = "pick-something-unguessable-b7f2a1c9"
+#notify_macos = false
+# An applied posting with no later event for this many days needs a follow-up, and
+# the push names the applications that need one.
+#follow_up_days = 14
+#notify_follow_ups = true
+
+# ---- USAJOBS ------------------------------------------------------------
+# A usajobs source needs this address and the API key USAJOBS emailed to it,
+# requested at developer.usajobs.gov. The key goes in Settings under API keys,
+# which keeps it in secrets.toml.
+#usajobs_email = ""
+
+# ---- Volume and cost ----------------------------------------------------
+#recent_days = 21
+#fit_threshold = 60
+#tier_floor = 55
+#max_summaries_per_run = 25
+#rank_batch_size = 25
+#rank_retries = 1
+# unset by default, which ranks every new posting; 200 caps a big first day
+#max_rank_per_run = 200
+#fetch_descriptions = true
+# look up each company's website and cache its icon for the app's lists
+#company_icons = true
+# ---- Claude -------------------------------------------------------------
+#claude_bin = "claude"
+#claude_model = "sonnet"
+#description_model = "haiku"
+# model calls made at once while ranking and summarizing, 1 to 8
+#model_concurrency = 4
+
+# ---- Feeds and filters --------------------------------------------------
+# Keep a posting only when its category is allowed AND its title matches a
+# keyword, and neither exclude list matches.
+#allowed_categories = ["Software", "AI/ML/Data", "Quant"]
+#title_keywords = ["software engineer", "swe", "quant", "machine learning"]
+#title_exclude = ["senior", "staff", "principal", "manager", "phd"]
+#title_exclude_field = ["mechanical", "firmware", "field service", "sales"]
+#include_off_season_internships = true
+#intern_terms = ["intern", "internship", "co-op", "coop"]
+
+# ---- Sources ------------------------------------------------------------
+# Keep these tables last, because TOML reads every key below a [[...]] header as
+# part of that table. Runs dedupe postings across sources by apply URL, and the
+# first source to list one keeps it. Writing any [[sources]] replaces all the
+# default feeds; set enabled = false to keep an entry but skip it.
+#
+# github: the raw listings.json URL of a repo in Simplify's schema.
+#[[sources]]
+#kind = "github"
+#location = "https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/.github/scripts/listings.json"
+#enabled = true
+#
+# github_readme: the raw URL of a Markdown file whose tables have Company and
+# Role, Job Title, or Position columns. A heading above a table that names
+# Software, Data, or Quant sets the category of its rows.
+#[[sources]]
+#kind = "github_readme"
+#location = "https://raw.githubusercontent.com/speedyapply/2027-SWE-College-Jobs/main/NEW_GRAD_USA.md"
+#
+# hn_hiring: each top-level comment in Hacker News' monthly "Who is hiring?"
+# thread. "whoishiring" follows the newest thread, and the month before while
+# the newest is under a week old; a thread URL reads that thread alone.
+#[[sources]]
+#kind = "hn_hiring"
+#location = "whoishiring"
+#
+# yc_waas: the jobs at Y Combinator startups that take new grads or ask for at
+# most a year of experience, from a YC jobs page and each city page it links.
+#[[sources]]
+#kind = "yc_waas"
+#location = "https://www.ycombinator.com/jobs/role/software-engineer"
+#
+# remoteok: RemoteOK's remote jobs tagged for engineering or data.
+#[[sources]]
+#kind = "remoteok"
+#location = "https://remoteok.com/api"
+#
+# usajobs: federal IT, computer science, computer engineering, and operations
+# research jobs matching the keyword in location. Needs usajobs_email above
+# the tables and the USAJOBS API key in Settings.
+#[[sources]]
+#kind = "usajobs"
+#location = "software engineer"
+#
+# page: every link on a careers page whose text names a role. Links that
+# appear and disappear between runs show up as new and delisted postings.
+# company is required.
+#[[sources]]
+#kind = "page"
+#location = "https://www.example.com/careers"
+#company = "Example"
+
+# Companies to follow directly from their public job board; runs fetch them after the feeds.
+# kind is greenhouse, lever, ashby, smartrecruiters, workable, bamboohr, or workday.
+# location is the board slug from its URL, except for workday, where it is
+# "<tenant>.<wdN>/<site>" from https://<tenant>.<wdN>.myworkdayjobs.com/<site>.
+# company is the name shown in the app.
+#[[watchlist]]
+#kind = "greenhouse"            # boards.greenhouse.io/stripe
+#location = "stripe"
+#company = "Stripe"
+#
+#[[watchlist]]
+#kind = "lever"                 # jobs.lever.co/palantir
+#location = "palantir"
+#company = "Palantir"
+#
+#[[watchlist]]
+#kind = "ashby"                 # jobs.ashbyhq.com/openai
+#location = "openai"
+#company = "OpenAI"
+#
+#[[watchlist]]
+#kind = "smartrecruiters"       # jobs.smartrecruiters.com/ServiceNow
+#location = "ServiceNow"
+#company = "ServiceNow"
+#
+#[[watchlist]]
+#kind = "workable"              # apply.workable.com/huggingface
+#location = "huggingface"
+#company = "Hugging Face"
+#
+#[[watchlist]]
+#kind = "bamboohr"              # rei.bamboohr.com/careers
+#location = "rei"
+#company = "REI"
+#
+#[[watchlist]]
+#kind = "workday"               # nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+#location = "nvidia.wd5/NVIDIAExternalCareerSite"
+#company = "NVIDIA"

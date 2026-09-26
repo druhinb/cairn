@@ -1,0 +1,136 @@
+{
+  "total": 4,
+  "results": [
+    {
+      "id": 2527943,
+      "shortcode": "97D188CA7C",
+      "title": "(Senior) Product Manager - Freelance",
+      "remote": true,
+      "location": {
+        "country": "Poland",
+        "countryCode": "PL",
+        "city": "",
+        "region": null
+      },
+      "locations": [
+        {
+          "country": "Poland",
+          "countryCode": "PL",
+          "city": "",
+          "region": null,
+          "hidden": true
+        }
+      ],
+      "state": "published",
+      "isInternal": false,
+      "code": "Product Manager",
+      "published": "2026-09-24T00:00:00.000Z",
+      "type": "contract",
+      "language": "en",
+      "department": [
+        "NTG Freelancer"
+      ],
+      "accountUid": "00000000-0000-4000-8000-000000000001",
+      "approvalStatus": "approved",
+      "workplace": "remote"
+    },
+    {
+      "id": 2878972,
+      "shortcode": "C99A238797",
+      "title": "(Senior) Data Engineer with AI - Freelance",
+      "remote": true,
+      "location": {
+        "country": "Poland",
+        "countryCode": "PL",
+        "city": "",
+        "region": null
+      },
+      "locations": [
+        {
+          "country": "Poland",
+          "countryCode": "PL",
+          "city": "",
+          "region": null,
+          "hidden": false
+        }
+      ],
+      "state": "published",
+      "isInternal": false,
+      "code": "Data Engineer",
+      "published": "2026-09-16T00:00:00.000Z",
+      "type": "contract",
+      "language": "en",
+      "department": [
+        "NTG Freelancer"
+      ],
+      "accountUid": "00000000-0000-4000-8000-000000000001",
+      "approvalStatus": "approved",
+      "workplace": "remote"
+    },
+    {
+      "id": 6140066,
+      "shortcode": "ACD32AC5E1",
+      "title": "Operations Driver Success Specialist - Globex Last Mile (ODSS 1026)",
+      "remote": false,
+      "location": {
+        "country": "Greece",
+        "countryCode": "GR",
+        "city": "Metamorfosi",
+        "region": "Attica"
+      },
+      "locations": [
+        {
+          "country": "Greece",
+          "countryCode": "GR",
+          "city": "Metamorfosi",
+          "region": "Attica",
+          "hidden": false
+        }
+      ],
+      "state": "published",
+      "isInternal": false,
+      "code": "1026",
+      "published": "2026-09-23T00:00:00.000Z",
+      "type": "full",
+      "language": "en",
+      "department": [
+        "Last Mile"
+      ],
+      "accountUid": "00000000-0000-4000-8000-000000000002",
+      "approvalStatus": "approved",
+      "workplace": "on_site"
+    },
+    {
+      "id": 6131311,
+      "shortcode": "C0CCE340BE",
+      "title": "Cargo Specialist - Globex Last Mile (CS0926)",
+      "remote": false,
+      "location": {
+        "country": "Greece",
+        "countryCode": "GR",
+        "city": "Athens",
+        "region": "Attica"
+      },
+      "locations": [
+        {
+          "country": "Greece",
+          "countryCode": "GR",
+          "city": "Athens",
+          "region": "Attica",
+          "hidden": false
+        }
+      ],
+      "state": "published",
+      "isInternal": false,
+      "code": "CS0926",
+      "published": "2026-09-22T00:00:00.000Z",
+      "language": "en",
+      "department": [
+        "Last Mile"
+      ],
+      "accountUid": "00000000-0000-4000-8000-000000000002",
+      "approvalStatus": "approved",
+      "workplace": "on_site"
+    }
+  ]
+}

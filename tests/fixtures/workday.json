@@ -1,0 +1,41 @@
+{
+  "total": 4,
+  "jobPostings": [
+    {
+      "title": "Senior Software Engineer, Widget Runtime",
+      "externalPath": "/job/US-OR-Springfield/Senior-Software-Engineer--Widget-Runtime_R0000101",
+      "locationsText": "6 Locations",
+      "postedOn": "Posted Today",
+      "bulletFields": [
+        "R0000101"
+      ]
+    },
+    {
+      "title": "Software QA Engineer",
+      "externalPath": "/job/US-OR-Springfield/Software-QA-Engineer_R0000102",
+      "locationsText": "US, OR, Springfield",
+      "postedOn": "Posted Yesterday",
+      "bulletFields": [
+        "R0000102"
+      ]
+    },
+    {
+      "title": "Senior Hardware Application Engineer",
+      "externalPath": "/job/US-OR-Springfield/Senior-Hardware-Application-Engineer_R0000103",
+      "locationsText": "US, OR, Springfield",
+      "postedOn": "Posted 2 Days Ago",
+      "bulletFields": [
+        "R0000103"
+      ]
+    },
+    {
+      "title": "Senior Chip Design Verification Engineer",
+      "externalPath": "/job/Freedonia-Fredonia/Senior-Chip-Design-Verification-Engineer_R0000104",
+      "locationsText": "Freedonia, Fredonia",
+      "postedOn": "Posted 30+ Days Ago",
+      "bulletFields": [
+        "R0000104"
+      ]
+    }
+  ]
+}

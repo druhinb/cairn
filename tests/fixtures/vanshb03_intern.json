@@ -1,0 +1,50 @@
+[
+  {
+    "id": "a1b2c3d4-0000-4000-8000-000000000001",
+    "company_name": "Datadog",
+    "company_url": "",
+    "title": "Software Engineering Intern",
+    "url": "https://careers.datadoghq.com/detail/7000001/",
+    "locations": ["New York, NY"],
+    "season": "Summer 2027",
+    "sponsorship": "Other",
+    "active": true,
+    "is_visible": true,
+    "date_posted": 1758000000,
+    "date_updated": 1758100000,
+    "source": "vanshb03",
+    "degrees": []
+  },
+  {
+    "id": "a1b2c3d4-0000-4000-8000-000000000002",
+    "company_name": "Ramp",
+    "company_url": "",
+    "title": "Software Engineer Intern",
+    "url": "https://jobs.ashbyhq.com/ramp/1111",
+    "locations": ["New York, NY", "Remote"],
+    "season": "Fall 2026",
+    "sponsorship": "Other",
+    "active": true,
+    "is_visible": true,
+    "date_posted": 1758200000,
+    "date_updated": 1758200000,
+    "source": "vanshb03",
+    "degrees": []
+  },
+  {
+    "id": "a1b2c3d4-0000-4000-8000-000000000003",
+    "company_name": "Jane Street",
+    "company_url": "",
+    "title": "Quantitative Trading Intern",
+    "url": "https://www.janestreet.com/join-jane-street/position/7000003/",
+    "locations": ["New York, NY"],
+    "season": "",
+    "sponsorship": "Other",
+    "active": true,
+    "is_visible": true,
+    "date_posted": 1758300000,
+    "date_updated": 1758300000,
+    "source": "vanshb03",
+    "degrees": []
+  }
+]

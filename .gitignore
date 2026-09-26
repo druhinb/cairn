@@ -1,0 +1,9 @@
+.venv/
+build/
+dist/
+*.egg-info
+__pycache__/
+*.pyc
+state/
+.DS_Store
+packaging/AppIcon.icns

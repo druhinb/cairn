@@ -1,0 +1,200 @@
+{
+  "offset": 0,
+  "limit": 100,
+  "totalFound": 4,
+  "content": [
+    {
+      "id": "744000151763959",
+      "name": "Senior Applications Dev Engineer",
+      "uuid": "5614d5e1-9680-4252-90d9-0293aef8e355",
+      "jobAdId": "665b33ab-090a-468a-87ee-5c2235f0ffa3",
+      "defaultJobAd": true,
+      "refNumber": "JB0075761",
+      "company": {
+        "identifier": "Initech",
+        "name": "Initech"
+      },
+      "releasedDate": "2026-09-25T05:51:50.168Z",
+      "location": {
+        "city": "Hyderabad",
+        "country": "in",
+        "address": "Salarpuria Sattva Knowledge City Knowledge City, Unit II, 17 to 10 Floor Survey No. 83/1, Serilingampally Mandal",
+        "postalCode": "500081",
+        "remote": false,
+        "hybrid": false,
+        "fullLocation": "Hyderabad, , India"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {
+        "id": "2294038",
+        "label": "Engineering, Infrastructure and Operations"
+      },
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "not_applicable",
+        "label": "Not Applicable"
+      },
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Initech/postings/744000151763959",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    },
+    {
+      "id": "744000151719919",
+      "name": "Senior Analyst, US International Tax",
+      "uuid": "462c38eb-ffba-4c55-9e8e-183ca6bd8149",
+      "jobAdId": "c1f364b8-3565-4a9e-b213-2ae8a02809a9",
+      "defaultJobAd": true,
+      "refNumber": "JB0075690",
+      "company": {
+        "identifier": "Initech",
+        "name": "Initech"
+      },
+      "releasedDate": "2026-09-25T00:04:20.497Z",
+      "location": {
+        "city": "Santa Clara",
+        "region": "CALIFORNIA",
+        "country": "us",
+        "address": "Building A,B,C 2225 Lawson Lane",
+        "postalCode": "95054",
+        "remote": false,
+        "hybrid": false,
+        "fullLocation": "Santa Clara, CALIFORNIA, United States"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {},
+      "function": {
+        "id": "finance",
+        "label": "Finance"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "not_applicable",
+        "label": "Not Applicable"
+      },
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Initech/postings/744000151719919",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    },
+    {
+      "id": "744000151698539",
+      "name": "Principal Software Engineer",
+      "uuid": "0e10f075-2e6c-4d5d-b718-d6557b61d779",
+      "jobAdId": "3d138253-e968-4ed3-90d5-a075aaccb3aa",
+      "defaultJobAd": false,
+      "refNumber": "JB0075435",
+      "company": {
+        "identifier": "Initech",
+        "name": "Initech"
+      },
+      "releasedDate": "2026-09-24T20:14:46.889Z",
+      "location": {
+        "city": "Santa Clara",
+        "region": "CALIFORNIA",
+        "country": "us",
+        "address": "2225 Lawson Lane",
+        "postalCode": "95054",
+        "remote": false,
+        "hybrid": true,
+        "fullLocation": "Santa Clara, CALIFORNIA, United States"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {
+        "id": "2294038",
+        "label": "Engineering, Infrastructure and Operations"
+      },
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "not_applicable",
+        "label": "Not Applicable"
+      },
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Initech/postings/744000151698539",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    },
+    {
+      "id": "744000151714239",
+      "name": "Pricing Operations Senior Analyst",
+      "uuid": "33d2113c-6862-44b1-a3ba-ab456824e852",
+      "jobAdId": "49e3ad32-2721-479e-8aa9-d82bc7a45273",
+      "defaultJobAd": true,
+      "refNumber": "JB0075598",
+      "company": {
+        "identifier": "Initech",
+        "name": "Initech"
+      },
+      "releasedDate": "2026-09-24T22:29:09.387Z",
+      "location": {
+        "city": "San Francisco de Heredia",
+        "region": "Heredia",
+        "country": "cr",
+        "address": "America Free Zone, 600 Norte de Plaza",
+        "postalCode": "40101",
+        "remote": true,
+        "hybrid": false,
+        "fullLocation": "San Francisco de Heredia, Heredia, Costa Rica"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {},
+      "function": {
+        "id": "marketing",
+        "label": "Marketing"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "not_applicable",
+        "label": "Not Applicable"
+      },
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Initech/postings/744000151714239",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    }
+  ]
+}

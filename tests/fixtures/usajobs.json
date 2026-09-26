@@ -1,0 +1,184 @@
+{
+ "LanguageCode": "EN",
+ "SearchParameters": {},
+ "SearchResult": {
+  "SearchResultCount": 3,
+  "SearchResultCountAll": 3,
+  "SearchResultItems": [
+   {
+    "MatchedObjectId": "812345600",
+    "MatchedObjectDescriptor": {
+     "PositionID": "TS-812345600",
+     "PositionTitle": "IT Specialist (APPSW)",
+     "PositionURI": "https://www.usajobs.gov:443/GetJob/ViewDetails/812345600",
+     "ApplyURI": [
+      "https://www.usajobs.gov:443/GetJob/ViewDetails/812345600?PostingChannelID="
+     ],
+     "PositionLocationDisplay": "Washington, District of Columbia; Anywhere in the U.S. (remote job)",
+     "PositionLocation": [
+      {
+       "LocationName": "Washington, District of Columbia",
+       "CountryCode": "United States",
+       "CountrySubDivisionCode": "District of Columbia",
+       "CityName": "Washington, District of Columbia",
+       "Longitude": -77.0,
+       "Latitude": 38.9
+      },
+      {
+       "LocationName": "Anywhere in the U.S. (remote job)",
+       "CountryCode": "United States",
+       "CountrySubDivisionCode": "",
+       "CityName": "Anywhere in the U.S. (remote job)",
+       "Longitude": -77.0,
+       "Latitude": 38.9
+      }
+     ],
+     "OrganizationName": "Bureau of Tidewater Surveys",
+     "DepartmentName": "Department of Tidewater",
+     "JobCategory": [
+      {
+       "Name": "Information Technology Management",
+       "Code": "2210"
+      }
+     ],
+     "JobGrade": [
+      {
+       "Code": "GS"
+      }
+     ],
+     "PositionSchedule": [
+      {
+       "Name": "Full-time",
+       "Code": "1"
+      }
+     ],
+     "PositionRemuneration": [
+      {
+       "MinimumRange": "85000",
+       "MaximumRange": "120000",
+       "RateIntervalCode": "PA",
+       "Description": "Per Year"
+      }
+     ],
+     "PositionStartDate": "2026-09-15T08:05:12.0270",
+     "PositionEndDate": "2026-10-15T23:59:59.9970",
+     "PublicationStartDate": "2026-09-15T08:05:12.0270",
+     "ApplicationCloseDate": "2026-10-15T23:59:59.9970"
+    },
+    "RelevanceRank": 0
+   },
+   {
+    "MatchedObjectId": "812345601",
+    "MatchedObjectDescriptor": {
+     "PositionID": "TS-812345601",
+     "PositionTitle": "Computer Scientist",
+     "PositionURI": "https://www.usajobs.gov:443/GetJob/ViewDetails/812345601",
+     "ApplyURI": [
+      "https://www.usajobs.gov:443/GetJob/ViewDetails/812345601?PostingChannelID="
+     ],
+     "PositionLocationDisplay": "Dahlgren, Virginia",
+     "PositionLocation": [
+      {
+       "LocationName": "Dahlgren, Virginia",
+       "CountryCode": "United States",
+       "CountrySubDivisionCode": "Virginia",
+       "CityName": "Dahlgren, Virginia",
+       "Longitude": -77.0,
+       "Latitude": 38.9
+      }
+     ],
+     "OrganizationName": "Tidewater Research Laboratory",
+     "DepartmentName": "Department of Tidewater",
+     "JobCategory": [
+      {
+       "Name": "Computer Science",
+       "Code": "1550"
+      }
+     ],
+     "JobGrade": [
+      {
+       "Code": "GS"
+      }
+     ],
+     "PositionSchedule": [
+      {
+       "Name": "Full-time",
+       "Code": "1"
+      }
+     ],
+     "PositionRemuneration": [
+      {
+       "MinimumRange": "72000",
+       "MaximumRange": "110000",
+       "RateIntervalCode": "PA",
+       "Description": "Per Year"
+      }
+     ],
+     "PositionStartDate": "2026-09-20T00:00:00.0000",
+     "PositionEndDate": "2026-10-15T23:59:59.9970",
+     "PublicationStartDate": "2026-09-20T00:00:00.0000",
+     "ApplicationCloseDate": "2026-10-15T23:59:59.9970"
+    },
+    "RelevanceRank": 0
+   },
+   {
+    "MatchedObjectId": "812345602",
+    "MatchedObjectDescriptor": {
+     "PositionID": "TS-812345602",
+     "PositionTitle": "Program Analyst",
+     "PositionURI": "https://www.usajobs.gov:443/GetJob/ViewDetails/812345602",
+     "ApplyURI": [
+      "https://www.usajobs.gov:443/GetJob/ViewDetails/812345602?PostingChannelID="
+     ],
+     "PositionLocationDisplay": "Denver, Colorado",
+     "PositionLocation": [
+      {
+       "LocationName": "Denver, Colorado",
+       "CountryCode": "United States",
+       "CountrySubDivisionCode": "Colorado",
+       "CityName": "Denver, Colorado",
+       "Longitude": -77.0,
+       "Latitude": 38.9
+      }
+     ],
+     "OrganizationName": "Bureau of Tidewater Surveys",
+     "DepartmentName": "Department of Tidewater",
+     "JobCategory": [
+      {
+       "Name": "Management And Program Analysis",
+       "Code": "0343"
+      }
+     ],
+     "JobGrade": [
+      {
+       "Code": "GS"
+      }
+     ],
+     "PositionSchedule": [
+      {
+       "Name": "Full-time",
+       "Code": "1"
+      }
+     ],
+     "PositionRemuneration": [
+      {
+       "MinimumRange": "70000",
+       "MaximumRange": "90000",
+       "RateIntervalCode": "PA",
+       "Description": "Per Year"
+      }
+     ],
+     "PositionStartDate": "2026-09-18T00:00:00.0000",
+     "PositionEndDate": "2026-10-15T23:59:59.9970",
+     "PublicationStartDate": "2026-09-18T00:00:00.0000",
+     "ApplicationCloseDate": "2026-10-15T23:59:59.9970"
+    },
+    "RelevanceRank": 0
+   }
+  ],
+  "UserArea": {
+   "NumberOfPages": "1",
+   "IsRadialSearch": false
+  }
+ }
+}

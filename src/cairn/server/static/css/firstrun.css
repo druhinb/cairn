@@ -1,0 +1,383 @@
+/* first run: the drafting and run screens, and the reveal card over Jobs */
+
+.launch-scroll {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--gutter);
+}
+
+/* auto margins centre the screen and still let a tall one scroll from its top */
+.launch {
+  display: grid;
+  justify-items: center;
+  width: min(560px, 100%);
+  margin: auto;
+  text-align: center;
+}
+
+.launch-art {
+  display: grid;
+  place-items: center;
+  width: 160px;
+  height: 128px;
+  margin-bottom: var(--space-5);
+  border: var(--line) solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  box-shadow: var(--panel-shadow);
+}
+
+.pixel-scene {
+  display: block;
+  color: var(--ink-2);
+}
+
+.pixel-scene .px-soft {
+  fill: var(--ink-3);
+}
+
+.pixel-scene .px-accent,
+.scene-scan {
+  fill: var(--brand);
+}
+
+.pixel-scene .px-band {
+  fill: var(--brand-soft);
+}
+
+.scene-write {
+  fill: var(--blue);
+}
+
+.scene-chip {
+  fill: var(--good);
+}
+
+.scene-chip[data-i="1"] {
+  fill: var(--ok);
+}
+
+.scene-chip[data-i="3"] {
+  fill: var(--weak);
+}
+
+.scene-scan {
+  animation: launch-scan 2400ms steps(12, end) infinite alternate;
+}
+
+/* each line redraws a pixel at a time in turn, --w steps for its --w pixels */
+.scene-write rect {
+  transform-box: fill-box;
+  transform-origin: left;
+  animation: launch-write 4200ms steps(var(--w), end) calc(var(--i) * 600ms) infinite backwards;
+}
+
+.scene-cursor {
+  animation: launch-rows 4800ms step-end infinite;
+}
+
+.scene-chip {
+  animation: launch-lit 4800ms step-end calc(var(--i) * 1200ms) infinite backwards;
+}
+
+@keyframes launch-scan {
+  to { transform: translateY(12px); }
+}
+
+@keyframes launch-write {
+  0% { transform: scaleX(0); }
+  14%, 100% { transform: scaleX(1); }
+}
+
+@keyframes launch-rows {
+  25% { transform: translateY(4px); }
+  50% { transform: translateY(8px); }
+  75%, 100% { transform: translateY(12px); }
+}
+
+@keyframes launch-lit {
+  0% { opacity: 0; }
+  8%, 100% { opacity: 1; }
+}
+
+.launch-title {
+  font-size: var(--text-2xl);
+  line-height: 1.2;
+}
+
+.launch-title:focus {
+  outline: none;
+}
+
+.launch-lead {
+  max-width: 52ch;
+  margin-top: var(--space-2);
+  color: var(--ink-2);
+}
+
+.launch-steps {
+  display: grid;
+  width: 100%;
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  overflow: hidden;
+  border: var(--line) solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--panel-shadow);
+  list-style: none;
+  text-align: left;
+}
+
+.launch-step {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  color: var(--ink-3);
+}
+
+.launch-step + .launch-step {
+  border-top: var(--line) solid var(--border);
+}
+
+.launch-step.is-now,
+.launch-step.is-done,
+.launch-step.is-failed {
+  color: var(--ink);
+}
+
+.launch-step.is-now {
+  background: var(--brand-soft);
+}
+
+.launch-label {
+  font-weight: 500;
+}
+
+.launch-note {
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.launch-mark {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+}
+
+.is-todo > .launch-mark::before,
+.is-now > .launch-mark::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--ink-3);
+}
+
+.is-now > .launch-mark::before {
+  border-color: var(--brand);
+  background: var(--brand);
+  animation: launch-blink 1000ms step-end infinite;
+}
+
+.is-done > .launch-mark {
+  color: var(--good);
+}
+
+.is-failed > .launch-mark {
+  color: var(--weak);
+}
+
+@keyframes launch-blink {
+  50% { opacity: 0.3; }
+}
+
+.launch-clock {
+  min-height: 20px;
+  margin-top: var(--space-4);
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.launch-clock:empty {
+  display: none;
+}
+
+.launch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.launch-actions:empty {
+  display: none;
+}
+
+.launch-foot {
+  max-width: 52ch;
+  margin-top: var(--space-4);
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+}
+
+.launch-log {
+  width: 100%;
+  margin-top: var(--space-4);
+  text-align: left;
+}
+
+.launch-log[hidden] {
+  display: none;
+}
+
+.launch.is-failed .launch-lead {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.setup-card.is-revealed {
+  animation: launch-rise 280ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes launch-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.setup-files summary {
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.setup-files .conflict-files {
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 600px) {
+  .launch-scroll {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .launch-step {
+    grid-template-columns: 16px minmax(0, 1fr);
+  }
+
+  .launch-note {
+    grid-column: 2;
+    text-align: left;
+  }
+}
+
+/* the reveal: covers the window, then fades to show the list under it */
+.reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 58;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+  /* a forwards fill keeps opacity pinned and the fade-out below jumps straight to 0 */
+  animation: reveal-in 200ms ease-out backwards;
+  transition: opacity 400ms ease;
+}
+
+.reveal.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.reveal-card {
+  display: grid;
+  justify-items: center;
+  width: min(420px, 100%);
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  border: var(--line) solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  text-align: center;
+  animation: launch-rise 280ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+.reveal .pixel-scene * {
+  animation: none;
+}
+
+.reveal-title {
+  font-size: var(--text-2xl);
+  line-height: 1.2;
+}
+
+.reveal-line {
+  margin-top: var(--space-2);
+  color: var(--ink-2);
+}
+
+.reveal-pick {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-5);
+  padding: var(--space-3);
+  border: var(--line) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  text-align: left;
+}
+
+.reveal-pick-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.reveal-pick-title {
+  overflow: hidden;
+  color: var(--ink);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reveal-pick-company {
+  overflow: hidden;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reveal-score {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  color: var(--ink-2);
+  font-size: var(--text-xs);
+}
+
+.reveal-hint {
+  margin-top: var(--space-4);
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+}
+
+@keyframes reveal-in {
+  from { opacity: 0; }
+}

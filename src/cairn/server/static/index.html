@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Cairn</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/ChicagoFLF.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/ibm-plex-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/layout.css">
+<link rel="stylesheet" href="/css/views.css">
+<link rel="stylesheet" href="/css/firstrun.css">
+<script src="/theme.js"></script>
+<script type="module" src="/app.js"></script>
+</head>
+<body>
+<div id="app" class="app">
+  <aside id="sidebar" class="sidebar" aria-label="Sidebar">
+    <div class="sidebar-top">
+      <button id="sidebar-toggle" type="button" class="icon-btn sidebar-toggle"
+              aria-label="Collapse sidebar" title="Collapse sidebar"></button>
+      <span class="wordmark">
+        <svg class="wordmark-mark" viewBox="0 0 16 16" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true">
+          <path d="M5 6h4v1h-4zM4 7h6v1h-6zM2 9h7v1h-7zM1 10h9v1h-9zM2 12h12v1h-12zM1 13h14v1h-14zM2 14h12v1h-12z"/>
+          <path class="wordmark-sun" d="M9 1h4v1h-4zM8 2h6v1h-6zM7 3h8v1h-8zM7 4h8v1h-8zM7 5h8v1h-8zM10 6h5v1h-5zM11 7h3v1h-3zM11 8h2v1h-2z"/>
+        </svg>
+        <span class="wordmark-name">Cairn</span>
+      </span>
+    </div>
+    <nav id="nav" class="nav" aria-label="Views"></nav>
+    <div class="sidebar-bottom">
+      <div id="update-banner" class="update-banner" role="status" hidden></div>
+      <section id="run-card" class="run-card" aria-label="Runs" aria-live="polite"></section>
+      <div class="sidebar-foot">
+        <div id="theme-toggle" class="segmented theme-toggle" role="radiogroup" aria-label="Theme"></div>
+        <div id="density-toggle" class="segmented density-toggle" role="radiogroup" aria-label="Row density"></div>
+        <button id="help-button" type="button" class="icon-btn help-button"
+                aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)"
+                aria-keyshortcuts="?"></button>
+      </div>
+      <p id="app-version" class="app-version mono" hidden></p>
+    </div>
+  </aside>
+  <main id="main" class="main" tabindex="-1">
+    <p class="main-loading" role="status"><span class="spinner" aria-hidden="true"></span>Loading</p>
+  </main>
+  <aside id="detail" class="detail" aria-label="Posting details">
+    <div id="detail-handle" class="detail-handle" role="separator" aria-orientation="vertical"
+         aria-label="Resize details" tabindex="0"></div>
+    <div id="detail-body" class="detail-body"></div>
+  </aside>
+  <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+</div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="help" class="help-panel" role="dialog" aria-modal="false" aria-labelledby="help-title" hidden>
+  <div class="help-head">
+    <h2 id="help-title">Keyboard shortcuts</h2>
+    <button id="help-close" type="button" class="icon-btn" aria-label="Close shortcuts"></button>
+  </div>
+  <div id="help-body" class="help-body"></div>
+</div>
+</body>
+</html>

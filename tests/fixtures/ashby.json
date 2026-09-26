@@ -1,0 +1,41 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "id": "8fb1615c-34bf-47c4-a1d1-b7b2f836bbd3",
+      "title": "Software Engineer, Applied AI",
+      "department": "Applied AI",
+      "team": "Applied AI Engineering",
+      "employmentType": "FullTime",
+      "location": "San Francisco",
+      "secondaryLocations": [{"location": "New York City", "address": {}}],
+      "publishedAt": "2026-03-12T16:38:15.322+00:00",
+      "isListed": true,
+      "isRemote": null,
+      "jobUrl": "https://jobs.ashbyhq.com/openai/8fb1615c-34bf-47c4-a1d1-b7b2f836bbd3",
+      "applyUrl": "https://jobs.ashbyhq.com/openai/8fb1615c-34bf-47c4-a1d1-b7b2f836bbd3/application"
+    },
+    {
+      "id": "9a000000-0000-4000-8000-000000000002",
+      "title": "Research Engineer",
+      "department": "Research",
+      "employmentType": "FullTime",
+      "location": "Seattle",
+      "secondaryLocations": [],
+      "publishedAt": "2026-09-01T00:00:00.000+00:00",
+      "isListed": true,
+      "jobUrl": "https://jobs.ashbyhq.com/openai/9a000000-0000-4000-8000-000000000002"
+    },
+    {
+      "id": "9a000000-0000-4000-8000-000000000003",
+      "title": "Internal Transfer: Infrastructure Engineer",
+      "department": "Infrastructure",
+      "employmentType": "FullTime",
+      "location": "San Francisco",
+      "secondaryLocations": [],
+      "publishedAt": "2026-09-02T00:00:00.000+00:00",
+      "isListed": false,
+      "jobUrl": "https://jobs.ashbyhq.com/openai/9a000000-0000-4000-8000-000000000003"
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "totalCount": 4
+  },
+  "result": [
+    {
+      "id": "30",
+      "jobOpeningName": "Best & Brightest",
+      "departmentId": "18671",
+      "departmentLabel": "All Departments",
+      "employmentStatusLabel": "Full-Time",
+      "employmentType": null,
+      "location": {
+        "city": "All Locations",
+        "state": null
+      },
+      "atsLocation": {
+        "country": null,
+        "state": null,
+        "province": null,
+        "city": null
+      },
+      "isRemote": null,
+      "locationType": "0"
+    },
+    {
+      "id": "42",
+      "jobOpeningName": "Project Engineer  - Building Enclosure",
+      "departmentId": "18585",
+      "departmentLabel": "Raleigh",
+      "employmentStatusLabel": "Full-Time",
+      "employmentType": null,
+      "location": {
+        "city": "Raleigh",
+        "state": "North Carolina"
+      },
+      "atsLocation": {
+        "country": null,
+        "state": null,
+        "province": null,
+        "city": null
+      },
+      "isRemote": null,
+      "locationType": "0"
+    },
+    {
+      "id": "65",
+      "jobOpeningName": "Project Manager- Building Enclosure ",
+      "departmentId": "18588",
+      "departmentLabel": "Wilmington",
+      "employmentStatusLabel": "Full-Time",
+      "employmentType": null,
+      "location": {
+        "city": "Wilmington",
+        "state": "North Carolina"
+      },
+      "atsLocation": {
+        "country": null,
+        "state": null,
+        "province": null,
+        "city": null
+      },
+      "isRemote": null,
+      "locationType": "0"
+    },
+    {
+      "id": "77",
+      "jobOpeningName": "Project Manager",
+      "departmentId": "18584",
+      "departmentLabel": "Charlotte",
+      "employmentStatusLabel": "Full-Time",
+      "employmentType": null,
+      "location": {
+        "city": "Charlotte",
+        "state": "North Carolina"
+      },
+      "atsLocation": {
+        "country": null,
+        "state": null,
+        "province": null,
+        "city": null
+      },
+      "isRemote": null,
+      "locationType": "0"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+[
+  {
+    "id": "5f0e1a2b-0000-4000-8000-000000000001",
+    "company_name": "Stripe",
+    "company_url": "https://simplify.jobs/c/Stripe",
+    "title": "Software Engineer, New Grad",
+    "url": "https://stripe.com/jobs/search?gh_jid=7412001",
+    "locations": ["San Francisco, CA"],
+    "category": "Software",
+    "terms": [],
+    "degrees": ["Bachelor's"],
+    "sponsorship": "Offers Sponsorship",
+    "active": true,
+    "is_visible": true,
+    "date_posted": 1757000000,
+    "date_updated": 1757100000,
+    "source": "Simplify"
+  },
+  {
+    "id": "5f0e1a2b-0000-4000-8000-000000000002",
+    "company_name": "Globex Systems",
+    "company_url": "https://simplify.jobs/c/Globex-Systems",
+    "title": "Software Engineer, Early Career",
+    "url": "https://careers.globex.example/jobs/7558821?gh_jid=7558821",
+    "locations": ["San Mateo, CA"],
+    "category": "Software",
+    "terms": [],
+    "degrees": ["Bachelor's", "Master's"],
+    "sponsorship": "Other",
+    "active": true,
+    "is_visible": true,
+    "date_posted": 1757200000,
+    "date_updated": 1757200000,
+    "source": "Simplify"
+  },
+  {
+    "id": "5f0e1a2b-0000-4000-8000-000000000003",
+    "company_name": "Acme Robotics",
+    "company_url": "https://simplify.jobs/c/Acme-Robotics",
+    "title": "Mechanical Engineer I",
+    "url": "https://acme.test/careers/331",
+    "locations": ["Austin, TX"],
+    "category": "Hardware",
+    "terms": [],
+    "degrees": [],
+    "sponsorship": "Does Not Offer Sponsorship",
+    "active": true,
+    "is_visible": true,
+    "date_posted": 1757300000,
+    "date_updated": 1757300000,
+    "source": "Simplify"
+  }
+]

@@ -1,0 +1,74 @@
+[
+ {
+  "last_updated": 1790265606,
+  "legal": "API Terms of Service: Please link back (with follow, and without nofollow!) to the URL on Remote OK and mention Remote OK as a source, so we get traffic back from your site. If you do not we'll have to suspend API access."
+ },
+ {
+  "slug": "remote-software-engineer-fernhollow-1137427",
+  "id": "1137427",
+  "epoch": 1790172002,
+  "date": "2026-09-23T14:00:02+00:00",
+  "company": "Fernhollow",
+  "company_logo": "",
+  "position": "Software Engineer",
+  "tags": [
+   "golang",
+   "dev",
+   "engineer",
+   "digital nomad"
+  ],
+  "description": "Remote - Fernhollow Inc. is an artificial intelligence company.",
+  "location": "",
+  "apply_url": "https://remoteOK.com/remote-jobs/remote-software-engineer-fernhollow-1137427",
+  "salary_min": 0,
+  "salary_max": 0,
+  "logo": "",
+  "url": "https://remoteOK.com/remote-jobs/remote-software-engineer-fernhollow-1137427"
+ },
+ {
+  "slug": "remote-solutions-consultant-brindle-consultancy-group-1137431",
+  "id": "1137431",
+  "epoch": 1790265606,
+  "date": "2026-09-24T16:00:06+00:00",
+  "company": "Brindle Consultancy Group",
+  "company_logo": "",
+  "position": "Danish Speaking Solutions Consultant",
+  "tags": [
+   "consulting",
+   "education",
+   "technical",
+   "customer support",
+   "marketing"
+  ],
+  "description": "<p>Danish Speaking Solutions Consultant</p>",
+  "location": "",
+  "apply_url": "https://remoteOK.com/remote-jobs/remote-solutions-consultant-brindle-consultancy-group-1137431",
+  "salary_min": 0,
+  "salary_max": 0,
+  "logo": "",
+  "url": "https://remoteOK.com/remote-jobs/remote-solutions-consultant-brindle-consultancy-group-1137431"
+ },
+ {
+  "slug": "remote-software-developer-security-analytics-redmoss-1137417",
+  "id": "1137417",
+  "epoch": 1790067601,
+  "date": "2026-09-22T09:00:01+00:00",
+  "company": "Redmoss",
+  "company_logo": "",
+  "position": "Software Developer Security Analytics",
+  "tags": [
+   "golang",
+   "infosec",
+   "Backend",
+   "stats",
+   "full time"
+  ],
+  "description": "Remote - Location: Mostly remote (within Texas).",
+  "location": "Austin, TX",
+  "apply_url": "https://remoteOK.com/remote-jobs/remote-software-developer-security-analytics-redmoss-1137417",
+  "salary_min": 90000,
+  "salary_max": 120000,
+  "logo": "",
+  "url": "https://remoteOK.com/remote-jobs/remote-software-developer-security-analytics-redmoss-1137417"
+ }
+]

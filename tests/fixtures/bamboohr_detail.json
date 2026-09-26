@@ -1,0 +1,32 @@
+{
+  "result": {
+    "jobOpening": {
+      "jobOpeningShareUrl": "https://hooli.bamboohr.com/careers/42",
+      "jobOpeningName": "Project Engineer  - Building Enclosure",
+      "jobOpeningStatus": "Open",
+      "jobCategoryId": "18454",
+      "departmentId": "18585",
+      "departmentLabel": "Raleigh",
+      "employmentStatusLabel": "Full-Time",
+      "employmentType": null,
+      "location": {
+        "city": "Raleigh",
+        "state": "North Carolina",
+        "postalCode": "27615",
+        "addressCountry": "United States"
+      },
+      "atsLocation": {
+        "country": null,
+        "countryId": null,
+        "state": null,
+        "city": null
+      },
+      "compensation": null,
+      "datePosted": "2023-10-06",
+      "minimumExperience": "Experienced",
+      "locationType": "0",
+      "seekPromoted": false,
+      "aiProcessingDisclosureEnabled": false
+    }
+  }
+}

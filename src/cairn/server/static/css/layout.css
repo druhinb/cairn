@@ -1,0 +1,631 @@
+.app {
+  --detail-fit: max(320px, min(var(--detail-w), calc(100vw - var(--sidebar-w) - 560px)));
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr) var(--detail-fit);
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.app.sidebar-rail {
+  --sidebar-w: var(--rail-w);
+}
+
+.app.detail-collapsed {
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr) 0;
+}
+
+.app.detail-collapsed .detail {
+  display: none;
+}
+
+.app.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+/* lists and cards cover the dot grid with their surface */
+.main,
+.sidebar {
+  background: radial-gradient(circle, var(--dot-grid) 1px, transparent 1.5px) 0 0 / 16px 16px, var(--bg);
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  .main,
+  .sidebar {
+    background: var(--bg);
+  }
+}
+
+.main {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* sidebar */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px 8px;
+  border-right: var(--line) solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  margin-bottom: 12px;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.wordmark-mark {
+  flex: none;
+  fill: currentColor;
+}
+
+.wordmark-sun {
+  fill: var(--brand);
+}
+
+.nav {
+  display: grid;
+  gap: 2px;
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: var(--radius);
+  color: var(--ink-2);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color var(--ease), color var(--ease);
+}
+
+.nav-item:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.nav-item[aria-current="page"] {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.nav-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--brand);
+}
+
+.nav-label {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.nav-count {
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+}
+
+.nav-item[aria-current="page"] .nav-count {
+  color: var(--brand);
+}
+
+.nav-badge {
+  padding: 0 5px;
+  border-radius: var(--radius-chip);
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  line-height: 16px;
+}
+
+/* pinned views */
+.nav-pins {
+  display: grid;
+  gap: 1px;
+}
+
+.nav-pins:empty {
+  display: none;
+}
+
+.nav-pin-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-pin {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 28px 0 32px;
+  border-radius: var(--radius);
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  line-height: 28px;
+  text-decoration: none;
+  transition: background-color var(--ease), color var(--ease);
+}
+
+.nav-pin::before {
+  content: "#";
+  margin-right: 6px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+}
+
+.nav-pin-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-pin:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.nav-pin[aria-current="true"] {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+/* opacity hides it and keeps it in the tab order */
+.nav-pin-remove {
+  position: absolute;
+  right: 4px;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: transparent;
+  color: var(--ink-3);
+  opacity: 0;
+  transition: opacity var(--ease);
+}
+
+.nav-pin-remove .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.nav-pin-row:hover .nav-pin-remove,
+.nav-pin-remove:focus-visible {
+  opacity: 1;
+}
+
+.nav-pin-remove:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.sidebar-bottom {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.run-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: var(--line) solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--panel-shadow);
+}
+
+.run-card:empty {
+  display: none;
+}
+
+.run-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+}
+
+.run-line {
+  display: grid;
+  min-width: 0;
+  color: var(--ink-2);
+}
+
+.run-greeting {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.run-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-dot);
+  background: var(--ink-3);
+}
+
+.run-running {
+  background: var(--brand);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.run-failed {
+  background: var(--weak);
+}
+
+@keyframes pulse {
+  50% { opacity: 0.35; transform: scale(0.8); }
+}
+
+.run-button {
+  width: 100%;
+}
+
+/* one line tall before the schedule loads, so the card keeps its height */
+.run-schedule {
+  min-height: 1lh;
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+}
+
+.sidebar-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle {
+  grid-column: 1 / -1;
+}
+
+/* sized by label so "Contrast" gets the room it needs and nothing clips */
+.sidebar-foot .segment {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
+  height: calc(var(--control-h-sm) - 2 * var(--line));
+  padding: 0 6px;
+  font-size: var(--text-xs);
+}
+
+.sidebar-foot .segment .icon {
+  display: none;
+}
+
+.app-version {
+  color: var(--ink-3);
+  font-size: var(--text-2xs);
+}
+
+/* the icon rail */
+.sidebar-rail .sidebar {
+  padding: 12px 8px;
+  align-items: center;
+}
+
+.sidebar-rail .wordmark-name,
+.sidebar-rail .nav-label,
+.sidebar-rail .nav-count,
+.sidebar-rail .nav-pins,
+.sidebar-rail .app-version,
+.sidebar-rail .run-line,
+.sidebar-rail .run-schedule,
+.sidebar-rail .run-button-label,
+.sidebar-rail .segment-label {
+  display: none;
+}
+
+.sidebar-rail .sidebar-top {
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* the border leaves the rail an odd width, which centres the mark on a half pixel */
+.sidebar-rail .wordmark-mark {
+  margin-left: 1px;
+}
+
+.sidebar-rail .nav-item {
+  justify-content: center;
+  width: 40px;
+  padding: 0;
+}
+
+.sidebar-rail .nav-item[aria-current="page"]::before {
+  left: -8px;
+}
+
+.sidebar-rail .nav-badge {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  overflow: hidden;
+  font-size: 0;
+}
+
+.sidebar-rail .nav-item:hover::after,
+.sidebar-rail .nav-item:focus-visible::after {
+  content: attr(data-label);
+  position: fixed;
+  left: calc(var(--rail-w) + 4px);
+  z-index: 40;
+  padding: 4px 8px;
+  border: var(--line) solid var(--card-border);
+  border-radius: var(--radius-chip);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.sidebar-rail .sidebar-bottom {
+  justify-items: center;
+}
+
+.sidebar-rail .run-card {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  justify-items: center;
+}
+
+.sidebar-rail .run-button {
+  width: 36px;
+  padding: 0;
+}
+
+.sidebar-rail .sidebar-foot {
+  grid-template-columns: auto;
+  justify-items: center;
+}
+
+.sidebar-rail .sidebar-foot .segmented {
+  flex-direction: column;
+}
+
+.sidebar-rail .sidebar-foot .segment {
+  border-right: 0;
+  border-bottom: var(--line) solid var(--border);
+}
+
+.sidebar-rail .sidebar-foot .segment:last-child {
+  border-bottom: 0;
+}
+
+.sidebar-rail .sidebar-foot .segment .icon {
+  display: block;
+}
+
+/* detail pane */
+.detail {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  border-left: var(--line) solid var(--border);
+  background: var(--surface);
+}
+
+.detail-handle {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  width: 6px;
+  cursor: col-resize;
+}
+
+.detail-handle:hover,
+.detail-handle:focus-visible {
+  background: var(--brand);
+  opacity: 0.5;
+  outline: none;
+}
+
+/* shown until the first view mounts over it */
+.main-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-4) var(--gutter);
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+}
+
+.detail-body {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  scroll-padding-block: 8px;
+  overscroll-behavior: contain;
+}
+
+.sheet-backdrop {
+  display: none;
+}
+
+/* help panel */
+.help-panel {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 55;
+  width: min(360px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 16px;
+  border: var(--line) solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+
+.help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.help-head h2 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.help-body {
+  display: grid;
+  gap: 12px;
+}
+
+.shortcut-list {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 4px 12px;
+  margin-top: 8px;
+  font-size: var(--text-sm);
+}
+
+.shortcut-list dt {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.shortcut-list dd {
+  color: var(--ink-2);
+}
+
+.help-foot {
+  padding-top: 12px;
+  border-top: var(--line) solid var(--border);
+}
+
+@media (max-width: 1100px) {
+  .app:not(.sidebar-rail) .sidebar {
+    min-width: var(--sidebar-w);
+  }
+}
+
+/* the detail pane as a sheet over the list; app.js sets sheet-mode below 880px, or
+   below 1100px on a view that opens the pane only for a selection */
+.app.sheet-mode,
+.app.sheet-mode.detail-collapsed {
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+}
+
+.app.sheet-mode .detail {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  width: min(440px, calc(100vw - 32px));
+  border: var(--line) solid var(--card-border);
+  box-shadow: var(--sheet-shadow);
+  transform: translateX(calc(100% + 4px));
+  transition: transform var(--ease);
+  visibility: hidden;
+}
+
+.app.sheet-mode.sheet-open .detail {
+  transform: none;
+  visibility: visible;
+}
+
+.app.sheet-mode .detail-handle {
+  display: none;
+}
+
+.app.sheet-mode .sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  display: block;
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+@media (max-width: 600px) {
+  .app {
+    --sidebar-w: var(--rail-w);
+  }
+
+  .app:not(.sidebar-rail) .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 35;
+    width: 232px;
+    box-shadow: 2px 0 0 var(--border);
+  }
+}
+
+/* views with nothing to show in the detail pane, Settings and Setup */
+.app.no-detail {
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr) 0;
+}
+
+.app.no-detail .detail,
+.app.no-detail .sheet-backdrop {
+  display: none;
+}
+
+/* "Version 0.3.0 is out" above the run card */
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px 6px 10px;
+  border: var(--line) solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--blue-soft);
+  font-size: var(--text-xs);
+}
+
+.update-banner[hidden],
+.sidebar-rail .update-banner {
+  display: none;
+}
+
+.update-text {
+  flex: 1;
+  min-width: 0;
+}

@@ -1,0 +1,125 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 var(--text-md)/1.5 var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+h1, h2, h3, h4, p, dl, dd, ol, ul, figure {
+  margin: 0;
+}
+
+/* plex sans ships 400, 500 and 600 here, so 700 would be synthesised */
+strong, b {
+  font-weight: 600;
+}
+
+ol, ul {
+  padding: 0;
+  list-style: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: default;
+}
+
+a {
+  color: var(--blue);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+.tone-weak {
+  color: var(--weak);
+}
+
+.tone-good {
+  color: var(--good);
+}
+
+.section-label {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+kbd {
+  display: inline-block;
+  min-width: 20px;
+  padding: 0 4px;
+  border: var(--line) solid var(--border-strong);
+  border-radius: var(--radius-chip);
+  background: var(--surface);
+  box-shadow: 0 1px 0 var(--border-strong);
+  color: var(--ink);
+  font: 500 var(--text-2xs)/18px var(--font-mono);
+  text-align: center;
+}
+
+.icon {
+  flex: none;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+<style>
+.stones { fill: #1B1B1F; }
+.sun { fill: #B34621; }
+@media (prefers-color-scheme: dark) {
+  .stones { fill: #EDEBE6; }
+  .sun { fill: #E8703F; }
+}
+</style>
+<path class="stones" d="M5 6h4v1h-4zM4 7h6v1h-6zM2 9h7v1h-7zM1 10h9v1h-9zM2 12h12v1h-12zM1 13h14v1h-14zM2 14h12v1h-12z"/>
+<path class="sun" d="M9 1h4v1h-4zM8 2h6v1h-6zM7 3h8v1h-8zM7 4h8v1h-8zM7 5h8v1h-8zM10 6h5v1h-5zM11 7h3v1h-3zM11 8h2v1h-2z"/>
+</svg>

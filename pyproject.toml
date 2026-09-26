@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cairn-jobs"
+version = "0.0.1"
+description = "Daily new-grad application pipeline: fetch postings, rank them, track applications"
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: MacOS X",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business",
+]
+dependencies = ["rich>=13", "fastapi>=0.115", "uvicorn>=0.30", "pywebview>=5,<7",
+                "python-multipart>=0.0.9"]
+
+[project.optional-dependencies]
+test = ["httpx>=0.27"]
+app = ["pyinstaller>=6.16,<7"]
+
+[project.urls]
+Homepage = "https://github.com/druhinb/cairn"
+Repository = "https://github.com/druhinb/cairn"
+Issues = "https://github.com/druhinb/cairn/issues"
+Changelog = "https://github.com/druhinb/cairn/blob/main/CHANGELOG.md"
+
+[project.scripts]
+cairn = "cairn.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cairn"]

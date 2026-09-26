@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$label</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>$program</string>
+    <string>run</string>
+  </array>
+
+  <!-- launchd starts jobs with a minimal PATH; claude lives elsewhere -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>$path</string>$home_env
+  </dict>
+
+  <!-- a Mac asleep at this time runs the job at next wake -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>$hour</integer>
+    <key>Minute</key><integer>$minute</integer>
+  </dict>
+
+  <!-- 0077: the logs it writes hold posting and profile text -->
+  <key>Umask</key>
+  <integer>63</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>$stdout</string>
+  <key>StandardErrorPath</key>
+  <string>$stderr</string>
+</dict>
+</plist>

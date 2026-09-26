@@ -1,0 +1,30 @@
+[
+  {
+    "id": "6ed76ce8-4156-4b60-b120-403538bd66cd",
+    "text": "Software Engineer, Early Career",
+    "hostedUrl": "https://jobs.lever.co/figma/6ed76ce8-4156-4b60-b120-403538bd66cd",
+    "applyUrl": "https://jobs.lever.co/figma/6ed76ce8-4156-4b60-b120-403538bd66cd/apply",
+    "categories": {"commitment": "Full-time", "location": "New York, NY", "team": "Engineering",
+                   "allLocations": ["New York, NY", "San Francisco, CA"]},
+    "createdAt": 1786469891368,
+    "workplaceType": "hybrid",
+    "country": "US"
+  },
+  {
+    "id": "0b1c2d3e-0000-4000-8000-000000000002",
+    "text": "Platform Engineer",
+    "hostedUrl": "https://jobs.lever.co/figma/0b1c2d3e-0000-4000-8000-000000000002",
+    "categories": {"commitment": "Full-time", "location": "United States", "team": "Infrastructure"},
+    "createdAt": 1786000000000,
+    "workplaceType": "remote",
+    "country": "US"
+  },
+  {
+    "id": "0b1c2d3e-0000-4000-8000-000000000003",
+    "text": "Product Designer",
+    "hostedUrl": "https://jobs.lever.co/figma/0b1c2d3e-0000-4000-8000-000000000003",
+    "categories": {"commitment": "Full-time", "team": "Design"},
+    "createdAt": 1785000000000,
+    "workplaceType": "onsite"
+  }
+]
