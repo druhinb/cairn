@@ -573,6 +573,30 @@ class ThreadTest(StoreTestCase):
                 conn.execute("SELECT 1")
 
 
+class FirstConnectTest(unittest.TestCase):
+    def test_threads_opening_a_new_database_at_once_all_connect(self):
+        errors = []
+
+        def search(start):
+            start.wait()
+            try:
+                store.search(limit=1)
+            except sqlite3.OperationalError as e:
+                errors.append(str(e))
+            finally:
+                store.close_thread()
+
+        for _ in range(30):
+            with temp_home():
+                start = threading.Barrier(12)
+                threads = [threading.Thread(target=search, args=(start,)) for _ in range(12)]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join(timeout=30)
+        self.assertEqual(errors, [])
+
+
 class UpsertTest(StoreTestCase):
     def _found(self, posting_id):
         return self.conn.execute("SELECT found_at FROM postings WHERE id = ?",

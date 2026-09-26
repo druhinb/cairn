@@ -18,6 +18,9 @@ from cairn.store.schema import _AFTER_MIGRATION, SCHEMA, SCHEMA_VERSION, _migrat
 # which anyio's thread limiter bounds; background job threads call close_thread().
 _connections = {}
 _connections_lock = threading.Lock()
+# two threads opening a new database at once can fail the WAL switch or the schema
+# setup with "database is locked" before the busy timeout runs out
+_opening_lock = threading.Lock()
 
 _SQLITE_CONFIG_MEMSTATUS = 9
 
@@ -74,14 +77,22 @@ def now():
 def connect():
     """This thread's connection for the current home, opened, migrated, and imported
     on first use."""
-    # both modules connect through this one, so a top-level import would be circular
-    from cairn.store import legacy, relevance  # noqa: PLC0415
     path = paths.db_file().resolve()
     key = (path, threading.get_ident())
     with _connections_lock:
         conn = _connections.get(key)
     if conn is not None:
         return conn
+    with _opening_lock:
+        conn = _open(path)
+    with _connections_lock:
+        _connections[key] = conn
+    return conn
+
+
+def _open(path):
+    # both modules connect through this one, so a top-level import would be circular
+    from cairn.store import legacy, relevance  # noqa: PLC0415
     path.parent.mkdir(parents=True, exist_ok=True)
     # each connection is used only by its own thread; the flag lets close() run
     # from any thread
@@ -113,8 +124,6 @@ def connect():
     except BaseException:
         conn.close()
         raise
-    with _connections_lock:
-        _connections[key] = conn
     return conn
 
 

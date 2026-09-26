@@ -50,6 +50,8 @@ This file lists every notable change to this project. It follows
   button that sends a test alert.
 - Run setup again from the top of Settings › Profile.
 - The Follow button on suggested companies works again.
+- The first time Cairn opens, the sidebar no longer says Cairn stopped
+  responding because the new database was locked.
 
 ## [0.0.4] — 2026-09-26
 
