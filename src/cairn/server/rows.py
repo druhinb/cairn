@@ -23,4 +23,4 @@ def make_row(job):
                 job.get("keywords")),
             "feedback": job.get("feedback"), "salary": job.get("salary"),
             "sponsorship": job.get("offers_sponsorship"), "closed": job.get("closed", False),
-            "also_on": job.get("also_on", [])}
+            "also_on": job.get("also_on", []), "reposts": job.get("reposts", 0)}

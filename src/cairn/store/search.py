@@ -5,7 +5,8 @@ import time
 from cairn.core import settings
 from cairn.jobs import places
 from cairn.store.db import connect
-from cairn.store.postings import _DETAIL, _DETAIL_PARAMS, _SPONSORSHIP, _add_also_on
+from cairn.store.postings import (_DETAIL, _DETAIL_PARAMS, _SPONSORSHIP, _add_also_on,
+                                  _add_reposts)
 from cairn.store.relevance import _RECENCY, _marks, relevant_query
 from cairn.store.rows import _posting
 
@@ -172,6 +173,7 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
                         _DETAIL_PARAMS + params + [limit, offset]).fetchall()
     jobs = [_posting(row) for row in rows]
     _add_also_on(jobs)
+    _add_reposts(jobs)
     return jobs, total
 
 

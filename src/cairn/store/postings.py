@@ -164,6 +164,7 @@ def get_posting(posting_id):
         return None
     job = _posting(row)
     _add_also_on([job])
+    _add_reposts([job])
     return job
 
 
@@ -181,6 +182,27 @@ def _add_also_on(jobs):
         job["also_on"] = [{"source": row["source"], "url": web_url(row["url"])}
                           for row in by_group.get(job.get("group_key"), ())
                           if row["id"] != job["id"]]
+
+
+def _match_key(group_key):
+    return group_key.rpartition("#")[0]
+
+
+def _add_reposts(jobs):
+    """Set reposts on each job: how many postings of the same company, title and
+    places were last listed before it was first seen. A role taken down and posted
+    again with a new requisition lands in a new group, so the match key is compared."""
+    keys = {_match_key(job["group_key"]) for job in jobs if job.get("group_key")}
+    rows = connect().execute(
+        "SELECT keys.value, postings.last_seen_at FROM json_each(?) keys "
+        "JOIN postings ON postings.group_key > keys.value || '#' "
+        "AND postings.group_key < keys.value || '$'", (json.dumps(sorted(keys)),))
+    last_seen = {}
+    for key, seen_at in rows:
+        last_seen.setdefault(key, []).append(seen_at or "")
+    for job in jobs:
+        earlier = last_seen.get(_match_key(job.get("group_key") or ""), ())
+        job["reposts"] = sum(1 for seen_at in earlier if seen_at < (job["first_seen_at"] or ""))
 
 
 def resolve(prefix):

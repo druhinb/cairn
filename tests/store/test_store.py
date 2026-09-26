@@ -1282,6 +1282,17 @@ class GroupTest(StoreTestCase):
         self.assertEqual(store.get_posting("two-swe")["also_on"],
                          [{"source": "one", "url": "https://jobs.test/one-swe"}])
 
+    def test_a_role_listed_again_after_it_came_down_counts_its_reposts(self):
+        with store.connect() as conn:
+            conn.execute("UPDATE postings SET active = 0, first_seen_at = '2026-01-01T00:00:00', "
+                         "last_seen_at = '2026-02-01T00:00:00' WHERE id IN ('one-swe', 'two-swe')")
+        store.upsert_postings([_row("three-swe", "Software Engineer (New Grad)", "Acme")],
+                              "three")
+        by_id = {row["id"]: row for row in store.search()[0]}
+        self.assertEqual((by_id["three-swe"]["reposts"], by_id["one-sre"]["reposts"]), (2, 0))
+        self.assertEqual(store.get_posting("three-swe")["reposts"], 2)
+        self.assertEqual(store.get_posting("one-swe")["reposts"], 0)
+
     def test_the_earliest_seen_member_stands_for_its_group_whatever_the_scores(self):
         self.assertIn("one-swe", [row["id"] for row in store.search()[0]])
         store.save_scores([{"id": "one-swe", "fit": 60, "tier": 60},

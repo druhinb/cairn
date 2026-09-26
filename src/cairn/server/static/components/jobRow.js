@@ -129,6 +129,8 @@ export function jobRow(job, { selected = false, unread = false } = {}) {
     h("div", { class: "row-line2" },
       job.closed && h("span", { class: "pill pill-closed", text: "Closed",
         title: "The last link check found this posting closed" }),
+      job.reposts > 0 && h("span", { class: "pill pill-repost", text: job.reposts > 1 ? `Reposted ${job.reposts}×` : "Reposted",
+        title: `${job.company || "The company"} took this role down and posted it again. A role that keeps coming back may not be hiring.` }),
       loc && h("span", { class: "row-loc", text: loc, title: (job.locations || []).join("\n") }),
       job.timing && timingChip(job.timing, job.starts_before_graduation),
       repeat && h("span", { class: "row-repeat", text: `applied before · ${dayText(job.applied_before)}`,

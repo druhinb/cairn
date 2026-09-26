@@ -121,7 +121,7 @@ class JobsTest(ServerTestCase):
             "applied_at": None, "updated_at": None, "seen": True, "run_id": None,
             "applied_before": None, "timing": None, "starts_before_graduation": False,
             "logo_domain": None, "feedback": None, "salary": None, "sponsorship": None,
-            "closed": False, "also_on": []})
+            "closed": False, "also_on": [], "reposts": 0})
         self.assertFalse(body["rows"][1]["seen"])
 
     def test_rows_and_detail_carry_the_stored_icon_domain(self):
