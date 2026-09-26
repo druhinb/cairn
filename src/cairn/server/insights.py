@@ -60,13 +60,14 @@ def job_facets(q: str | None = None, relevant_only: bool = True,
                posted_within_days: float | None = None,
                active_only: bool = True, run_id: int | None = None,
                sponsorship: Literal["yes", "no"] | None = None,
-               salary_min: int | None = Query(None, ge=0)):
+               salary_min: int | None = Query(None, ge=0), hide_low_fit: bool = False):
     return store.facets(
         q=q, relevant_only=relevant_only, fit_min=fit_min, tier_min=tier_min,
         status=status, hide_passed=hide_passed, category=category, location=location,
         source=source, posted_within_days=posted_within_days,
         active_only=active_only,
-        run_id=run_id, sponsorship=sponsorship, salary_min=salary_min)
+        run_id=run_id, sponsorship=sponsorship, salary_min=salary_min,
+        hide_low_fit=hide_low_fit)
 
 
 @router.get("/api/insights/skills")

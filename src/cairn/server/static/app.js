@@ -81,7 +81,7 @@ const app = {
 async function refreshStatus() {
   try {
     const [status, relevant, runs] = await Promise.all([api("/api/status", { quiet: true }),
-      api("/api/jobs?limit=1", { quiet: true }), api(`/api/runs?limit=${RUNS_SCANNED}`, { quiet: true })]);
+      api("/api/jobs?limit=1&hide_low_fit=true", { quiet: true }), api(`/api/runs?limit=${RUNS_SCANNED}`, { quiet: true })]);
     app.status = status;
     app.relevant = relevant.total;
     app.runs = runs;

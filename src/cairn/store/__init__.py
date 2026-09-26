@@ -101,7 +101,7 @@ from cairn.store.scores import (
     set_feedback,
     set_keywords,
 )
-from cairn.store.search import facets, search
+from cairn.store.search import count, facets, search
 from cairn.store.tracker import (
     add_stage,
     application,

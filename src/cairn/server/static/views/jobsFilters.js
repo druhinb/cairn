@@ -14,7 +14,7 @@ const PAY_MAX = 10000000;
 const SPONSORSHIP = [[null, "Any"], ["yes", "Yes"], ["no", "No"]];
 
 export const DEFAULTS = { q: "", rel: true, fit: null, tier: null, pay: null, source: [], category: [],
-  sponsor: null, loc: "", posted: null, status: [], passed: false, sort: "score" };
+  sponsor: null, loc: "", posted: null, status: [], passed: false, low: false, sort: "score" };
 
 /** The filter state a hash's params describe; anything unrecognised is dropped. */
 export function readFilters(params) {
@@ -38,6 +38,7 @@ export function readFilters(params) {
     status: (params.get("status") || "").split(",")
       .filter((s) => s === "none" || STATUSES.includes(s)),
     passed: params.get("passed") === "1",
+    low: params.get("low") === "1",
     sort: SORTS.some(([value]) => value === sort) ? sort : "score",
   };
 }
@@ -52,6 +53,7 @@ export function writeFilters(f) {
   if (f.loc) params.set("loc", f.loc);
   if (f.status.length) params.set("status", f.status.join(","));
   if (f.passed) params.set("passed", "1");
+  if (f.low) params.set("low", "1");
   if (f.sort !== "score") params.set("sort", f.sort);
   return params;
 }

@@ -66,16 +66,19 @@ def list_jobs(q: str | None = None, relevant_only: bool = True,
               posted_within_days: float | None = None,
               active_only: bool = True, run_id: int | None = None,
               sponsorship: Literal["yes", "no"] | None = None,
-              salary_min: int | None = Query(None, ge=0),
+              salary_min: int | None = Query(None, ge=0), hide_low_fit: bool = False,
               sort: Literal["score", "newest", "company", "updated", "salary"] = "score",
               limit: int = Query(50, ge=1, le=200), offset: int = Query(0, ge=0)):
-    rows, total = store.search(
-        q=q, relevant_only=relevant_only, fit_min=fit_min, tier_min=tier_min,
-        status=status, hide_passed=hide_passed, category=category, location=location,
-        source=source, posted_within_days=posted_within_days,
-        active_only=active_only, run_id=run_id, sponsorship=sponsorship,
-        salary_min=salary_min, sort=sort, limit=limit, offset=offset)
-    return {"rows": [make_row(job) for job in rows], "total": total}
+    filters = {"q": q, "relevant_only": relevant_only, "fit_min": fit_min,
+               "tier_min": tier_min, "status": status, "hide_passed": hide_passed,
+               "category": category, "location": location, "source": source,
+               "posted_within_days": posted_within_days, "active_only": active_only,
+               "run_id": run_id, "sponsorship": sponsorship, "salary_min": salary_min}
+    rows, total = store.search(**filters, hide_low_fit=hide_low_fit, sort=sort, limit=limit,
+                               offset=offset)
+    return {"rows": [make_row(job) for job in rows], "total": total,
+            "low_fit_hidden": store.count(**filters) - total if hide_low_fit else 0,
+            "fit_threshold": settings.get().fit_threshold}
 
 
 @router.get("/api/jobs/{posting_id}")

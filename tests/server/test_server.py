@@ -105,6 +105,12 @@ class ServerTestCase(unittest.TestCase):
 
 
 class JobsTest(ServerTestCase):
+    def test_hide_low_fit_says_how_many_it_hid(self):
+        body = self.client.get("/api/jobs", params={"hide_low_fit": "true"}).json()
+        self.assertEqual([r["id"] for r in body["rows"]], ["alpha", "beta", "gamma"])
+        self.assertEqual((body["low_fit_hidden"], body["fit_threshold"]), (1, 60))
+        self.assertEqual(self.client.get("/api/jobs").json()["low_fit_hidden"], 0)
+
     def test_default_list_is_relevant_active_and_ranked(self):
         body = self.client.get("/api/jobs").json()
         self.assertEqual([r["id"] for r in body["rows"]], ["alpha", "zeta", "beta", "gamma"])

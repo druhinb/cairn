@@ -42,7 +42,7 @@ const selectModeQuery = matchMedia("(max-width: 899px)");
 const SCOPES = {
   jobs: { title: "Jobs", fixed: {}, hidden: new Set(), group: ["group", "date"] },
   saved: { title: "Saved", fixed: { status: ["saved"], rel: false },
-    hidden: new Set(["rel", "status", "passed"]), group: ["group", "date"] },
+    hidden: new Set(["rel", "status", "passed", "low"]), group: ["group", "date"] },
   latest: { title: "Latest run", fixed: { rel: false }, hidden: new Set(["rel"]),
     group: ["latestGroup", "none"], byRun: true },
 };
@@ -79,6 +79,8 @@ class JobsList {
     this.removed = new Map();
     this.chips = new Map();
     this.total = 0;
+    /** @type {{hidden: number, under: number} | null} */
+    this.lowFit = null;
     this.loading = false;
     this.token = 0;
     this.selectedId = detail.shownId();
@@ -146,6 +148,7 @@ class JobsList {
   // structure
   build() {
     this.count = h("span", { class: "view-count", "aria-live": "polite" });
+    this.lowFitNote = h("span", { class: "view-count" });
     this.searchInput = h("input", { type: "search", class: "search-input",
       placeholder: "Search company, title, city, or season", "aria-label": "Search postings",
       "aria-keyshortcuts": "/", value: this.filters.q,
@@ -167,7 +170,7 @@ class JobsList {
     this.root.replaceChildren(h("section", { class: "view jobs-view" },
       h("header", { class: "view-head" },
         h("div", { class: "view-heading" }, h("h1", { class: "display", text: this.scope.title }), this.count,
-          this.openNext, this.selectToggle),
+          this.lowFitNote, this.openNext, this.selectToggle),
         h("div", { class: "search" }, icon("search"), this.searchInput,
           h("kbd", { class: "search-kbd", text: "/" })),
         this.subline),
@@ -268,7 +271,8 @@ class JobsList {
     const f = { ...this.filters, ...overrides };
     const fixed = this.scope.fixed;
     return { q: f.q.trim(), relevant_only: fixed.rel ?? f.rel, fit_min: f.fit, tier_min: f.tier,
-      status: fixed.status || f.status, hide_passed: !f.passed, category: f.category,
+      status: fixed.status || f.status, hide_passed: !f.passed,
+      hide_low_fit: !this.scope.hidden.has("low") && !f.low, category: f.category,
       location: f.loc, source: f.source, posted_within_days: f.posted, sponsorship: f.sponsor,
       salary_min: f.pay, run_id: this.scope.byRun ? this.runId : null };
   }
@@ -451,6 +455,7 @@ class JobsList {
       this.list.removeAttribute("aria-busy");
       this.rows = [];
       this.total = 0;
+      this.lowFit = null;
       this.renderList();
       return;
     }
@@ -461,6 +466,7 @@ class JobsList {
       if (token !== this.token) return;
       this.rows = page.rows;
       this.total = page.total;
+      this.lowFit = { hidden: page.low_fit_hidden, under: page.fit_threshold };
       this.removed.clear();
       this.banner.hidden = true;
       this.renderList();
@@ -745,6 +751,21 @@ class JobsList {
     const noun = this.scope === SCOPES.saved ? "saved"
       : (rel ? (this.total === 1 ? "match" : "matches") : (this.total === 1 ? "posting" : "postings"));
     this.count.textContent = `${fmt.number(this.total)} ${noun}`;
+    this.renderLowFit();
+  }
+
+  /** How many low fits the list hides, with a link to show them, or one to hide them again. */
+  renderLowFit() {
+    const hidden = this.lowFit?.hidden;
+    if (this.filters.low && !this.scope.hidden.has("low")) {
+      this.lowFitNote.replaceChildren(h("button", { type: "button", class: "link-btn",
+        text: "Hide low fits", onclick: () => this.set({ low: false }) }));
+    } else if (hidden > 0) {
+      this.lowFitNote.replaceChildren(`${fmt.number(hidden)} hidden for a fit under ${this.lowFit.under}`,
+        this.showLowFitButton());
+    } else {
+      this.lowFitNote.replaceChildren();
+    }
   }
 
   renderList() {
@@ -875,7 +896,15 @@ class JobsList {
     this.sentinel.replaceChildren(...[this.rows.length > 0 && h("span", { class: "muted",
       text: `Showing ${fmt.number(this.rows.length)} of ${fmt.number(this.total)}` }),
     more && h("button", { type: "button", class: "btn btn-sm", text: "Load more",
-      onclick: () => this.loadMore() })].filter(Boolean));
+      onclick: () => this.loadMore() }),
+    !more && this.rows.length > 0 && this.lowFit?.hidden > 0 && h("span", { class: "muted",
+      text: `${fmt.number(this.lowFit.hidden)} more with a fit under ${this.lowFit.under}.` }),
+    !more && this.rows.length > 0 && this.lowFit?.hidden > 0 && this.showLowFitButton()].filter(Boolean));
+  }
+
+  showLowFitButton() {
+    return h("button", { type: "button", class: "link-btn", text: "Show them", "data-key": "show-low-fit",
+      onclick: () => this.set({ low: true }) });
   }
 
   renderError() {
@@ -926,9 +955,14 @@ class JobsList {
 
   emptyState() {
     const f = this.filters;
+    const lowFit = this.lowFit?.hidden;
+    if (lowFit > 0) {
+      return this.empty(`${fmt.number(lowFit)} low-fit ${lowFit === 1 ? "posting" : "postings"} hidden`,
+        `Each has a fit score under ${this.lowFit.under}.`, "Show them", () => this.set({ low: true }), "tray");
+    }
     if (f.q.trim()) {
       return this.empty(`No results for “${f.q.trim()}”`,
-        "Search looks at company names, titles, and summarized requirements.", "Clear search",
+        "Search looks at companies, titles, requirements, places, categories and internship terms.", "Clear search",
         () => this.set({ q: "" }), "magnifier", true);
     }
     const onlyDefaults = !narrowed({ ...f, q: "" });

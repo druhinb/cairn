@@ -1253,6 +1253,14 @@ class SearchTest(StoreTestCase):
         self.assertEqual(self._ids(source="two"), ["other"])
         self.assertNotIn("acme", self._ids(posted_within_days=7))
 
+    def test_hide_low_fit_keeps_the_unscored_and_the_tracked(self):
+        store.save_scores([{"id": "other", "fit": 40, "tier": 50},
+                           {"id": "citadel", "fit": 59, "tier": 90}])
+        store.set_status("citadel", "saved")
+        self.assertEqual(self._ids(hide_low_fit=True, relevant_only=False),
+                         ["jane", "citadel", "acme", "senior"])
+        self.assertEqual(store.count(relevant_only=False), 5)
+
     def test_postings_older_than_recent_days_show_only_with_a_status(self):
         store.upsert_postings([
             _row("stale", "Software Engineer", "Hooli", date_posted=NOW - 30 * DAY,

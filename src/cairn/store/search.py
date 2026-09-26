@@ -99,7 +99,7 @@ def _status_clauses(status, hide_passed, column="applications.status"):
 def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
              hide_passed=True, category=None, location=None, source=None,
              posted_within_days=None, active_only=True, run_id=None,
-             sponsorship=None, salary_min=None):
+             sponsorship=None, salary_min=None, hide_low_fit=False):
     """(where, params) over _FILTERED for search's filters."""
     # active first: SQLite tests the terms in order, and the same test after the
     # relevance rule's substring matches made a search four times slower
@@ -128,6 +128,9 @@ def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=Non
         params.extend(values)
     clauses.append(f"({_RECENCY} >= ? OR applications.status IS NOT NULL)")
     params.append(time.time() - settings.get().recent_days * 86400)
+    if hide_low_fit:
+        clauses.append("(scores.fit IS NULL OR scores.fit >= ? OR applications.status IS NOT NULL)")
+        params.append(settings.get().fit_threshold)
     status_clauses, status_params = _status_clauses(status, hide_passed)
     clauses.extend(status_clauses)
     params.extend(status_params)
@@ -140,7 +143,8 @@ def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=Non
 def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
            hide_passed=True, category=None, location=None, source=None,
            posted_within_days=None, active_only=True, run_id=None,
-           sponsorship=None, salary_min=None, sort="score", limit=50, offset=0):
+           sponsorship=None, salary_min=None, hide_low_fit=False, sort="score", limit=50,
+           offset=0):
     """(rows, total): one page of matching postings and the count across all pages.
 
     status lists STATUSES entries, and "none" for postings that have no status.
@@ -148,7 +152,8 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
     and source take one value or a list; run_id keeps the postings scored in that run.
     sponsorship is "yes" or "no". salary_min is a yearly USD amount that the stated
     maximum, hourly pay scaled by 2080 hours, must reach; pay stated in another
-    currency counts as unstated, here and for sort="salary".
+    currency counts as unstated, here and for sort="salary". hide_low_fit drops
+    postings scored under fit_threshold unless they have a status.
 
     Postings posted more than recent_days ago stay out unless they have a status.
     The postings of one role come back as a single row, the one _representatives
@@ -162,7 +167,8 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
         status=status, hide_passed=hide_passed, category=category, location=location,
         source=source, posted_within_days=posted_within_days,
         active_only=active_only,
-        run_id=run_id, sponsorship=sponsorship, salary_min=salary_min)
+        run_id=run_id, sponsorship=sponsorship, salary_min=salary_min,
+        hide_low_fit=hide_low_fit)
     chosen = _representatives(where)
     conn = connect()
     total = conn.execute(f"SELECT count(*) FROM ({chosen})", params).fetchone()[0]
@@ -174,6 +180,13 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
     _add_other_openings(jobs)
     _add_reposts(jobs)
     return jobs, total
+
+
+def count(**filters):
+    """The total search would give under these filters."""
+    where, params = _filters(**filters)
+    return connect().execute(f"SELECT count(*) FROM ({_representatives(where)})",
+                             params).fetchone()[0]
 
 
 # facet: the value it counts, a column of the candidates
