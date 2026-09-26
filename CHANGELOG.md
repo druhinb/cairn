@@ -15,6 +15,8 @@ This file lists every notable change to this project. It follows
 - Postings posted more than Recent days ago no longer show in Jobs, unless
   you saved, applied to or otherwise tracked them. A board editing its
   listings no longer makes old postings count as new.
+- Recent days is 90 by default, up from 21, so new grad and intern roles
+  posted in July and still open show up in the fall.
 - A role one company lists in several cities shows as one row. The posting's
   details list the other places, with a link to each.
 - Postings with a fit under your fit threshold are hidden. Jobs shows how many

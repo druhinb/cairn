@@ -1263,9 +1263,9 @@ class SearchTest(StoreTestCase):
 
     def test_postings_older_than_recent_days_show_only_with_a_status(self):
         store.upsert_postings([
-            _row("stale", "Software Engineer", "Hooli", date_posted=NOW - 30 * DAY,
+            _row("stale", "Software Engineer", "Hooli", date_posted=NOW - 100 * DAY,
                  date_updated=None),
-            _row("kept", "Software Engineer", "Pied Piper", date_posted=NOW - 30 * DAY,
+            _row("kept", "Software Engineer", "Pied Piper", date_posted=NOW - 100 * DAY,
                  date_updated=None),
         ], "one")
         store.set_status("kept", "saved")

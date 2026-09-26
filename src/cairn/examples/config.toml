@@ -35,7 +35,7 @@
 #usajobs_email = ""
 
 # ---- Volume and cost ----------------------------------------------------
-#recent_days = 21
+#recent_days = 90
 #fit_threshold = 60
 #tier_floor = 55
 #max_summaries_per_run = 25

@@ -117,7 +117,7 @@ class Settings:
     location_allow: list[str] = field(default_factory=list)
     us_only: bool = False            # skip postings whose every place is outside the US
 
-    recent_days: int = 21            # only consider postings posted this recently
+    recent_days: int = 90            # only consider postings posted this recently
     fit_threshold: int = 60          # 0-100; below this no summary and no mention in the push
     # each costs one page fetch and one call to the cheap model
     max_summaries_per_run: int = 25

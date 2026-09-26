@@ -279,7 +279,7 @@ class WhyNothingTest(unittest.TestCase):
                 _row("keyword", "Accountant"),
                 _row("degree", degrees=["PhD"]),
                 _row("location", locations=["Austin, TX"]),
-                _row("stale", date_posted=NOW - 40 * DAY, date_updated=NOW - 40 * DAY),
+                _row("stale", date_posted=NOW - 100 * DAY, date_updated=NOW - 100 * DAY),
                 _row("inactive", "Senior Engineer", active=False),
             ], "feed")
             store.set_years_required({"years": 5})
