@@ -692,6 +692,13 @@ async function takeTour() {
   }
 }
 
+/** Start the tour if it has never run. @returns {boolean} whether it started */
+function tourIfNew() {
+  if (pref("toured", false) || app.touring || tourOpen()) return false;
+  takeTour();
+  return true;
+}
+
 /** Offer the tour on the first visit to Today or Jobs once setup is done. */
 async function offerTour() {
   const due = () => !pref("toured", false) && !app.touring && !tourOpen() && !revealOpen()
@@ -748,6 +755,7 @@ function viewContext(name, params) {
       renderPins();
     },
     navigate,
+    tourIfNew,
     /** The run card's greeting and its "34 new yesterday, 6 strong" line, which is null while a run goes. */
     greeting: () => ({ hello: greeting(), summary: idleSummary() }),
     status: () => app.status,

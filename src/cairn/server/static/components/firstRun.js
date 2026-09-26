@@ -284,7 +284,7 @@ export class FirstRunScreen {
     this.stop();
     this.frame.heading.textContent = "Your jobs are ready";
     this.frame.clock.textContent = "";
-    showReveal({ runId: this.run?.id, counts: this.progress.counts, strong: this.progress.strong }, this.ctx.navigate);
+    showReveal({ runId: this.run?.id, counts: this.progress.counts, strong: this.progress.strong }, this.ctx);
   }
 }
 
@@ -339,11 +339,12 @@ async function landOnFirstRow() {
 /**
  * Open the run's postings best first under a card that says the first run is done,
  * with the top pick, then fade the card away after a moment or on a click or any key.
- * Jobs groups its rows by day, so its first row is seldom the best one.
+ * Jobs groups its rows by day, so its first row is seldom the best one. The tour
+ * follows the card the first time; after that the card lands on the best row.
  * @param {{runId: number | undefined, counts: Record<string, number> | null, strong: number}} result
- * @param {(name: string) => void} navigate
+ * @param {{navigate: (name: string) => void, tourIfNew: () => boolean}} ctx
  */
-export async function showReveal({ runId, counts, strong }, navigate) {
+export async function showReveal({ runId, counts, strong }, { navigate, tourIfNew }) {
   const top = counts?.ranked && runId != null ? await api(`/api/jobs${qs({ run_id: runId, relevant_only: false, limit: 1 })}`,
     { quiet: true }).catch(() => null) : null;
   const text = revealText(counts, strong);
@@ -364,7 +365,7 @@ export async function showReveal({ runId, counts, strong }, navigate) {
     window.removeEventListener("keydown", onKey, true);
     overlay.classList.add("is-leaving");
     setTimeout(() => overlay.remove(), REVEAL_FADE_MS);
-    landOnFirstRow();
+    if (!tourIfNew()) landOnFirstRow();
   };
   const onKey = (event) => {
     if (MODIFIERS.has(event.key)) return;

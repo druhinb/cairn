@@ -12,6 +12,8 @@ This file lists every notable change to this project. It follows
 - The profile that setup drafts from your resume has no TODO lines left to fill
   in. Your answers to the setup questions add your work authorization, the
   companies you rate highest and where you want to work.
+- The tour starts on its own once your first run finishes. You no longer have to
+  find it under the keyboard shortcuts.
 
 ## [0.0.2] — 2026-09-26
 
