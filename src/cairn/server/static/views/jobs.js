@@ -15,7 +15,7 @@ import { switchControl } from "../components/switch.js";
 import { toast } from "../components/toast.js";
 import * as detail from "./detail.js";
 import { openNextQueue, openPosting, postingShortcuts, setStatus } from "./postingList.js";
-import { DEFAULTS, FOUND, SORTS, categoryPanel, foundPanel, locationPanel, narrowed, payLabel, payPanel, postedPanel,
+import { DEFAULTS, SORTS, categoryPanel, locationPanel, narrowed, payLabel, payPanel, postedPanel,
   readFilters, sourcePanel, sponsorPanel, statusPanel, thresholdPanel, writeFilters } from "./jobsFilters.js";
 
 const PAGE = 50;
@@ -268,7 +268,7 @@ class JobsList {
     const fixed = this.scope.fixed;
     return { q: f.q.trim(), relevant_only: fixed.rel ?? f.rel, fit_min: f.fit, tier_min: f.tier,
       status: fixed.status || f.status, hide_passed: !f.passed, category: f.category,
-      location: f.loc, source: f.source, posted_within_days: f.posted, found_within_hours: f.found, sponsorship: f.sponsor,
+      location: f.loc, source: f.source, posted_within_days: f.posted, sponsorship: f.sponsor,
       salary_min: f.pay, run_id: this.scope.byRun ? this.runId : null };
   }
 
@@ -341,8 +341,6 @@ class JobsList {
         () => locationPanel(this), () => this.set({ loc: "" })),
       this.chip("Posted", f.posted ? `Posted: ${f.posted} days` : "Posted", f.posted != null,
         () => postedPanel(this), () => this.set({ posted: null })),
-      this.chip("Found", f.found ? `Found: ${FOUND.find(([hours]) => hours === f.found)?.[1].toLowerCase() ?? `last ${f.found} hours`}` : "Found",
-        f.found != null, () => foundPanel(this), () => this.set({ found: null })),
       !hidden.has("status") && this.chip("Status", f.status.length ? `Status: ${statusText}` : "Status",
         f.status.length > 0, () => statusPanel(this), () => this.set({ status: [] })),
       !hidden.has("passed") && switchControl("Hide passed", !f.passed, (on) => this.set({ passed: !on })),

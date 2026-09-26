@@ -183,16 +183,6 @@ class JobsTest(ServerTestCase):
             with self.subTest(params=params):
                 self.assertEqual(self.ids(**params), expected)
 
-    def test_found_within_hours_keeps_what_appeared_that_recently(self):
-        with store.connect() as conn:
-            conn.execute("UPDATE postings SET found_at = '2020-01-01T00:00:00' "
-                         "WHERE id = 'alpha'")
-            conn.execute("UPDATE postings SET found_at = ? WHERE id = 'zeta'",
-                         (store.db.now(),))
-        self.assertEqual(self.ids(found_within_hours=24), ["zeta"])
-        self.assertEqual(self.client.get("/api/jobs", params={"found_within_hours": 0})
-                         .status_code, 400)
-
     def test_paging(self):
         page = self.client.get("/api/jobs", params={"limit": 2, "offset": 1}).json()
         self.assertEqual([r["id"] for r in page["rows"]], ["zeta", "beta"])
