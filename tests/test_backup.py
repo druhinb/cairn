@@ -312,7 +312,8 @@ class CommandTest(BackupTestCase):
         self.assertIn("so quit it first", output)
         self.assertEqual(list(self.root.glob("a.bak-*")), [])
         self.assertFalse(backup.app_running())
-        self.assertFalse(backup.server_marker().exists())
+        # Windows keeps the file; the lock alone says a server runs
+        self.assertEqual(backup.server_marker().exists(), sys.platform == "win32")
 
     def test_the_app_server_holds_the_marker_while_it_runs(self):
         with TestClient(create_app(), base_url="http://127.0.0.1"):

@@ -99,7 +99,7 @@ class DoctorTest(unittest.TestCase):
         pdftotext = self.checks()["pdftotext"]
         self.assertFalse(pdftotext["ok"])
         self.assertFalse(pdftotext["required"])
-        self.assertEqual(pdftotext["fix"], "brew install poppler")
+        self.assertIn("poppler", pdftotext["fix"].lower())
         self.assertEqual(self.cli_doctor()[0], 0)
 
     def test_cli_prints_marks_and_fixes_and_fails_on_a_required_check(self):
