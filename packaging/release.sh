@@ -45,7 +45,7 @@ trap 'rm -f "$notes"' EXIT
 # the lines under "## [<version>]" up to the next heading, less the link
 # definitions and blank lines that end the file
 awk -v head="## [$version]" '
-	index($0, "## [") == 1 { inside = index($0, head) == 1; next }
+	index($0, "## ") == 1 { inside = index($0, head) == 1; next }
 	inside { lines[++n] = $0 }
 	END {
 		while (n > 0 && (lines[n] ~ /^[[:space:]]*$/ || lines[n] ~ /^\[[^]]*\]: /)) n--
