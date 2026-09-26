@@ -1,0 +1,94 @@
+/* runs */
+.runs-schedule {
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+}
+
+.runs-body {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--gutter) var(--space-6);
+}
+
+/* seven columns fit the list beside an open detail pane at 1280 */
+@container (max-width: 700px) {
+  .runs-table th,
+  .runs-table td {
+    padding: 0 8px;
+  }
+}
+
+.run-form-inline {
+  margin: 0;
+}
+
+.run-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.run-busy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+}
+
+.run-progress {
+  display: grid;
+  gap: 12px;
+}
+
+.run-counters {
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+}
+
+.run-elapsed {
+  color: var(--ink-3);
+}
+
+.run-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--good-soft);
+  font-weight: 500;
+}
+
+.run-summary p {
+  flex: 1;
+}
+
+.run-summary-failed {
+  background: var(--weak-soft);
+}
+
+.past-title {
+  margin: 8px 0;
+}
+
+.detail-run-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.run-facts {
+  grid-template-columns: 96px minmax(0, 1fr);
+}
+
+.detail-log .log-body {
+  height: min(60vh, 520px);
+}

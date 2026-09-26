@@ -1,0 +1,406 @@
+/* applications */
+.apps-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 24px 12px;
+}
+
+.apps-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.count-pill[aria-pressed="true"] {
+  border-color: currentColor;
+}
+
+.count-pill-n {
+  font-weight: 500;
+}
+
+.apps-view .segmented .segment[aria-pressed="true"] {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.apps-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-top: var(--line) solid var(--border);
+}
+
+.apps-body > .table-wrap {
+  margin: 16px 24px 24px;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap: 12px;
+  min-width: calc(5 * 160px + 4 * 12px + 48px);
+  min-height: 100%;
+  padding: 16px 24px 24px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  container-type: inline-size;
+  border: var(--line) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  transition: outline-color var(--ease);
+}
+
+.column-closed {
+  background: var(--grey-soft);
+}
+
+.column.drop-target {
+  outline: 2px dashed var(--brand);
+  outline-offset: 2px;
+}
+
+.column-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+}
+
+.column-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-lg);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.column-count {
+  flex: 0 0 3ch;
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+  text-align: right;
+}
+
+.column-closed .column-count {
+  color: var(--ink-2);
+}
+
+.column-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 8px;
+  flex: 1;
+  padding: 0 8px 8px;
+}
+
+.board .card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: var(--space-3);
+  border: var(--line) solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--panel-shadow);
+  cursor: grab;
+  transition: background-color var(--ease), border-color var(--ease);
+}
+
+.board .card:hover {
+  border-color: var(--ink-3);
+}
+
+.board .card[aria-current="true"] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  box-shadow: inset 3px 0 0 var(--brand);
+}
+
+.board .card.dragging {
+  opacity: 0.5;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.card-company {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-title {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.card-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.card-foot {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+}
+
+/* two lines before the cut, so a note says something beside the date */
+.card-note {
+  display: -webkit-box;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.card-age {
+  flex: none;
+  font-size: var(--text-xs);
+}
+
+.menu-title {
+  margin-bottom: 12px;
+}
+
+.apps-table .cell-company {
+  font-weight: 600;
+}
+
+.cell-company-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* a zero max-width lets these two share whatever the fixed columns leave */
+.apps-table .cell-title,
+.apps-table .cell-note {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apps-table .cell-title {
+  width: 60%;
+  color: var(--ink-2);
+}
+
+.apps-table .cell-note {
+  width: 40%;
+  color: var(--ink-3);
+}
+
+.apps-table td,
+.apps-table th {
+  padding: 0 8px;
+}
+
+.apps-table td:first-child,
+.apps-table th:first-child {
+  padding-left: 12px;
+}
+
+/* CSV import and export */
+.apps-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-slot:empty {
+  display: none;
+}
+
+.import-card {
+  display: grid;
+  gap: 8px;
+  margin: 0 24px 12px;
+  padding: 12px 16px;
+  border: var(--line) solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  font-size: var(--text-sm);
+}
+
+.import-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.import-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.import-file {
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+}
+
+.import-counts {
+  color: var(--ink-2);
+}
+
+.import-error {
+  color: var(--weak);
+}
+
+.import-table td {
+  vertical-align: middle;
+}
+
+.import-tracked {
+  margin-left: 8px;
+  font-size: var(--text-xs);
+}
+
+.cell-link {
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+}
+
+.import-list {
+  width: 100%;
+  padding: 8px;
+  border: var(--line) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: var(--text-xs);
+  resize: vertical;
+}
+
+.import-missed {
+  display: grid;
+  gap: 4px;
+}
+
+.import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.import-progress {
+  margin-right: auto;
+}
+
+@media (max-width: 720px) {
+  .import-card {
+    margin: 0 16px 12px;
+  }
+}
+
+/* each preview row stacks into company and status, then title, then link */
+@media (max-width: 600px) {
+  .import-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .import-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 8px;
+    padding: 8px 12px;
+    border-bottom: var(--line) solid var(--border);
+  }
+
+  .import-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .import-table td {
+    height: auto;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .import-table .cell-status {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: start;
+    max-width: 50vw;
+    text-align: right;
+  }
+
+  .import-table .cell-title,
+  .import-table .cell-link {
+    grid-column: 1;
+  }
+}
+
+/* board cards: the next stage and the checklist */
+.card-tracking {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: var(--ink-2);
+  font-size: var(--text-xs);
+}
+
+.card-stage,
+.card-checks {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.card-stage .icon,
+.card-checks .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--ink-3);
+}
+
+.card-checks.is-done,
+.card-checks.is-done .icon {
+  color: var(--good);
+}

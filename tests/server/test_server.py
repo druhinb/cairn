@@ -822,7 +822,7 @@ class StatusTest(ServerTestCase):
                 pending += [posixpath.normpath(posixpath.join(posixpath.dirname(url), ref))
                             for ref in reference.findall(response.text)]
         for expected in ("/app.js", "/views/jobs.js", "/views/detail.js", "/lib/api.js",
-                         "/css/views.css", "/fonts/ChicagoFLF.woff2",
+                         "/css/views/jobs.css", "/fonts/ChicagoFLF.woff2",
                          "/fonts/ibm-plex-sans-latin-400-normal.woff2",
                          "/fonts/ibm-plex-mono-latin-500-normal.woff2"):
             self.assertIn(expected, loaded)

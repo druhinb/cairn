@@ -1,0 +1,508 @@
+/* settings */
+/* past about 760px a section only widens the gap between a label and its control */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 760px);
+  gap: var(--space-5);
+  padding: var(--space-4) var(--gutter) var(--space-6);
+}
+
+.settings-nav {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  align-self: start;
+  gap: 2px;
+}
+
+.settings-nav-item {
+  position: relative;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-align: left;
+  transition: background-color var(--ease), color var(--ease);
+}
+
+.settings-nav-item:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.settings-nav-item[aria-current="true"] {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.settings-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+.settings-section {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--line) solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--panel-shadow);
+  scroll-margin-top: 16px;
+}
+
+.settings-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--control-h-sm);
+}
+
+.settings-section-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.fields {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  max-width: 640px;
+}
+
+.field-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* one measure for help text, in a field or loose in a section */
+.field-help {
+  max-width: 68ch;
+  color: var(--ink-3);
+  font-size: var(--text-sm);
+  text-wrap: pretty;
+}
+
+.field .tag-input,
+.number-input,
+.field .input-text,
+.field-stack {
+  margin-top: 4px;
+}
+
+.field-error {
+  color: var(--weak);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.field.has-error .input,
+.field.has-error .tag-input {
+  border-color: var(--weak);
+}
+
+/* the switch sits at the section's right edge, where every other switch in Settings sits */
+.field-switch {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 16px;
+  max-width: none;
+}
+
+.field-switch .field-label,
+.field-switch .field-help,
+.field-switch .field-error {
+  grid-column: 1;
+}
+
+.field-switch .switch {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.number-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.default-btn {
+  min-height: 24px;
+  margin-left: 4px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background: none;
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.default-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.default-btn:disabled {
+  text-decoration: none;
+}
+
+.input-text {
+  width: min(420px, 100%);
+}
+
+.field-stack {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.field-stack .tag-input {
+  width: 100%;
+}
+
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: var(--space-3) var(--gutter);
+  border-top: var(--line) solid var(--border);
+  background: var(--surface);
+}
+
+.save-bar-text {
+  margin-right: auto;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.spec-list {
+  display: grid;
+  margin-top: 4px;
+  border: var(--line) solid var(--border);
+  border-radius: var(--radius);
+}
+
+.spec-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 6px 12px;
+  border-bottom: var(--line) solid var(--border);
+  font-size: var(--text-sm);
+}
+
+.spec-row:last-child {
+  border-bottom: 0;
+}
+
+.spec-row:has(.spec-company) {
+  grid-template-columns: auto minmax(0, max-content) minmax(0, 1fr) auto auto;
+}
+
+.spec-off .chip,
+.spec-off .spec-name,
+.spec-off .spec-company {
+  opacity: 0.55;
+}
+
+.spec-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-2);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spec-company {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.add-note:empty {
+  display: none;
+}
+
+.schedule-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.schedule-status.is-on .run-dot {
+  background: var(--good);
+}
+
+.schedule-status.is-off .run-dot {
+  background: var(--ok);
+}
+
+.icons-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 12px;
+  border: var(--line) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.icons-coverage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 500;
+}
+
+.advanced-facts {
+  grid-template-columns: 120px minmax(0, 1fr);
+}
+
+.settings-section .field-help.mono {
+  overflow-wrap: anywhere;
+}
+
+/* Settings: the AI provider picker (also in setup), System, USAJOBS, suggestions */
+.provider-picker {
+  display: grid;
+  gap: 16px;
+}
+
+.provider-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.provider-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 10px 12px 10px 36px;
+  border: var(--line) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color var(--ease), background-color var(--ease);
+}
+
+.provider-card:hover {
+  background: var(--surface-2);
+}
+
+.provider-card.is-chosen {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.provider-card input {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  margin: 0;
+  accent-color: var(--brand);
+}
+
+.provider-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.provider-name {
+  font-weight: 600;
+}
+
+.provider-notes {
+  color: var(--ink-2);
+  font-size: var(--text-xs);
+}
+
+.provider-notes .icon {
+  vertical-align: -3px;
+}
+
+.provider-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: var(--line) solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.provider-panel:empty {
+  display: none;
+}
+
+.provider-steps li::marker {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+}
+
+.provider-steps {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 20px;
+  list-style: decimal;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+}
+
+.provider-key-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  font-size: var(--text-sm);
+}
+
+/* every field in the walkthrough ends at the panel's right edge */
+.provider-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  max-width: none;
+}
+
+.provider-field .input-text {
+  width: 100%;
+}
+
+.provider-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.provider-key .input {
+  flex: 1 1 160px;
+  width: auto;
+  min-width: 0;
+}
+
+.provider-models {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.provider-result {
+  min-height: 21px;
+  font-size: var(--text-sm);
+}
+
+.key-status {
+  font-size: var(--text-xs);
+}
+
+.system-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.system-line {
+  font-size: var(--text-md);
+}
+
+.restore-confirm {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px;
+  border: var(--line) solid color-mix(in srgb, var(--weak) 40%, var(--card-border));
+  border-radius: var(--radius);
+  background: var(--weak-soft);
+  font-size: var(--text-sm);
+}
+
+.restore-confirm[hidden] {
+  display: none;
+}
+
+.suggested {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.spec-row.suggested-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+/* a narrow row gives the location or count its own line under the name and controls */
+@media (max-width: 600px) {
+  .spec-row {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .spec-row > .switch,
+  .suggested-row > .btn {
+    margin-left: auto;
+  }
+
+  .spec-row > .spec-name {
+    order: 1;
+    flex-basis: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+.source-company[hidden] {
+  display: none;
+}
+
+.feedback-stats strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.field.field-found {
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 2px var(--brand);
+  transition: box-shadow var(--ease);
+}
+
+.setup-ai {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
