@@ -17,6 +17,8 @@ The first release.
   same job listed in several places shows once.
 - Filters for role, location, degree, graduation date, internship term,
   sponsorship and pay, saved as your preferences.
+- One spelling per city: NYC, New York City and New York, NY all count as New
+  York, NY, and SF and LA work the same way.
 - Each new posting gets a fit score and a company score with a short reason, from
   the AI provider you pick: Claude Code, the Anthropic API, Google Gemini, Groq,
   Mistral, OpenRouter, Ollama or any OpenAI-compatible service. Agree or Too high

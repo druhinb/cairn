@@ -3,7 +3,7 @@ import string
 import threading
 from dataclasses import dataclass
 
-from cairn import events, logos, settings, sources, store
+from cairn import events, logos, places, settings, sources, store
 
 
 # Postings fetched before sources had names carry the listings URL as their source.
@@ -80,7 +80,7 @@ def relevance_rules(cfg):
         keywords=tuple(k.lower() for k in cfg.title_keywords),
         categories=frozenset(cfg.allowed_categories),
         degrees=frozenset(cfg.degrees_held),
-        locations=tuple(l.lower() for l in cfg.location_allow),
+        locations=tuple(places.term(l) for l in cfg.location_allow),
         intern_terms=tuple(k.lower() for k in cfg.intern_terms),
         off_season_internships=cfg.include_off_season_internships,
         wanted_terms=frozenset(t.casefold() for t in cfg.wanted_intern_terms),
@@ -135,7 +135,7 @@ def _degree_ok(job, title, rules):
 def _location_ok(job, title, rules):
     if not rules.locations:
         return True
-    locs = _fold(" ".join(job.get("locations") or []))
+    locs = _fold(" ".join(places.canonical(p) for p in job.get("locations") or []))
     return any(l in locs for l in rules.locations)
 
 

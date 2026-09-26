@@ -17,7 +17,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import parse_qs, parse_qsl, urlsplit
 
-from cairn import paths, settings, ui
+from cairn import paths, places, settings, ui
 
 SCHEMA_VERSION = 12
 
@@ -660,6 +660,10 @@ def _regroup(conn, ids):
     _assign_groups(conn, list(members.values()))
 
 
+def _canonical_places(locations):
+    return None if locations is None else [places.canonical(p) for p in locations]
+
+
 def _json_list(value):
     return None if value is None else json.dumps(list(value), ensure_ascii=False)
 
@@ -718,7 +722,7 @@ def upsert_postings(rows, source):
             conn.execute(_UPSERT, {
                 "id": posting_id, "source": source, "company": job.get("company_name"),
                 "title": job.get("title"), "url": job.get("url"), "url_key": key,
-                "locations": _json_list(job.get("locations")),
+                "locations": _json_list(_canonical_places(job.get("locations"))),
                 "category": job.get("category"), "terms": _json_list(job.get("terms")),
                 "degrees": _json_list(job.get("degrees")),
                 "sponsorship": job.get("sponsorship"),
@@ -938,7 +942,7 @@ def _relevance_rule(cfg):
             f"WHERE value IN ({_marks(degrees)})))", degrees)
 
     if cfg.location_allow:
-        add(*_any_substring(_LOCATIONS, [l.lower() for l in cfg.location_allow]))
+        add(*_any_substring(_LOCATIONS, [places.term(l) for l in cfg.location_allow]))
 
     return "(" + " AND ".join(clauses) + ")", params
 
@@ -1137,7 +1141,8 @@ def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=Non
     if match:
         clauses.append("postings.id IN (SELECT id FROM postings_fts WHERE postings_fts MATCH ?)")
         params.append(match)
-    given = {"fit_min": fit_min, "tier_min": tier_min, "location": location,
+    given = {"fit_min": fit_min, "tier_min": tier_min,
+             "location": None if location is None else places.term(location),
              "run_id": run_id, "sponsorship": sponsorship, "salary_min": salary_min}
     for name, sql in _VALUE_FILTERS.items():
         if given[name] is not None:
