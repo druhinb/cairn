@@ -448,8 +448,8 @@ class Setup {
 
   claudeNote() {
     const ai = this.ai;
-    if (!ai.data) return h("span", { class: "provider-notes", text: "Looking for Claude Code on this Mac…" });
-    if (this.claudeFound()) return h("span", { class: "provider-notes tone-good", text: "Found on this Mac." });
+    if (!ai.data) return h("span", { class: "provider-notes", text: "Looking for Claude Code on this computer…" });
+    if (this.claudeFound()) return h("span", { class: "provider-notes tone-good", text: "Found on this computer." });
     const spec = ai.data.providers.find((p) => p.id === CLAUDE_CODE);
     const link = safeUrl(spec?.key_url) || safeUrl(CLAUDE_CODE_URL);
     return h("span", { class: "provider-notes" }, "Not found. Install it from ",
@@ -652,7 +652,7 @@ class Setup {
    */
   async findJobs(button, label, checks) {
     button.disabled = true;
-    label.textContent = "Checking this Mac…";
+    label.textContent = "Checking this computer…";
     checks.replaceChildren();
     // a check that cannot run holds nothing back, since the run reports its own failures
     const found = await api("/api/doctor", { method: "POST", quiet: true }).then((answer) => answer.checks, () => []);

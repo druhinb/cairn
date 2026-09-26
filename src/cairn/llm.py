@@ -34,7 +34,8 @@ PROVIDERS = {
         "key_url": "https://claude.com/claude-code",
         "models": {"strong": "sonnet", "cheap": "haiku"},
         "steps": ["Install Claude Code from claude.com/claude-code.",
-                  "Open Terminal, type claude, and sign in with your Claude account.",
+                  "Open Terminal (PowerShell on Windows), type claude, and sign in with "
+                  "your Claude account.",
                   "Come back here and press Test."],
         "free": False, "needs_key": False, "rpm": None,
         "notes": "Uses the limits of your Claude plan.",
@@ -105,10 +106,11 @@ PROVIDERS = {
         "key_url": "",
         "models": {"strong": "llama3.1:8b", "cheap": "llama3.2:3b"},
         "steps": ["Install Ollama from ollama.com and open it.",
-                  "In Terminal, run ollama pull llama3.1:8b, then ollama pull llama3.2:3b.",
+                  "In Terminal (PowerShell on Windows), run ollama pull llama3.1:8b, then "
+                  "ollama pull llama3.2:3b.",
                   "Small models on a laptop rank less reliably than online providers."],
         "free": True, "needs_key": False, "rpm": None,
-        "notes": "Free and runs on this Mac, at its speed.",
+        "notes": "Free and runs on this computer, at its speed.",
     },
     "custom": {
         "label": "Custom", "kind": "openai", "base_url": "", "key_url": "",
@@ -315,7 +317,7 @@ def _refusal(t, code, message):
 
 def _unreachable(t):
     if _loopback(t.base_url):
-        return f"Couldn't reach {t.label}. Open it on this Mac and try again."
+        return f"Couldn't reach {t.label}. Open it on this computer and try again."
     return f"Couldn't reach {t.label}. Check your internet connection and try again."
 
 

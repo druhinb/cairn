@@ -83,13 +83,13 @@ def _rename_in_launch_services(name):
 
 
 def _show_window(url, page):
-    """Show page in the window, and the menu-bar item that calls the API at url, until
-    Quit. Closing the window hides it."""
+    """Show page in the window until Quit, and on a Mac the menu-bar item that calls
+    the API at url, where closing the window hides it."""
     dock_icon = _present_as_cairn()
     import webview  # noqa: PLC0415 - needs a display; --no-window and the tests run without one
     window = webview.create_window("Cairn", page, width=1280, height=860,
                                    min_size=(900, 600))
-    bar = menubar.attach(url, window)
+    bar = menubar.attach(url, window) if sys.platform == "darwin" else None
     webview.start(bar.started if bar else None, icon=dock_icon)
     if bar:
         bar.stop()

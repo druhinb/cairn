@@ -109,7 +109,7 @@ function perform(shortcut) {
 }
 
 const KEY_NAMES = { Escape: "Esc" };
-const MAC = /Mac|iPhone|iPad/.test(navigator.platform);
+export const MAC = /Mac|iPhone|iPad/.test(navigator.platform);
 
 /** A key as the help panel and tooltips show it. @param {string} key @returns {string} */
 export function keyLabel(key) {

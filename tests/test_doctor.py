@@ -62,7 +62,7 @@ class DoctorTest(unittest.TestCase):
         self.binaries.discard("claude")
         claude = self.checks()["claude"]
         self.assertFalse(claude["ok"])
-        self.assertEqual(claude["detail"], "Claude Code isn't installed on this Mac")
+        self.assertEqual(claude["detail"], "Claude Code isn't installed on this computer")
         self.assertIn("claude.com/claude-code", claude["fix"])
 
     def test_claude_that_cannot_report_its_version(self):
@@ -105,7 +105,7 @@ class DoctorTest(unittest.TestCase):
         code, out = self.cli_doctor()
         self.assertEqual(code, 1)
         self.assertIn("✓ python: Python", out)
-        self.assertIn("✗ claude: Claude Code isn't installed on this Mac", out)
+        self.assertIn("✗ claude: Claude Code isn't installed on this computer", out)
         self.assertIn("    fix: install Claude Code", out)
 
     def cli_doctor(self):

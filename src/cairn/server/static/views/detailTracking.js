@@ -369,5 +369,5 @@ function filesSection(job, result, reload) {
         } }, icon("trash")))))
       : h("p", { class: "muted", text: "No files yet. Add the resume and cover letter you sent for this job." }),
     form, error,
-    h("p", { class: "field-help", text: "Cairn links to the file where it sits on your Mac." }));
+    h("p", { class: "field-help", text: "Cairn links to the file where it sits on your computer." }));
 }

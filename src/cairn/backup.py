@@ -237,8 +237,8 @@ def _extract(bundle, staged):
             with os.fdopen(fd, "wb") as out, bundle.open(info) as packed:
                 shutil.copyfileobj(packed, out)
         except UNREADABLE:
-            raise BackupError("Cairn couldn't copy the backup's files. Check that your Mac "
-                              "has free space and try again") from None
+            raise BackupError("Cairn couldn't copy the backup's files. Check that your "
+                              "computer has free space and try again") from None
 
 
 def _aside_dir(home):
@@ -276,7 +276,7 @@ def _swap(staged, home, aside):
                               f"Your previous data is in {aside}") from None
         aside.rmdir()
         raise BackupError("the restore failed, and your data is back as it was. Check that "
-                          "your Mac has free space and try again") from None
+                          "your computer has free space and try again") from None
 
 
 def _open(zip_file):

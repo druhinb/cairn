@@ -38,7 +38,7 @@ def _claude():
     fix = "install Claude Code from claude.com/claude-code and sign in"
     found = shutil.which(settings.get().claude_bin)
     if not found:
-        return False, "Claude Code isn't installed on this Mac", fix
+        return False, "Claude Code isn't installed on this computer", fix
     ok, output = _run([found, "--version"])
     return ok, "Installed" if ok else output or "Claude Code didn't start", fix
 
@@ -112,7 +112,9 @@ def _autostart():
 def _pdftotext():
     found = shutil.which("pdftotext")
     detail = "Installed" if found else "Can't read PDF resumes yet. You can paste the text instead"
-    return bool(found), detail, "brew install poppler"
+    fix = ("install Poppler and put its bin folder on your PATH" if sys.platform == "win32"
+           else "brew install poppler")
+    return bool(found), detail, fix
 
 
 def _checks():

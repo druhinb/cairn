@@ -3,7 +3,7 @@ import { subscribe } from "../lib/events.js";
 import { copyText } from "../lib/clipboard.js";
 import { fmt, h, safeUrl } from "../lib/dom.js";
 import { followCompany, followedAt } from "../lib/follow.js";
-import { register } from "../lib/keys.js";
+import { MAC, register } from "../lib/keys.js";
 import { setPref } from "../lib/store.js";
 import { kindLabel, sourceChip, specName } from "../components/chip.js";
 import { doctorList } from "../components/doctor.js";
@@ -54,6 +54,7 @@ let lastDoctor = null;
  * @property {number} [min]
  * @property {number} [max]
  * @property {boolean} [claudeOnly] shown only while Claude Code is the AI provider
+ * @property {boolean} [macOnly] shown only on a Mac
  */
 
 /** @type {{id: string, title: string, fields?: Field[]}[]} */
@@ -118,7 +119,7 @@ export const SECTIONS = [
   { id: "notifications", title: "Notifications", fields: [
     { key: "notify_ntfy_topic", label: "Phone alerts", type: "text",
       help: "The ntfy topic your phone subscribes to. Pick a name only you know, or leave it empty to turn alerts off." },
-    { key: "notify_macos", label: "Mac notifications", type: "switch",
+    { key: "notify_macos", label: "Mac notifications", type: "switch", macOnly: true,
       help: "Show a banner on this Mac when a run finishes." },
   ] },
   { id: "schedule", title: "Schedule" },
@@ -420,7 +421,7 @@ class Settings {
    */
   renderFields(section) {
     const hideClaude = this.provider != null && this.provider !== CLAUDE_CODE;
-    const shown = section.fields.filter((field) => !(hideClaude && field.claudeOnly));
+    const shown = section.fields.filter((field) => !(hideClaude && field.claudeOnly) && (MAC || !field.macOnly));
     for (const field of section.fields) {
       this.fields.delete(field.key);
       this.defaultButtons.delete(field.key);
@@ -912,7 +913,7 @@ class Settings {
     const remove = installed ? h("button", { type: "button", class: "btn btn-sm", text: "Turn off" }) : null;
     remove?.addEventListener("click", () => act(remove, "/api/schedule/remove"));
     box.replaceChildren(this.sectionHead(section),
-      h("p", { class: "field-help", text: "Cairn runs once a day at this time while you're logged in to this Mac." }),
+      h("p", { class: "field-help", text: "Cairn runs once a day at this time while you're logged in to this computer." }),
       h("p", { class: `schedule-status${installed ? (schedule.loaded ? " is-on" : " is-off") : ""}` }, h("span", { class: "run-dot", "aria-hidden": "true" }), status),
       h("div", { class: "add-row" },
         h("label", { class: "field-inline", for: "schedule-hour" }, h("span", { class: "field-inline-label", text: "Hour" }), hour),
@@ -939,7 +940,7 @@ class Settings {
     run.disabled = true;
     body.setAttribute("aria-busy", "true");
     body.replaceChildren(h("p", { class: "muted" }, h("span", { class: "spinner", "aria-hidden": "true" }),
-      " Checking this Mac…"));
+      " Checking this computer…"));
     try {
       const { checks } = await api("/api/doctor", { method: "POST", quiet: true });
       lastDoctor = { checks, at: Date.now() };
@@ -978,7 +979,8 @@ class Settings {
   renderSystem(version) {
     const section = SECTIONS.find((s) => s.id === "system");
     const login = h("div", { class: "field" }, h("span", { class: "field-label", text: "Start at login" }),
-      h("p", { class: "field-help", text: "Opens Cairn in the menu bar when you log in to this Mac." }),
+      h("p", { class: "field-help", text: MAC ? "Opens Cairn in the menu bar when you log in to this Mac."
+        : "Opens Cairn when you log in to this computer." }),
       h("p", { class: "muted", text: "Checking…" }));
     this.renderAutostart(login);
     const updateLine = h("p", { class: "system-line" });

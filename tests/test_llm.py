@@ -199,7 +199,7 @@ class ErrorTest(LLMTestCase):
         self.opener(urllib.error.URLError(ConnectionRefusedError(61, "Connection refused")))
         text, err = llm.send(self.target("ollama", key=""), "hi")
         self.assertIsNone(text)
-        self.assertEqual(err, "Couldn't reach Ollama. Open it on this Mac and try again.")
+        self.assertEqual(err, "Couldn't reach Ollama. Open it on this computer and try again.")
 
     def test_a_retry_after_a_429_takes_a_paced_slot(self):
         self.opener(http_error(429, {}, {"Retry-After": "1"}), openai_reply("OK"))
