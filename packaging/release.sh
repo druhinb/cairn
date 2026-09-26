@@ -54,17 +54,13 @@ awk -v head="## [$version]" '
 ' CHANGELOG.md | sed '/./,$!d' >"$notes"
 [ -s "$notes" ] || fail "CHANGELOG.md has no notes under ## [$version]"
 
-zip="dist/Cairn-$version.zip"
-assets=""
 {
 	printf '\n## How to update\n\n'
 	cat <<'EOF'
 If you installed with uv, run `uv tool upgrade cairn-jobs`. With pipx, run `pipx upgrade cairn-jobs`.
 EOF
-	if [ -f "$zip" ]; then
-		assets=$zip
-		echo "If you use the app, download Cairn-$version.zip below, unzip it, and move Cairn into Applications in place of the old one."
-	fi
+	echo "If you use the app on a Mac with Apple silicon, download Cairn-$version.zip below once it shows up, a few minutes after this release. Unzip it and move Cairn into Applications in place of the old one."
+	echo 'If macOS says it can'"'"'t check the app, open System Settings › Privacy & Security, scroll down, and click Open Anyway.'
 	echo 'Your jobs, notes and settings stay as they are.'
 } >>"$notes"
 
@@ -74,5 +70,4 @@ uv run --locked --extra test python -m unittest discover -s tests -q ||
 
 [ -n "${tagged:-}" ] || git tag -a "$tag" -m "Cairn $version"
 git push --atomic origin main "$tag"
-# shellcheck disable=SC2086 # $assets is empty or one path without spaces
-gh release create "$tag" --verify-tag --title "Cairn $version" --notes-file "$notes" $assets
+gh release create "$tag" --verify-tag --title "Cairn $version" --notes-file "$notes"

@@ -1,0 +1,37 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  app:
+    name: Attach the app
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - name: Check the tag matches the version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          in_package=$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' src/cairn/__init__.py)
+          if [ "$TAG" != "v$in_package" ]; then
+            echo "::error::the tag is $TAG but src/cairn/__init__.py says $in_package"
+            exit 1
+          fi
+          echo "VERSION=$in_package" >>"$GITHUB_ENV"
+      - name: Build Cairn.app
+        run: packaging/build_app.sh
+      - name: Zip the app and attach it to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          ditto -c -k --keepParent dist/Cairn.app "dist/Cairn-$VERSION.zip"
+          gh release upload "$TAG" "dist/Cairn-$VERSION.zip" --clobber --repo "$GITHUB_REPOSITORY"
