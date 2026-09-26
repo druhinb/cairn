@@ -1,0 +1,73 @@
+{
+  "format": "cairn-watchlist",
+  "version": 1,
+  "name": "Big tech",
+  "about": "Large tech companies whose job boards Cairn can read",
+  "companies": [
+    {
+      "company": "Airbnb",
+      "kind": "greenhouse",
+      "location": "airbnb"
+    },
+    {
+      "company": "Block",
+      "kind": "greenhouse",
+      "location": "block"
+    },
+    {
+      "company": "Cloudflare",
+      "kind": "greenhouse",
+      "location": "cloudflare"
+    },
+    {
+      "company": "Discord",
+      "kind": "greenhouse",
+      "location": "discord"
+    },
+    {
+      "company": "Dropbox",
+      "kind": "greenhouse",
+      "location": "dropbox"
+    },
+    {
+      "company": "Duolingo",
+      "kind": "greenhouse",
+      "location": "duolingo"
+    },
+    {
+      "company": "Instacart",
+      "kind": "greenhouse",
+      "location": "instacart"
+    },
+    {
+      "company": "Lyft",
+      "kind": "greenhouse",
+      "location": "lyft"
+    },
+    {
+      "company": "Pinterest",
+      "kind": "greenhouse",
+      "location": "pinterest"
+    },
+    {
+      "company": "Reddit",
+      "kind": "greenhouse",
+      "location": "reddit"
+    },
+    {
+      "company": "Roblox",
+      "kind": "greenhouse",
+      "location": "roblox"
+    },
+    {
+      "company": "Spotify",
+      "kind": "lever",
+      "location": "spotify"
+    },
+    {
+      "company": "Twitch",
+      "kind": "greenhouse",
+      "location": "twitch"
+    }
+  ]
+}

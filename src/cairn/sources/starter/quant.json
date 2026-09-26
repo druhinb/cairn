@@ -1,0 +1,58 @@
+{
+  "format": "cairn-watchlist",
+  "version": 1,
+  "name": "Quant and trading",
+  "about": "Trading firms and hedge funds that hire engineers",
+  "companies": [
+    {
+      "company": "Akuna Capital",
+      "kind": "greenhouse",
+      "location": "akunacapital"
+    },
+    {
+      "company": "Hudson River Trading",
+      "kind": "greenhouse",
+      "location": "wehrtyou"
+    },
+    {
+      "company": "IMC",
+      "kind": "greenhouse",
+      "location": "imc"
+    },
+    {
+      "company": "Jane Street",
+      "kind": "greenhouse",
+      "location": "janestreet"
+    },
+    {
+      "company": "Jump Trading",
+      "kind": "greenhouse",
+      "location": "jumptrading"
+    },
+    {
+      "company": "Old Mission",
+      "kind": "greenhouse",
+      "location": "oldmissioncapital"
+    },
+    {
+      "company": "Point72",
+      "kind": "greenhouse",
+      "location": "point72"
+    },
+    {
+      "company": "Squarepoint Capital",
+      "kind": "greenhouse",
+      "location": "squarepointcapital"
+    },
+    {
+      "company": "Tower Research Capital",
+      "kind": "greenhouse",
+      "location": "towerresearchcapital"
+    },
+    {
+      "company": "Virtu Financial",
+      "kind": "greenhouse",
+      "location": "virtu"
+    }
+  ]
+}

@@ -20,9 +20,12 @@ class FileBody(BaseModel):
     text: str
 
 
-class ImportBody(BaseModel):
-    text: Annotated[str, StringConstraints(max_length=200_000)]
+class DraftBody(BaseModel):
     watchlist: list[dict]
+
+
+class ImportBody(DraftBody):
+    text: Annotated[str, StringConstraints(max_length=200_000)]
 
 
 class ResolveBody(BaseModel):
@@ -92,6 +95,25 @@ def import_watchlist(body: ImportBody):
         name, specs = watchlists.parse(body.text)
     except watchlists.WatchlistFileError as e:
         raise HTTPException(400, str(e)) from None
-    merged, added, turned_on = watchlists.merge(body.watchlist, specs)
+    return _merged(name, specs, body.watchlist)
+
+
+@router.get("/api/watchlist/starters")
+def starter_watchlists():
+    return watchlists.starters()
+
+
+@router.post("/api/watchlist/starters/{starter_id}")
+def add_starter_watchlist(starter_id: str, body: DraftBody):
+    """body.watchlist with a packaged list merged in; nothing is saved."""
+    try:
+        name, _, specs = watchlists.starter(starter_id)
+    except KeyError:
+        raise HTTPException(404, f"no starter list '{starter_id}'") from None
+    return _merged(name, specs, body.watchlist)
+
+
+def _merged(name, specs, watchlist):
+    merged, added, turned_on = watchlists.merge(watchlist, specs)
     return {"name": name, "watchlist": merged, "added": added, "turned_on": turned_on,
             "already": len(specs) - added - turned_on}

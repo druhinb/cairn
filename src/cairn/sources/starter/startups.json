@@ -1,0 +1,78 @@
+{
+  "format": "cairn-watchlist",
+  "version": 1,
+  "name": "Hot startups",
+  "about": "Fast-growing private companies",
+  "companies": [
+    {
+      "company": "Anduril",
+      "kind": "greenhouse",
+      "location": "andurilindustries"
+    },
+    {
+      "company": "Cognition",
+      "kind": "ashby",
+      "location": "cognition"
+    },
+    {
+      "company": "Decagon",
+      "kind": "ashby",
+      "location": "decagon"
+    },
+    {
+      "company": "Neuralink",
+      "kind": "greenhouse",
+      "location": "neuralink"
+    },
+    {
+      "company": "Palantir",
+      "kind": "lever",
+      "location": "palantir"
+    },
+    {
+      "company": "Physical Intelligence",
+      "kind": "ashby",
+      "location": "physicalintelligence"
+    },
+    {
+      "company": "Replit",
+      "kind": "ashby",
+      "location": "replit"
+    },
+    {
+      "company": "Samsara",
+      "kind": "greenhouse",
+      "location": "samsara"
+    },
+    {
+      "company": "Saronic",
+      "kind": "ashby",
+      "location": "saronic"
+    },
+    {
+      "company": "Sierra",
+      "kind": "ashby",
+      "location": "sierra"
+    },
+    {
+      "company": "SpaceX",
+      "kind": "greenhouse",
+      "location": "spacex"
+    },
+    {
+      "company": "Vanta",
+      "kind": "ashby",
+      "location": "vanta"
+    },
+    {
+      "company": "Verkada",
+      "kind": "greenhouse",
+      "location": "verkada"
+    },
+    {
+      "company": "Zipline",
+      "kind": "greenhouse",
+      "location": "flyzipline"
+    }
+  ]
+}

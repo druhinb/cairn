@@ -14,6 +14,7 @@ from cairn.ai.onboard.preferences import (
 )
 from cairn.ai.onboard.resume import Draft, OnboardError, _example, _suggestions
 from cairn.core import paths, settings
+from cairn.sources import watchlists
 
 
 class FilesExist(OnboardError):
@@ -94,6 +95,8 @@ def apply(draft, prefs):
             raise FilesExist(own)
     new = _mapped(prefs, settings.base())
     boards, unresolved = _watchlist(prefs.get("watchlist", []), new.watchlist)
+    for starter_id in prefs.get("starter_watchlists", []):
+        boards = watchlists.merge(boards, watchlists.starter(starter_id)[2])[0]
     new = dataclasses.replace(new, watchlist=boards)
     _write_atomic(paths.profile_md(), profile)
     written = [paths.profile_md(), settings.save(new)]

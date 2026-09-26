@@ -10,6 +10,7 @@ from cairn.ai.onboard.resume import (
     _str_list,
 )
 from cairn.core import settings
+from cairn.sources.watchlists import STARTERS
 
 MAX_ANCHORS = 3
 
@@ -38,6 +39,8 @@ PREF_SHAPES = {
                         f"a list of up to {MAX_ANCHORS} strings"),
     "ntfy_topic": (lambda v: isinstance(v, str), "a string"),
     "watchlist": (_str_list, "a list of strings"),
+    "starter_watchlists": (lambda v: _str_list(v) and set(v) <= set(STARTERS),
+                           f"a list drawn from {', '.join(STARTERS)}"),
     "overwrite": (lambda v: isinstance(v, bool), "true or false"),
 }
 

@@ -1,0 +1,83 @@
+{
+  "format": "cairn-watchlist",
+  "version": 1,
+  "name": "AI labs",
+  "about": "Companies building and training AI models",
+  "companies": [
+    {
+      "company": "Anthropic",
+      "kind": "greenhouse",
+      "location": "anthropic"
+    },
+    {
+      "company": "Character.AI",
+      "kind": "ashby",
+      "location": "character"
+    },
+    {
+      "company": "Cohere",
+      "kind": "ashby",
+      "location": "cohere"
+    },
+    {
+      "company": "Cursor",
+      "kind": "ashby",
+      "location": "cursor"
+    },
+    {
+      "company": "Databricks",
+      "kind": "greenhouse",
+      "location": "databricks"
+    },
+    {
+      "company": "ElevenLabs",
+      "kind": "ashby",
+      "location": "elevenlabs"
+    },
+    {
+      "company": "Glean",
+      "kind": "greenhouse",
+      "location": "gleanwork"
+    },
+    {
+      "company": "Harvey",
+      "kind": "ashby",
+      "location": "harvey"
+    },
+    {
+      "company": "Hugging Face",
+      "kind": "workable",
+      "location": "huggingface"
+    },
+    {
+      "company": "OpenAI",
+      "kind": "ashby",
+      "location": "openai"
+    },
+    {
+      "company": "Perplexity",
+      "kind": "ashby",
+      "location": "perplexity"
+    },
+    {
+      "company": "Runway",
+      "kind": "ashby",
+      "location": "runway"
+    },
+    {
+      "company": "Scale AI",
+      "kind": "greenhouse",
+      "location": "scaleai"
+    },
+    {
+      "company": "Together AI",
+      "kind": "greenhouse",
+      "location": "togetherai"
+    },
+    {
+      "company": "xAI",
+      "kind": "greenhouse",
+      "location": "xai"
+    }
+  ]
+}

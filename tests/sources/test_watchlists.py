@@ -64,6 +64,18 @@ class ApiTest(unittest.TestCase):
         self.assertEqual((response.status_code, response.json()["error"]),
                          (400, "the file is not a Cairn watchlist"))
 
+    def test_starter_lists_are_offered_and_merge_into_the_draft(self):
+        offered = self.client.get("/api/watchlist/starters").json()
+        self.assertEqual([s["id"] for s in offered], list(watchlists.STARTERS))
+        fintech = next(s for s in offered if s["id"] == "fintech-dev-tools")
+        self.assertIn("Stripe", fintech["companies"])
+        body = self.client.post("/api/watchlist/starters/fintech-dev-tools",
+                                json={"watchlist": [STRIPE]}).json()
+        self.assertEqual((body["added"], body["already"]),
+                         (len(fintech["companies"]) - 1, 1))
+        self.assertEqual(self.client.post("/api/watchlist/starters/nope",
+                                          json={"watchlist": []}).status_code, 404)
+
 
 class CommandTest(unittest.TestCase):
     def test_import_saves_the_merged_watchlist(self):

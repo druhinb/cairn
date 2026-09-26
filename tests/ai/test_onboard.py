@@ -399,6 +399,14 @@ class ApplyTest(unittest.TestCase):
         applied = onboard.apply(self.draft, {"watchlist": ["Stripe"]})
         self.assertEqual(applied.settings.watchlist, watched)
 
+    def test_chosen_starter_lists_join_the_watchlist(self):
+        applied = onboard.apply(self.draft, {"starter_watchlists": ["quant", "ai-labs"]})
+        names = {spec["company"] for spec in applied.settings.watchlist}
+        self.assertIn("Jane Street", names)
+        self.assertIn("Anthropic", names)
+        with self.assertRaisesRegex(onboard.OnboardError, "starter_watchlists"):
+            onboard.apply(self.draft, {"starter_watchlists": ["nope"]})
+
     def test_an_empty_file_or_bad_answer_writes_nothing(self):
         with self.assertRaisesRegex(onboard.OnboardError, "profile.md is empty"):
             onboard.apply(onboard.Draft(" \n", {}), {})
