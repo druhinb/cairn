@@ -4,28 +4,28 @@ This file lists every notable change to this project. It follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-- Setup and Settings ask how many years of full-time experience you have and
-  the most a job can ask for. Full-time jobs asking for more stay out of your
-  matches and are never scored.
-- Each row shows when the job was posted, with how long ago Cairn found it
-  underneath. Postings from a source's first read have no found age.
-- The Found filter is gone.
-- Postings posted more than Recent days ago no longer show in Jobs, unless
-  you saved, applied to or otherwise tracked them. A board editing its
-  listings no longer makes old postings count as new.
-- Search also looks at location, category and internship term, so Winter 2027
-  lists the postings for that term.
-
 ## [0.0.5] — 2026-09-26
 
 - Cairn checks the careers pages of companies you follow every hour, even with
   the app closed, and sends a phone alert when a strong match appears. If you
   set up the daily run before this version, press Change time in Settings ›
   Schedule to turn the hourly check on.
-- Job lists show how long ago Cairn found each posting, and the Found filter
-  shows only postings from the last hour, day or three days.
+- Each row shows when the job was posted, with how long ago Cairn found it
+  underneath. Postings from a source's first read have no found age.
+- Postings posted more than Recent days ago no longer show in Jobs, unless
+  you saved, applied to or otherwise tracked them. A board editing its
+  listings no longer makes old postings count as new.
+- A role one company lists in several cities shows as one row. The posting's
+  details list the other places, with a link to each.
+- Postings with a fit under your fit threshold are hidden. Jobs shows how many
+  beside the match count, and Show them brings them back.
+- Setup and Settings ask how many years of full-time experience you have and
+  the most a job can ask for. Full-time jobs asking for more stay out of your
+  matches and are never scored.
+- A new setting, Only jobs in the US, hides postings that list only places
+  outside the US.
+- Search also looks at location, category and internship term, so Winter 2027
+  lists the postings for that term.
 - A role taken down and posted again carries a Reposted mark.
 - Save your watchlist as a file to share it, or add the companies from a file
   someone shared, in Settings › Sources or with `cairn watchlist export` and
