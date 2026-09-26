@@ -175,9 +175,11 @@ def _local_host(value):
 def _loopback_client(scope):
     client = scope.get("client")
     try:
-        return client is not None and ipaddress.ip_address(client[0]).is_loopback
+        address = client and ipaddress.ip_address(client[0])
     except ValueError:
         return False
+    # Python before 3.11.10 reads ::ffff:127.0.0.1 as not loopback
+    return bool(address) and (getattr(address, "ipv4_mapped", None) or address).is_loopback
 
 
 def session_cookie(port):

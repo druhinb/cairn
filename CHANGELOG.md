@@ -6,6 +6,9 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+- On Python 3.11 releases before 3.11.10, Cairn no longer turns away your own
+  browser when it connects over IPv6.
+
 ## [0.0.2] — 2026-09-26
 
 - Each release now includes the app for Apple silicon Macs as
