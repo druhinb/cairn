@@ -1210,6 +1210,23 @@ class SearchTest(StoreTestCase):
         self.assertEqual(self._ids(q="kdb"), ["citadel"])
         self.assertEqual(self._ids(q="   "), self._ids())
 
+    def test_full_text_matches_terms_category_and_locations(self):
+        store.upsert_postings([_row("winter", "Software Engineer Intern", "Hooli",
+                                    terms=["Winter 2027"], locations=["Toronto, ON"])], "one")
+        self.assertEqual(self._ids(q="Winter 2027", relevant_only=False), ["winter"])
+        self.assertEqual(self._ids(q="hooli toronto", relevant_only=False), ["winter"])
+        self.assertEqual(self._ids(q="quant chicago"), ["citadel"])
+
+    def test_the_migration_indexes_what_search_reads(self):
+        with self.conn:
+            self.conn.execute("UPDATE postings SET terms = '[\"Fall 2026\"]' WHERE id = 'jane'")
+            self.conn.execute("DROP TABLE postings_fts")
+            self.conn.execute("CREATE VIRTUAL TABLE postings_fts "
+                              "USING fts5(id UNINDEXED, company, title, keywords)")
+            store.schema._index_search(self.conn)
+        self.assertEqual(self._ids(q="fall 2026"), ["jane"])
+        self.assertEqual(self._ids(q="kdb"), ["citadel"])
+
     def test_query_syntax_in_user_input_is_literal(self):
         for q in ('"', "AND", "c++ OR", "(title:", "NEAR(a b)", "*", "\x00", "jane\x00"):
             store.search(q=q)

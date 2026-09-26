@@ -3,7 +3,7 @@ from pathlib import Path
 
 from cairn.store.keys import _GROUP_COLUMNS, _assign_groups, url_key
 
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 15
 
 # pipeline order; a posting with no applications row has no status, and `passed`
 # keeps it out of the default jobs list
@@ -104,6 +104,19 @@ CREATE TABLE IF NOT EXISTS claude_calls (
     output_chars INTEGER,
     run_id INTEGER
 )"""
+
+
+_POSTINGS_FTS = """CREATE VIRTUAL TABLE IF NOT EXISTS postings_fts
+    USING fts5(id UNINDEXED, company, title, keywords, terms, category, locations)"""
+
+# postings_fts rows for the postings a WHERE clause appended to this picks
+FTS_ROWS = """
+INSERT INTO postings_fts (id, company, title, keywords, terms, category, locations)
+SELECT postings.id, postings.company, postings.title, descriptions.keywords,
+       (SELECT group_concat(value, ' ') FROM json_each(postings.terms)),
+       postings.category,
+       (SELECT group_concat(value, ' ') FROM json_each(postings.locations))
+FROM postings LEFT JOIN descriptions ON descriptions.posting_id = postings.id"""
 
 
 SCHEMA = f"""
@@ -219,8 +232,7 @@ CREATE TABLE IF NOT EXISTS runs (
     log_end INTEGER
 );
 
-CREATE VIRTUAL TABLE IF NOT EXISTS postings_fts
-    USING fts5(id UNINDEXED, company, title, keywords);
+{_POSTINGS_FTS};
 """
 
 # connect() runs this after _migrate; an older table lacks these columns until a
@@ -340,6 +352,12 @@ def _add_years(conn):
             conn.execute(f"ALTER TABLE postings ADD COLUMN {column} {kind}")
 
 
+def _index_search(conn):
+    conn.execute("DROP TABLE postings_fts")
+    conn.execute(_POSTINGS_FTS)
+    conn.execute(FTS_ROWS)
+
+
 def _add_relevant(conn):
     # a postings table created by this connect() already has the column
     present = {row["name"] for row in conn.execute("PRAGMA table_info(postings)")}
@@ -379,6 +397,8 @@ _MIGRATIONS = {
     13: (_add_found_at,),
     # the years of experience a full-time posting's description asks for
     14: (_add_years,),
+    # search reads a posting's terms, category, and locations too
+    15: (_index_search,),
 }
 
 

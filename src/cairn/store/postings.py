@@ -8,7 +8,7 @@ from cairn.store.db import connect
 from cairn.store.keys import _regroup, url_key, web_url
 from cairn.store.relevance import _flag_relevance, relevant_query
 from cairn.store.rows import _json_list, _posting
-from cairn.store.schema import SENT
+from cairn.store.schema import FTS_ROWS, SENT
 
 
 def _canonical_places(locations):
@@ -137,11 +137,7 @@ def _refresh_fts(conn, ids):
     ids = json.dumps(list(ids))
     conn.execute("DELETE FROM postings_fts WHERE id IN (SELECT value FROM json_each(?))",
                  (ids,))
-    conn.execute(
-        "INSERT INTO postings_fts (id, company, title, keywords) "
-        "SELECT postings.id, postings.company, postings.title, descriptions.keywords "
-        "FROM postings LEFT JOIN descriptions ON descriptions.posting_id = postings.id "
-        "WHERE postings.id IN (SELECT value FROM json_each(?))", (ids,))
+    conn.execute(f"{FTS_ROWS} WHERE postings.id IN (SELECT value FROM json_each(?))", (ids,))
 
 
 _SENT_MARKS = ", ".join("?" for _ in SENT)

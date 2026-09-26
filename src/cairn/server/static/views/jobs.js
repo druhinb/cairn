@@ -146,7 +146,7 @@ class JobsList {
   build() {
     this.count = h("span", { class: "view-count", "aria-live": "polite" });
     this.searchInput = h("input", { type: "search", class: "search-input",
-      placeholder: "Search company, title, requirements", "aria-label": "Search postings",
+      placeholder: "Search company, title, city, or season", "aria-label": "Search postings",
       "aria-keyshortcuts": "/", value: this.filters.q,
       oninput: () => this.search(this.searchInput.value) });
     this.filterBar = h("div", { class: "filter-bar", role: "toolbar", "aria-label": "Filters" });
