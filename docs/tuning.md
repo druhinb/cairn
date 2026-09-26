@@ -30,6 +30,8 @@ Some feeds (vanshb03 `New-Grad-2026`) carry no category. Their postings pass on 
 title rule alone, with both exclude lists still applied, so the filter keeps those
 feeds.
 
+Setup starts `title_keywords`, `title_exclude` and `title_exclude_field` from these
+defaults and adjusts them to your resume.
 To widen the net, add to `title_keywords`. To drop a kind of junk you keep seeing,
 add to `title_exclude_field`. `location_allow` narrows by location substring
 (`["CA", "New York", "Remote"]`) and is empty, keeping every location, by default.
