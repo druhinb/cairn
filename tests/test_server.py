@@ -640,7 +640,8 @@ class RunOverrideTest(ServerTestCase):
 
 class RunsTest(ServerTestCase):
     def test_list_and_log_slice(self):
-        paths.run_log().write_text("before\nrun line 1\nrun line 2\nafter\n", encoding="utf-8")
+        paths.run_log().write_text("before\nrun line 1\nrun line 2\nafter\n", encoding="utf-8",
+                                   newline="\n")
         finished = store.start_run(str(paths.run_log()))
         store.finish_run(finished, "ok", {"ranked": 2}, log_start=7, log_end=29)
         running = store.start_run(str(paths.run_log()))
@@ -679,7 +680,7 @@ class RunsTest(ServerTestCase):
         run_id = store.start_run(str(paths.run_log()))
         start = f"2026-09-25 07:00:00  run {run_id} started  limit=5  fit=None  dry_run=True\n"
         paths.run_log().write_text(f"before\n{start}2026-09-25 07:00:01  == fetch ==\n",
-                                   encoding="utf-8")
+                                   encoding="utf-8", newline="\n")
         with pipeline.run_lock():
             status = self.client.get("/api/run/status").json()
             log = self.client.get(f"/api/runs/{run_id}/log").text
@@ -692,7 +693,7 @@ class RunsTest(ServerTestCase):
     def test_a_log_is_read_from_run_log_alone_and_cut_to_its_end(self):
         secret = self.home / "secret.txt"
         secret.write_text("the resume\n", encoding="utf-8")
-        paths.run_log().write_text("0123456789abcdefghij\n", encoding="utf-8")
+        paths.run_log().write_text("0123456789abcdefghij\n", encoding="utf-8", newline="\n")
         run_id = store.start_run(str(secret))
         store.finish_run(run_id, "failed", {}, log_start=0, log_end=21)
         crafted = store.start_run(str(secret))

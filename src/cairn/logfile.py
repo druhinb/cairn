@@ -59,7 +59,7 @@ def attach(path):
     path.parent.mkdir(parents=True, exist_ok=True)
 
     def write(event):
-        with path.open("a", encoding="utf-8") as f:
+        with path.open("a", encoding="utf-8", newline="\n") as f:
             f.write(line(event) + "\n")
 
     return events.subscribe(write)

@@ -464,7 +464,7 @@ class LockTest(PipelineTestCase):
 
 class RunLogTest(PipelineTestCase):
     def test_the_runs_row_slices_the_log_to_this_run(self):
-        paths.run_log().write_text("an earlier line\n", encoding="utf-8")
+        paths.run_log().write_text("an earlier line\n", encoding="utf-8", newline="\n")
         self.addCleanup(logfile.attach(paths.run_log()))
         first = pipeline.run(RunOptions(dry_run=True)).run_id
         pipeline.run(RunOptions(dry_run=True))
@@ -479,6 +479,7 @@ class RunLogTest(PipelineTestCase):
         self.assertIn(f"run {first} dry-run", lines[-1])
         self.assertEqual(len(lines), 4)
         self.assertNotIn(b"\x1b", paths.run_log().read_bytes())
+        self.assertNotIn(b"\r", paths.run_log().read_bytes())
 
     def _logged_lines(self, run_id):
         row = next(r for r in store.list_runs() if r["id"] == run_id)
