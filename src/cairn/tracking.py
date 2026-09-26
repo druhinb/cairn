@@ -1,7 +1,9 @@
 """What an application needs next: follow-ups that are due, the Today summary, and
 interview stages as a calendar feed."""
+import calendar
 import datetime
 import re
+import time
 
 from cairn import applications, insights, settings, store
 
@@ -141,7 +143,24 @@ def _utc(when):
     """A local naive datetime as an RFC 5545 UTC DATE-TIME. A time a DST change
     repeats reads as its first occurrence, and one it skips with the offset before
     the change."""
+    if when.tzinfo is None:
+        when = datetime.datetime.fromtimestamp(_local_instant(when), datetime.timezone.utc)
     return when.astimezone(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+
+def _local_instant(naive):
+    """The epoch second at which the system clock reads `naive`. Python 3.11's
+    astimezone() reads a skipped time with the offset after the change, 3.12 and
+    later with the one before, so the offsets come from localtime(), which only
+    ever converts from UTC."""
+    clock = calendar.timegm(naive.timetuple())
+    before = time.localtime(clock - 86400).tm_gmtoff
+    after = time.localtime(clock + 86400).tm_gmtoff
+    # only a time past the change reads back under the later offset alone
+    if (time.localtime(clock - after).tm_gmtoff == after
+            and time.localtime(clock - before).tm_gmtoff != before):
+        return clock - after
+    return clock - before
 
 
 # RFC 5545 3.3.11: TEXT excludes the control characters, newline aside

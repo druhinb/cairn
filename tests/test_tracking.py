@@ -297,7 +297,9 @@ class CalendarTest(unittest.TestCase):
         zone = ZoneInfo("America/Los_Angeles")
         # 01:30 on the fall-back day happens twice; 02:30 on the spring-forward day never
         for local, utc in ((datetime.datetime(2026, 11, 1, 1, 30), "20261101T083000Z"),
-                           (datetime.datetime(2026, 3, 8, 2, 30), "20260308T103000Z")):
+                           (datetime.datetime(2026, 11, 1, 3, 0), "20261101T110000Z"),
+                           (datetime.datetime(2026, 3, 8, 2, 30), "20260308T103000Z"),
+                           (datetime.datetime(2026, 3, 8, 5, 0), "20260308T120000Z")):
             self.assertEqual(tracking._utc(local), utc)
             self.assertEqual(tracking._utc(local.replace(tzinfo=zone)), utc)
 
