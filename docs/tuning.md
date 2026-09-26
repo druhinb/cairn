@@ -244,7 +244,7 @@ still show, and a company without one shows its initials.
   hold.
 - Moving a posting to applied adds four checklist items when its list is empty:
   resume version sent, referral asked, cover letter, thank-you note. Files are
-  labels with a path on this Mac; nothing is copied.
+  labels with a path on this computer; nothing is copied.
 
 ## What counts as seen
 
@@ -266,7 +266,7 @@ needs no refetch.
 `notify_ntfy_topic` to it, and subscribe the ntfy phone app to the same string; a
 run then pushes a summary of company names and fit scores. Anyone who knows the
 topic can read it, so treat it as a password. `notify_macos`, off by default,
-also shows a local banner. A failed notification never fails a run.
+also shows a local banner on a Mac. A failed notification never fails a run.
 
 ## Claude
 

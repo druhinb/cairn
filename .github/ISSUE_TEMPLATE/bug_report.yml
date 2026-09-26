@@ -26,15 +26,15 @@ body:
     validations:
       required: true
   - type: input
-    id: macos-version
+    id: system-version
     attributes:
-      label: macOS version
-      description: Apple menu › About This Mac.
+      label: macOS or Windows version
+      description: On a Mac, Apple menu › About This Mac. On Windows, Settings › System › About.
     validations:
       required: true
   - type: textarea
     id: doctor
     attributes:
       label: Output of cairn doctor
-      description: Optional. Run `cairn doctor` in Terminal and paste what it prints. Remove anything you'd rather keep private.
+      description: Optional. Run `cairn doctor` in Terminal or PowerShell and paste what it prints. Remove anything you'd rather keep private.
       render: text

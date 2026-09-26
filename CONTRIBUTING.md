@@ -5,8 +5,9 @@ a change. If any of it is unclear, open an issue and say which part.
 
 ## Set up
 
-You need a Mac, [Git](https://git-scm.com), [uv](https://docs.astral.sh/uv/)
-and [Node.js](https://nodejs.org). Node is only for the JavaScript tests.
+You need a Mac or a Windows PC, [Git](https://git-scm.com),
+[uv](https://docs.astral.sh/uv/) and [Node.js](https://nodejs.org). Node is only
+for the JavaScript tests.
 
 Fork the repository on GitHub with the Fork button at the top of
 <https://github.com/druhinb/cairn>, then clone your fork and install Cairn
@@ -32,6 +33,14 @@ testing never touches your real jobs and notes in `~/.cairn`. Keep the same
 under `src/cairn/server/static`; reload the page to see a change, with no build
 step.
 
+On Windows, use PowerShell, and `.venv\Scripts\` where this page says `.venv/bin/`:
+
+```powershell
+$env:CAIRN_HOME = (New-Item -ItemType Directory "$env:TEMP\cairn-$(Get-Random)").FullName
+.venv\Scripts\cairn init
+.venv\Scripts\cairn serve --port 8766
+```
+
 ## Run the tests
 
 ```sh
@@ -40,8 +49,10 @@ node --test tests/js/*.mjs
 ```
 
 Give `node --test` the files as shown. Newer versions of Node fail when you
-pass it the folder. Every pull request runs the Python tests on Python 3.11, 3.13
-and 3.14, and the JavaScript tests once, so run both before you push.
+pass it the folder. Every pull request runs the Python tests on a Mac with Python
+3.11, 3.13 and 3.14 and on Windows with Python 3.13, and the JavaScript tests once,
+so run both before you push. A test that only makes sense on one system skips
+itself on the other and says why.
 
 ## What a good change looks like
 
@@ -72,7 +83,7 @@ Report a bug or ask for a feature at
 <https://github.com/druhinb/cairn/issues/new/choose> and pick the form that
 fits. For a bug, say what you did, what you expected and what happened
 instead, and include your Cairn version (the app shows it in Settings) and
-your macOS version. If you found a security problem, follow
+your macOS or Windows version. If you found a security problem, follow
 [SECURITY.md](SECURITY.md) and keep it out of public issues.
 
 For a large change, open an issue first so you and the maintainer can agree on

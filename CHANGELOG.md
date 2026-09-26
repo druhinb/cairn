@@ -6,6 +6,8 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+- Cairn runs on Windows 10 and 11. Install it with uv; the daily run uses Task
+  Scheduler. The app download is still for Macs only.
 - The first run ranks every posting that matches your preferences, where it used
   to rank at most 100 from the last two weeks. Max ranked per run, in Settings,
   applies to the runs after it.
