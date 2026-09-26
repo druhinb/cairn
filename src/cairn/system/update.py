@@ -6,7 +6,8 @@ import urllib.request
 from importlib import metadata
 from urllib.parse import urlparse
 
-from cairn import __version__, events, paths
+from cairn import __version__
+from cairn.core import events, paths
 
 TIMEOUT = 5  # seconds for the GitHub request
 INTERVAL = datetime.timedelta(hours=24)

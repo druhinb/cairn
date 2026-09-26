@@ -5,8 +5,10 @@ from unittest import mock
 
 from helpers import temp_home
 
-from cairn import fetch, logos, paths, pipeline, rank, settings, store
-from cairn.pipeline import RunOptions
+from cairn import store
+from cairn.core import paths, settings
+from cairn.jobs import fetch, logos, pipeline, rank
+from cairn.jobs.pipeline import RunOptions
 
 
 def _job(job_id, company="Acme"):

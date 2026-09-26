@@ -12,7 +12,9 @@ import zipfile
 import zlib
 from pathlib import Path
 
-from cairn import __version__, locks, paths, pipeline, settings, store
+from cairn import __version__, store
+from cairn.core import locks, paths, settings
+from cairn.jobs import pipeline
 
 FORMAT = 1
 MANIFEST = "manifest.json"

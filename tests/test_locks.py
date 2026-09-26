@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cairn import locks
+from cairn.core import locks
 
 
 class LocksTest(unittest.TestCase):

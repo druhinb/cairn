@@ -8,7 +8,8 @@ import time
 
 from fastapi import APIRouter, Body, HTTPException
 
-from cairn import claude, llm, secrets, settings
+from cairn.ai import claude, llm
+from cairn.core import secrets, settings
 
 router = APIRouter()
 

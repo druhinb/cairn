@@ -3,7 +3,7 @@ import struct
 import unittest
 import zlib
 
-from cairn import icon
+from cairn.desktop import icon
 
 
 def _decode(png):

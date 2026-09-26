@@ -9,7 +9,9 @@ import shutil
 import subprocess
 import sys
 
-from cairn import llm, paths, schedule, secrets, settings
+from cairn.ai import llm
+from cairn.core import paths, secrets, settings
+from cairn.system import schedule
 
 TIMEOUT = 5  # seconds for any subprocess a check runs
 LLM_TIMEOUT = 20

@@ -5,7 +5,7 @@ from unittest import mock
 
 import helpers  # noqa: F401 - installs the suite settings guard
 
-from cairn import events, ui
+from cairn.core import events, ui
 
 
 class EventsTest(unittest.TestCase):

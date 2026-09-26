@@ -14,7 +14,9 @@ from urllib.parse import urlencode
 from helpers import temp_home
 from test_net import PUBLIC_IP, LocalWeb, drip, resolver
 
-from cairn import __version__, events, fetch, logos, net, store
+from cairn import __version__, store
+from cairn.core import events, net
+from cairn.jobs import fetch, logos
 
 
 def _png(width):

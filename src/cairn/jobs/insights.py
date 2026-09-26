@@ -9,7 +9,9 @@ import time
 from concurrent.futures import ThreadPoolExecutor, wait
 from urllib.parse import parse_qs, urlsplit
 
-from cairn import descriptions, fetch, net, settings, sources, store
+from cairn import sources, store
+from cairn.core import net, settings
+from cairn.jobs import descriptions, fetch
 
 # --------------------------------------------------------------------------
 # Skills gap

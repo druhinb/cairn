@@ -17,7 +17,7 @@ from rich.console import Console
 from rich.markup import escape
 from rich.table import Table
 
-from cairn import events, settings
+from cairn.core import events, settings
 
 # isatty(), not console.is_terminal: rich honors FORCE_COLOR, which would let an
 # inherited env var put a live Progress region into redirected output.

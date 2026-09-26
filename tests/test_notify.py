@@ -12,7 +12,9 @@ from unittest import mock
 
 from helpers import temp_home
 
-from cairn import notify, settings, store
+from cairn import store
+from cairn.core import settings
+from cairn.jobs import notify
 
 
 def _settings(**overrides):

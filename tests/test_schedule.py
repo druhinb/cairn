@@ -18,7 +18,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from helpers import app_client, temp_home
 
-from cairn import cli, schedule
+from cairn import cli
+from cairn.system import schedule
 from cairn.server import system
 
 PROGRAM = "/Applications/Cairn/bin/cairn"

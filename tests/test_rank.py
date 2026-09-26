@@ -12,7 +12,10 @@ import unittest
 
 from helpers import temp_home
 
-from cairn import claude, descriptions, events, llm, paths, rank, settings, store
+from cairn import store
+from cairn.ai import claude, llm
+from cairn.core import events, paths, settings
+from cairn.jobs import descriptions, rank
 
 
 def _jobs(n, prefix="j"):

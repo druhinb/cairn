@@ -16,7 +16,10 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from helpers import temp_home, user_home
 
-from cairn import backup, cli, insights, logos, paths, pipeline, settings, store
+from cairn import cli, store
+from cairn.core import paths, settings
+from cairn.jobs import insights, logos, pipeline
+from cairn.system import backup
 from cairn.server import system
 from cairn.server.app import create_app
 

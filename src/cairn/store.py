@@ -18,7 +18,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import parse_qs, parse_qsl, urlsplit
 
-from cairn import paths, places, settings, ui
+from cairn.core import paths, settings, ui
+from cairn.jobs import places
 
 SCHEMA_VERSION = 12
 

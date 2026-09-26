@@ -6,7 +6,8 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from cairn import events, store, tracking
+from cairn import store, tracking
+from cairn.core import events
 from cairn.server.rows import make_row
 
 router = APIRouter()

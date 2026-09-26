@@ -39,9 +39,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from cairn import (__version__, backup, descriptions, doctor, events, fetch, llm,
-                         logos, onboard, paths, pipeline, rank, schedule, settings, sources,
-                         store)
+from cairn import __version__, sources, store
+from cairn.ai import llm, onboard
+from cairn.core import events, paths, settings
+from cairn.jobs import descriptions, fetch, logos, pipeline, rank
+from cairn.system import backup, doctor, schedule
 from cairn.server import insights as insights_routes
 from cairn.server import llm as llm_routes
 from cairn.server import system

@@ -25,9 +25,13 @@ from fastapi.testclient import TestClient
 from helpers import app_client, temp_home, user_home
 from test_onboard import PROFILE, SUGGESTIONS, envelope
 
-from cairn import (claude, cli, descriptions, doctor, events, fetch, logos, onboard,
-                         paths, pipeline, server, settings, sources, store)
-from cairn import backup, secrets
+from cairn import cli, server, sources, store
+from cairn.ai import claude, onboard
+from cairn.core import events, paths, settings
+from cairn.jobs import descriptions, fetch, logos, pipeline
+from cairn.system import doctor
+from cairn.core import secrets
+from cairn.system import backup
 from cairn.server import app as server_app
 from cairn.server import system
 from cairn.server.app import create_app

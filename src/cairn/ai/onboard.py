@@ -14,7 +14,9 @@ from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
 
-from cairn import claude, paths, settings, sources, store
+from cairn import sources, store
+from cairn.ai import claude
+from cairn.core import paths, settings
 
 PDFTOTEXT_TIMEOUT = 30
 DRAFT_TIMEOUT = 240

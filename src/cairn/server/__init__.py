@@ -6,7 +6,7 @@ import webbrowser
 
 import uvicorn
 
-from cairn import ui
+from cairn.core import ui
 from cairn.server.app import SESSION, TOKEN_PARAM, create_app
 
 

@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass
 from urllib.parse import parse_qs, parse_qsl, quote, urldefrag, urlencode, urljoin, urlparse
 
-from cairn import events, net, secrets
+from cairn.core import events, net, secrets
 
 BOARD_KINDS = ("greenhouse", "lever", "ashby", "smartrecruiters", "workable", "bamboohr",
                "workday")
@@ -803,7 +803,7 @@ USAJOBS_SERIES = ("2210", "1550", "0854", "1515")
 
 def usajobs(keyword):
     # imported here because settings imports this module at load
-    from cairn import settings
+    from cairn.core import settings
     key, email = secrets.get_key("usajobs"), settings.get().usajobs_email
     if not (key and email):
         raise Skipped("add the USAJOBS API key and usajobs_email in Settings to read USAJOBS")

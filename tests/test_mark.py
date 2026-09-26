@@ -3,7 +3,7 @@ import re
 import unittest
 from importlib import resources
 
-from cairn import mark
+from cairn.desktop import mark
 
 STATIC = resources.files("cairn") / "server" / "static"
 

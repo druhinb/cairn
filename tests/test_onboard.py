@@ -9,7 +9,9 @@ from unittest import mock
 
 from helpers import temp_home
 
-from cairn import claude, cli, onboard, paths, settings, sources
+from cairn import cli, sources
+from cairn.ai import claude, onboard
+from cairn.core import paths, settings
 
 
 def _doc(title, name, sections=None):

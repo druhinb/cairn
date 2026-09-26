@@ -16,7 +16,7 @@ UV_PROJECT_ENVIRONMENT="$venv" uv sync --frozen --extra app --python "${CAIRN_PY
 iconset=build/AppIcon.iconset
 rm -rf "$iconset"
 mkdir -p "$iconset"
-"$venv/bin/python" -m cairn.icon build/AppIcon-1024.png
+"$venv/bin/python" -m cairn.desktop.icon build/AppIcon-1024.png
 for size in 16 32 128 256 512; do
 	sips -z "$size" "$size" build/AppIcon-1024.png \
 		--out "$iconset/icon_${size}x${size}.png" >/dev/null

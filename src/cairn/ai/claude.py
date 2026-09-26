@@ -10,7 +10,8 @@ import os
 import shutil
 import subprocess
 
-from cairn import llm, paths, settings
+from cairn.ai import llm
+from cairn.core import paths, settings
 
 
 def run(prompt, model=None, timeout=240, tier=None):

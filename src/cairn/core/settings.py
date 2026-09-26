@@ -16,7 +16,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlparse
 
-from cairn import events, paths, sources
+from cairn import sources
+from cairn.core import events, paths
 
 
 class SettingsError(Exception):
@@ -200,7 +201,7 @@ def load(path=None):
 
 
 def _check_llm(raw, source):
-    from cairn import llm  # llm reads settings, so the import stays local
+    from cairn.ai import llm  # llm reads settings, so the import stays local
     provider = raw.get("llm_provider")
     if provider is not None and provider not in llm.PROVIDERS:
         raise SettingsError(f"{source}: 'llm_provider' should be one of "

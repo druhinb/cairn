@@ -12,7 +12,10 @@ from unittest import mock
 
 from helpers import temp_home
 
-from cairn import claude, descriptions, llm, net, paths, settings, store
+from cairn import store
+from cairn.ai import claude, llm
+from cairn.core import net, paths, settings
+from cairn.jobs import descriptions
 
 GOOD = ("TECH: Python, Kubernetes, AWS\n"
         "DOMAIN: distributed systems, backend\n"

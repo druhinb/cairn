@@ -13,7 +13,7 @@ from pathlib import Path
 from string import Template
 from xml.sax.saxutils import escape
 
-from cairn import paths
+from cairn.core import paths
 
 LABEL = "app.cairn.daily"
 UI_LABEL = "app.cairn.autostart"
@@ -64,7 +64,7 @@ def render(program_path, hour=DEFAULT_HOUR, minute=DEFAULT_MINUTE):
     if os.environ.get("CAIRN_HOME"):
         home_env = ("\n    <key>CAIRN_HOME</key>\n"
                     f"    <string>{escape(os.environ['CAIRN_HOME'])}</string>")
-    template = (resources.files("cairn") / "launchd.plist.template").read_text(encoding="utf-8")
+    template = (resources.files("cairn.system") / "launchd.plist.template").read_text(encoding="utf-8")
     return Template(template).substitute(
         label=LABEL, program=escape(str(program_path)),
         path=escape(LAUNCHD_PATH.format(home=Path.home())), home_env=home_env,
@@ -241,5 +241,5 @@ def autostart_status():
 
 
 if sys.platform == "win32":
-    from cairn.schedule_windows import (  # noqa: E402, F811 - they replace the launchd forms
+    from cairn.system.schedule_windows import (  # noqa: E402, F811 - they replace the launchd forms
         autostart_install, autostart_remove, autostart_status, install, remove, status)

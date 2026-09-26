@@ -18,7 +18,8 @@ import sys
 import urllib.error
 import urllib.request
 
-from cairn import events, settings, tracking
+from cairn import tracking
+from cairn.core import events, settings
 
 TIMEOUT = 15
 

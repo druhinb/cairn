@@ -9,7 +9,7 @@ import json
 import os
 import tomllib
 
-from cairn import events, paths
+from cairn.core import events, paths
 
 USAJOBS = "usajobs"
 _warned = set()  # (name, where) of each unusable key already reported
@@ -25,7 +25,7 @@ def secrets_file():
 
 def names():
     """Every name a key can be stored under: each provider id, and usajobs."""
-    from cairn import llm  # llm reads keys from here, so the import stays local
+    from cairn.ai import llm  # llm reads keys from here, so the import stays local
     return (*llm.PROVIDERS, USAJOBS)
 
 

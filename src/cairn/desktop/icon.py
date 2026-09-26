@@ -5,14 +5,14 @@ and a brand-coloured sun on a 1024-unit canvas, 40 units to a grid cell. Only th
 square's corners are anti-aliased; the mark's cells keep hard edges, as in the
 sidebar and the menu bar.
 
-    python -m cairn.icon OUT.png
+    python -m cairn.desktop.icon OUT.png
 """
 import math
 import struct
 import sys
 import zlib
 
-from cairn import mark
+from cairn.desktop import mark
 
 CANVAS = 1024
 BODY = (100, 100, 924, 924, 185)  # left, top, right, bottom, corner radius

@@ -21,7 +21,9 @@ from unittest import mock
 
 from helpers import temp_home, user_home
 
-from cairn import fetch, logos, paths, settings, sources, store
+from cairn import sources, store
+from cairn.core import paths, settings
+from cairn.jobs import fetch, logos
 
 NOW = time.time()
 DAY = 86400

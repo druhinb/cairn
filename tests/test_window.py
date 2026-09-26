@@ -6,7 +6,9 @@ import unittest
 import httpx
 from helpers import temp_home
 
-from cairn import events, server, window
+from cairn import server
+from cairn.core import events
+from cairn.desktop import window
 
 
 class OpenUiTest(unittest.TestCase):

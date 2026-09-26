@@ -15,7 +15,8 @@ import urllib.request
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-from cairn import __version__, events, paths, secrets, settings
+from cairn import __version__
+from cairn.core import events, paths, secrets, settings
 
 REQUEST_TIMEOUT = 120
 MAX_TIMEOUT = 300

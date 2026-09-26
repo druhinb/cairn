@@ -15,7 +15,9 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from helpers import temp_home
 
-from cairn import __version__, cli, events, update
+from cairn import __version__, cli
+from cairn.core import events
+from cairn.system import update
 from cairn.server import system
 
 REPO = "https://github.com/someone/cairn"

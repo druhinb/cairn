@@ -9,7 +9,8 @@ from unittest import mock
 
 import helpers  # noqa: F401 - installs the suite settings guard
 
-from cairn import claude, paths
+from cairn.ai import claude
+from cairn.core import paths
 
 # Trimmed from a real `claude -p ... --output-format json --tools ""` run: same
 # element order and the same keys we depend on.

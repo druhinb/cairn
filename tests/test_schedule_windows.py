@@ -12,8 +12,8 @@ from unittest import mock
 
 from helpers import temp_home
 
-from cairn import schedule_windows as windows
-from cairn.schedule import ScheduleError
+from cairn.system import schedule_windows as windows
+from cairn.system.schedule import ScheduleError
 
 WINDOWS = sys.platform == "win32"
 

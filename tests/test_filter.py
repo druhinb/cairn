@@ -10,7 +10,9 @@ from unittest import mock
 
 from helpers import temp_home
 
-from cairn import fetch, settings, sources
+from cairn import sources
+from cairn.core import settings
+from cairn.jobs import fetch
 
 
 def _job(title, category="Software", degrees=None):

@@ -9,8 +9,10 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, PlainTextResponse
 from starlette.datastructures import UploadFile
 
-from cairn import (backup, insights, llm, logos, paths, pipeline, schedule, secrets,
-                         update)
+from cairn.ai import llm
+from cairn.core import paths, secrets
+from cairn.jobs import insights, logos, pipeline
+from cairn.system import backup, schedule, update
 
 router = APIRouter()
 

@@ -17,7 +17,8 @@ from unittest import mock
 
 from fastapi.testclient import TestClient
 
-from cairn import settings, store
+from cairn import store
+from cairn.core import settings
 from cairn.server import app
 
 SUITE_HOME = tempfile.mkdtemp(prefix="cairn-tests-")

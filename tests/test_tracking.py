@@ -13,7 +13,8 @@ from zoneinfo import ZoneInfo
 
 from helpers import app_client, temp_home, user_home
 
-from cairn import events, settings, store, tracking
+from cairn import store, tracking
+from cairn.core import events, settings
 
 NOW = time.time()
 

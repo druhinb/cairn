@@ -15,7 +15,9 @@ import urllib.error
 import urllib.request
 import webbrowser
 
-from cairn import events, mark, schedule, update
+from cairn.core import events
+from cairn.desktop import mark
+from cairn.system import schedule, update
 from cairn.server.app import own_headers
 
 POLL_SECONDS = 30

@@ -5,7 +5,9 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from cairn import events, insights, settings, store
+from cairn import store
+from cairn.core import events, settings
+from cairn.jobs import insights
 
 router = APIRouter()
 

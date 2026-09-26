@@ -9,7 +9,9 @@ import time
 import urllib.request
 import webbrowser
 
-from cairn import icon, logfile, menubar, paths, server, ui
+from cairn import server
+from cairn.core import logfile, paths, ui
+from cairn.desktop import icon, menubar
 from cairn.server.app import own_headers
 
 HOST = "127.0.0.1"

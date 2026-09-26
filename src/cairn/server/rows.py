@@ -1,5 +1,6 @@
 """The posting row every list in the API returns."""
-from cairn import descriptions, store
+from cairn import store
+from cairn.jobs import descriptions
 
 
 def make_row(job):

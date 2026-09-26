@@ -5,7 +5,9 @@ import datetime
 import re
 import time
 
-from cairn import applications, insights, settings, store
+from cairn import applications, store
+from cairn.core import settings
+from cairn.jobs import insights
 
 STAGE_LABELS = {"screen": "Screen", "oa": "Online assessment", "onsite": "Onsite",
                 "final": "Final round", "other": "Interview"}

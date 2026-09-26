@@ -6,7 +6,8 @@ import unittest
 
 from helpers import temp_home
 
-from cairn import fetch, places, store
+from cairn import store
+from cairn.jobs import fetch, places
 
 NOW = time.time()
 

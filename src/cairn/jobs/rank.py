@@ -11,7 +11,10 @@ import re
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from cairn import claude, descriptions, events, paths, settings, store
+from cairn import store
+from cairn.ai import claude
+from cairn.core import events, paths, settings
+from cairn.jobs import descriptions
 
 MAX_CALIBRATION_EXAMPLES = 12
 MAX_CALIBRATION_CHARS = 1500

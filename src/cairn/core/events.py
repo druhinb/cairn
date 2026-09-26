@@ -75,7 +75,7 @@ def _drop(fn, error):
             _subscribers.remove(fn)
     message = f"[events] dropped subscriber {fn!r}: {type(error).__name__}: {error}"
     # ui subscribes through this module, so a top-level import would be circular
-    from cairn import ui  # noqa: PLC0415
+    from cairn.core import ui  # noqa: PLC0415
     try:
         ui.warn(message)
     except Exception:  # noqa: BLE001 - the dropped subscriber may be the renderer itself

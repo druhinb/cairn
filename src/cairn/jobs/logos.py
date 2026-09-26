@@ -29,7 +29,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlencode, urljoin, urlsplit
 
-from cairn import events, locks, net, paths, store
+from cairn import store
+from cairn.core import events, locks, net, paths
 
 MAX_BYTES = 512 * 1024
 # the part of a home page searched for its title

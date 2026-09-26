@@ -6,7 +6,8 @@ import os
 import sys
 from pathlib import Path
 
-from cairn import cli, schedule
+from cairn import cli
+from cairn.system import schedule
 
 # an app opened from the Finder inherits launchd's PATH, which lacks claude
 os.environ["PATH"] = (schedule.LAUNCHD_PATH.format(home=Path.home())

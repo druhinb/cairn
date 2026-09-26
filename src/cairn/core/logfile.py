@@ -9,7 +9,7 @@ thread in the same process (a server thread, say) can still land inside it.
 import datetime
 from pathlib import Path
 
-from cairn import events
+from cairn.core import events
 
 
 def _summary_done(d):

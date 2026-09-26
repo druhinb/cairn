@@ -22,7 +22,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from helpers import temp_home
 
-from cairn import claude, events, llm, paths, secrets, settings
+from cairn.ai import claude, llm
+from cairn.core import events, paths, secrets, settings
 from cairn.server import llm as llm_routes
 
 KEY = "sk-test-0123456789abcdef"

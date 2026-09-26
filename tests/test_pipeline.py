@@ -12,14 +12,15 @@ from unittest import mock
 
 from helpers import temp_home
 
-from cairn import (descriptions, events, fetch, locks, logfile, paths, pipeline, rank,
-                         settings, store)
-from cairn.pipeline import RunInProgress, RunOptions
+from cairn import store
+from cairn.core import events, locks, logfile, paths, settings
+from cairn.jobs import descriptions, fetch, pipeline, rank
+from cairn.jobs.pipeline import RunInProgress, RunOptions
 
 HOLD_LOCK = """
 import os
 import sys
-from cairn import pipeline
+from cairn.jobs import pipeline
 with pipeline.run_lock():
     print("locked", os.getpid(), flush=True)
     sys.stdin.read()

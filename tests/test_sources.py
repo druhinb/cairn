@@ -15,7 +15,9 @@ from unittest import mock
 
 from helpers import temp_home
 
-from cairn import events, fetch, logos, net, paths, secrets, settings, sources, store
+from cairn import sources, store
+from cairn.core import events, net, paths, secrets, settings
+from cairn.jobs import fetch, logos
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SIMPLIFY = ("https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/"

@@ -19,7 +19,7 @@ SRC = os.path.join(REPO, "src")
 
 # Every renderer, including the styled paths.
 EXERCISE_UI = """
-from cairn import events, ui
+from cairn.core import events, ui
 ui.attach()
 events.emit("info", text="plain line")
 events.emit("warn", text="a warning")

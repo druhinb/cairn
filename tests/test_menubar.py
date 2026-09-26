@@ -7,7 +7,8 @@ import unittest
 import urllib.error
 from unittest import mock
 
-from cairn import events, menubar
+from cairn.core import events
+from cairn.desktop import menubar
 from cairn.server.app import SESSION
 
 

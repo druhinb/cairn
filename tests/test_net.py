@@ -13,7 +13,8 @@ import time
 import unittest
 from unittest import mock
 
-from cairn import __version__, net
+from cairn import __version__
+from cairn.core import net
 
 PUBLIC_IP = "93.184.216.34"
 

@@ -11,8 +11,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from cairn import paths
-from cairn.schedule import DEFAULT_HOUR, DEFAULT_MINUTE, ScheduleError
+from cairn.core import paths
+from cairn.system.schedule import DEFAULT_HOUR, DEFAULT_MINUTE, ScheduleError
 
 TASK = "Cairn daily run"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"

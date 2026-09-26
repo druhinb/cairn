@@ -13,15 +13,17 @@ from importlib import resources
 from pathlib import Path
 
 try:  # the first project import, so a missing rich fails with the hint below
-    from cairn import ui
+    from cairn.core import ui
 except ImportError:
     print("Cairn cannot import rich; reinstall the package: "
           "uv pip install -e <your cairn checkout>", file=sys.stderr)
     sys.exit(2)
 
-from cairn import (applications, backup, claude, doctor, fetch, llm, logfile, logos,
-                         notify, onboard, paths, pipeline, schedule, secrets, settings, store,
-                         update)
+from cairn import applications, store
+from cairn.ai import claude, llm, onboard
+from cairn.core import logfile, paths, secrets, settings
+from cairn.jobs import fetch, logos, notify, pipeline
+from cairn.system import backup, doctor, schedule, update
 
 TOP_SHOWN = 15  # ranked postings echoed to the terminal; the app has them all
 LOGGED_COMMANDS = {"run", "serve", "icons"}  # their events are appended to paths.run_log()
@@ -184,7 +186,8 @@ def cmd_serve(args):
 
 
 def cmd_ui(args):
-    from cairn import server, window  # noqa: PLC0415 - keeps fastapi out of every other command
+    from cairn import server  # noqa: PLC0415 - keeps fastapi out of every other command
+    from cairn.desktop import window  # noqa: PLC0415
     port = args.port or server.pick_port(window.HOST)
     try:
         window.open_ui(args.no_window, port)

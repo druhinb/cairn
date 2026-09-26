@@ -12,7 +12,11 @@ from unittest import mock
 from helpers import temp_home
 from test_llm import KEY, llm_home
 
-from cairn import cli, llm, logos, paths, pipeline, schedule, secrets, settings, store
+from cairn import cli, store
+from cairn.ai import llm
+from cairn.core import paths, secrets, settings
+from cairn.jobs import logos, pipeline
+from cairn.system import schedule
 
 
 def _posting(posting_id, company):

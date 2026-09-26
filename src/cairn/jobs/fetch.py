@@ -3,7 +3,9 @@ import string
 import threading
 from dataclasses import dataclass
 
-from cairn import events, logos, places, settings, sources, store
+from cairn import sources, store
+from cairn.core import events, settings
+from cairn.jobs import logos, places
 
 
 # Postings fetched before sources had names carry the listings URL as their source.
@@ -239,7 +241,7 @@ def check_links(ids=None, wait=0):
     a check already running. Returns its counts, or None when it was skipped or
     failed; a failure never fails a run."""
     # insights reads RULES from this module, so a top-level import would be circular
-    from cairn import insights  # noqa: PLC0415
+    from cairn.jobs import insights  # noqa: PLC0415
     if not insights.LINK_LOCK.acquire(timeout=wait):
         events.emit("info", text="[links] skipped: another link check is running")
         return None

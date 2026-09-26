@@ -19,7 +19,9 @@ import time
 from html import unescape
 from urllib.parse import urlparse
 
-from cairn import claude, events, llm, net, paths, settings, store
+from cairn import store
+from cairn.ai import claude, llm
+from cairn.core import events, net, paths, settings
 
 MAX_CHARS = 12000          # JDs run long; the tail is boilerplate and legalese
 TIMEOUT = 25                # seconds allowed for a whole posting: every candidate and retry

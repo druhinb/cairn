@@ -12,7 +12,9 @@ from fastapi.testclient import TestClient
 from helpers import temp_home
 from test_net import drip, serve_web
 
-from cairn import events, fetch, insights, settings, store
+from cairn import store
+from cairn.core import events, settings
+from cairn.jobs import fetch, insights
 from cairn.server import insights as insights_routes
 
 NOW = time.time()

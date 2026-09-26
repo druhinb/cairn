@@ -13,7 +13,7 @@ function level(text) {
 
 const pad = (n) => String(n).padStart(2, "0");
 
-// mirrors cairn/logfile.py, so a live run reads like its stored log
+// mirrors cairn/core/logfile.py, so a live run reads like its stored log
 const LINES = {
   run_start: (d) => `run ${d.run_id} started  limit=${d.limit ?? "None"}  fit=${d.fit ?? "None"}  dry_run=${d.dry_run ? "True" : "False"}`,
   phase_start: (d) => `== ${d.name} ==`,
