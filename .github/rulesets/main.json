@@ -38,6 +38,7 @@
           { "context": "Python 3.11", "integration_id": 15368 },
           { "context": "Python 3.13", "integration_id": 15368 },
           { "context": "Python 3.14", "integration_id": 15368 },
+          { "context": "Windows", "integration_id": 15368 },
           { "context": "JavaScript", "integration_id": 15368 }
         ]
       }
