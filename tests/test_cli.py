@@ -182,6 +182,7 @@ class MainTest(unittest.TestCase):
         self.assertIn("settings,llm}", out)
 
 
+@unittest.skipIf(sys.platform == "win32", "Windows files have no Unix permission bits")
 class LockDownTest(unittest.TestCase):
     def setUp(self):
         self.root = self.enterContext(temp_home())

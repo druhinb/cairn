@@ -4,6 +4,7 @@ import io
 import json
 import os
 import stat
+import sys
 import threading
 import time
 import unittest
@@ -157,6 +158,7 @@ class ExportRestoreTest(BackupTestCase):
         self.assertEqual((first.name, second.name), ("a.bak-20260925-120000-000001",
                                                      "a.bak-20260925-120000-000001-2"))
 
+    @unittest.skipIf(sys.platform == "win32", "Windows files have no Unix permission bits")
     def test_a_backup_zip_is_private_under_any_umask(self):
         previous = os.umask(0o022)
         self.addCleanup(os.umask, previous)
@@ -197,6 +199,7 @@ class ExportRestoreTest(BackupTestCase):
         backup.restore(path, accept_model_change=True)
         self.assertEqual(paths.config_file().read_text(encoding="utf-8"), CONFIG)
 
+    @unittest.skipIf(sys.platform == "win32", "Windows files have no Unix permission bits")
     def test_restored_files_are_private(self):
         path = backup.export(self.out)
         self.use_home("b")

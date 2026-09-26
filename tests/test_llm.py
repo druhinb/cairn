@@ -11,6 +11,7 @@ import io
 import json
 import os
 import stat
+import sys
 import threading
 import unittest
 import urllib.error
@@ -443,6 +444,7 @@ class ClaudeDispatchTest(LLMTestCase):
 
 
 class SecretsTest(LLMTestCase):
+    @unittest.skipIf(sys.platform == "win32", "Windows files have no Unix permission bits")
     def test_the_file_is_private_and_holds_one_keys_table(self):
         secrets.set_key("groq", f"  {KEY}\n")
         secrets.set_key("claude-code", "other")
@@ -458,6 +460,7 @@ class SecretsTest(LLMTestCase):
         self.assertNotIn(KEY, path.read_text(encoding="utf-8"))
         self.assertFalse((paths.home() / "config.toml").exists())
 
+    @unittest.skipIf(sys.platform == "win32", "Windows files have no Unix permission bits")
     def test_a_loosened_file_is_made_private_on_the_next_write(self):
         secrets.set_key("groq", KEY)
         secrets.secrets_file().chmod(0o644)
@@ -503,6 +506,7 @@ class SecretsTest(LLMTestCase):
             with self.subTest(call), self.assertRaisesRegex(secrets.SecretsError, "no key named"):
                 call("gpt")
 
+    @unittest.skipIf(sys.platform == "win32", "Windows files have no Unix permission bits")
     def test_a_stale_staging_file_never_lends_its_mode(self):
         staging = secrets.secrets_file().with_name("secrets.toml.tmp")
         staging.write_text("left over", encoding="utf-8")

@@ -7,6 +7,7 @@ import io
 import os
 import plistlib
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -52,6 +53,7 @@ class FakeLaunchctl:
         return subprocess.CompletedProcess(cmd, 0, listing if verb == "list" else "", "")
 
 
+@unittest.skipIf(sys.platform == "win32", "launchd is macOS only")
 class ScheduleTestCase(unittest.TestCase):
     def setUp(self):
         self.home = self.enterContext(temp_home())
@@ -336,6 +338,7 @@ class AutostartTest(ScheduleTestCase):
                          (500, {"detail": "no cairn executable found"}))
 
 
+@unittest.skipIf(sys.platform == "win32", "launchd is macOS only")
 class ProgramTest(unittest.TestCase):
     def setUp(self):
         self.addCleanup(setattr, schedule.sys, "argv", schedule.sys.argv)

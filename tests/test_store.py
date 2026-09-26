@@ -12,6 +12,7 @@ import json
 import os
 import re
 import sqlite3
+import sys
 import tempfile
 import threading
 import time
@@ -1079,6 +1080,7 @@ class AttachmentTest(StoreTestCase):
     def test_a_blank_label_takes_the_file_name_and_tilde_expands(self):
         self.assertEqual(store.add_attachment("a", "", "~/cv.pdf")["label"], "cv.pdf")
 
+    @unittest.skipIf(sys.platform == "win32", "Windows needs extra rights to make a symlink")
     def test_a_symlink_is_resolved_before_the_check(self):
         target = self.outside / "secret.txt"
         target.write_text("x", encoding="utf-8")
