@@ -777,7 +777,7 @@ class StatusTest(ServerTestCase):
         body = self.client.get("/api/schedule").json()
         self.assertEqual(body, {"installed": False, "loaded": False, "plist": str(plist),
                                 "program": None, "hour": None, "minute": None,
-                                "error": ""})
+                                "hourly": False, "error": ""})
 
     def test_index_page_and_its_assets(self):
         response = self.client.get("/")

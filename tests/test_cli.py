@@ -165,6 +165,16 @@ class LlmCommandTest(unittest.TestCase):
             self.assertEqual(run_main("llm", "test")[0], 0)
 
 
+class CheckCommandTest(unittest.TestCase):
+    def setUp(self):
+        self.enterContext(temp_home())
+
+    def test_a_held_run_lock_skips_the_check_quietly(self):
+        with pipeline.run_lock():
+            code, out = run_main("check")
+        self.assertEqual((code, out), (0, "a run is in progress, so this check is skipped\n"))
+
+
 class MainTest(unittest.TestCase):
     def setUp(self):
         self.enterContext(temp_home())

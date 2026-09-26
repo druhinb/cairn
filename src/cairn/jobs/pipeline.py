@@ -65,6 +65,19 @@ def run(opts, on_start=None):
         return _recorded(opts, on_start)
 
 
+def check():
+    """Fetch the watchlist boards and rank what they list that is new, under the run
+    lock and without a runs row. Returns (ranked postings, counts).
+
+    Raises RunInProgress when the lock is held. The next run takes the scores as
+    its own, so what a check found is listed with that run.
+    """
+    with run_lock():
+        new, fetched = fetch.fetch_watchlist()
+        results = _ranked(new, run_id=None)[0] if new else []
+    return results, {"fetched": fetched, "new": len(new), "ranked": len(results)}
+
+
 def summarise_posting(posting_id, force=False):
     """Distill the requirements of one stored posting. Returns the summary or None.
 
@@ -231,16 +244,8 @@ def _pipeline(run_id, opts):
                          elapsed=time.monotonic() - started)
 
     with _phase("rank"):
-        results, unranked = rank.process(new, run_id=run_id)
-
-    applications.annotate(results)
-    # a posting's score is its group's, so the members ranking skipped get it too
-    scored = results + [{**r, "id": other} for r in results for other in r.get("also_ids", ())]
-    store.save_scores(scored, run_id)
-    # the one commit point. Only ranked postings are marked seen, after their scores
-    # are stored, so whatever --limit, the rank cap or a failed batch dropped stays
-    # unseen and retries
-    store.mark_seen(r.get("id") for r in scored)
+        results, unranked = _ranked(new, run_id)
+    store.claim_check_scores(run_id)
     if opts.first_run:
         fetch.fetch_icons_later()
 
@@ -251,6 +256,20 @@ def _pipeline(run_id, opts):
     return RunResult(run_id=run_id, status="ok", counts=counts, results=results,
                      unranked=unranked, elapsed=time.monotonic() - started,
                      follow_ups=follow_ups)
+
+
+def _ranked(new, run_id):
+    """Rank new and commit the scores. Returns rank.process's (results, unranked)."""
+    results, unranked = rank.process(new, run_id=run_id)
+    applications.annotate(results)
+    # a posting's score is its group's, so the members ranking skipped get it too
+    scored = results + [{**r, "id": other} for r in results for other in r.get("also_ids", ())]
+    store.save_scores(scored, run_id)
+    # the one commit point. Only ranked postings are marked seen, after their scores
+    # are stored, so whatever --limit, the rank cap or a failed batch dropped stays
+    # unseen and retries
+    store.mark_seen(r.get("id") for r in scored)
+    return results, unranked
 
 
 def _follow_ups():

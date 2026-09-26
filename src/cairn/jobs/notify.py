@@ -114,8 +114,7 @@ def run_finished(results, follow_ups=None):
     if not (cfg.notify_ntfy_topic or cfg.notify_macos):
         return []
 
-    strong = [r for r in results
-              if not r.get("below_floor") and (r.get("fit") or 0) >= cfg.fit_threshold]
+    strong = _strong(results)
     top = strong[:TOP_N]
 
     if not results:
@@ -148,3 +147,29 @@ def run_finished(results, follow_ups=None):
     actions = [a for a in (_action(r) for r in top[:ACTION_N]) if a]
     return send(title, body, link=(top[0].get("url") if top else None),
                 priority=priority, tags=["briefcase"], actions=actions)
+
+
+def _strong(results):
+    threshold = settings.get().fit_threshold
+    return [r for r in results
+            if not r.get("below_floor") and (r.get("fit") or 0) >= threshold]
+
+
+def check_finished(results):
+    """Push the strong matches an hourly watchlist check ranked, and nothing when it
+    found none. Returns the channels that accepted it."""
+    strong = _strong(results)
+    if not strong:
+        return []
+    if len(strong) == 1:
+        r = strong[0]
+        title = f"New at {r.get('company_name')}"
+        body = f"{r.get('title')}\nfit {r.get('fit')} · tier {r.get('tier')}"
+    else:
+        title = f"{len(strong)} new roles at companies you follow"
+        body = "\n".join(_line(r) for r in strong[:TOP_N])
+        if len(strong) > TOP_N:
+            body += f"\n\n+{len(strong) - TOP_N} more"
+    actions = [a for a in (_action(r) for r in strong[:ACTION_N]) if a]
+    return send(title, body, link=strong[0].get("url"), priority="high",
+                tags=["briefcase"], actions=actions)

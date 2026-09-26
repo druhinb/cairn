@@ -19,21 +19,24 @@ WINDOWS = sys.platform == "win32"
 
 
 class FakeSchtasks:
-    """Answers schtasks like Task Scheduler with one task registered or none."""
+    """Answers schtasks like Task Scheduler, by task name."""
 
     def __init__(self):
-        self.registered = False
+        self.tasks = set()
         self.calls = []
         self.fail_create = None
 
     def __call__(self, cmd, **kwargs):
         self.calls.append(cmd[1:])
-        verb = cmd[1]
+        verb, task = cmd[1], cmd[3]
         if verb == "/Query":
-            return subprocess.CompletedProcess(cmd, 0 if self.registered else 1, "", "")
+            return subprocess.CompletedProcess(cmd, 0 if task in self.tasks else 1, "", "")
         if verb == "/Create" and self.fail_create:
             return subprocess.CompletedProcess(cmd, 1, "", self.fail_create)
-        self.registered = verb == "/Create"
+        if verb == "/Create":
+            self.tasks.add(task)
+        else:
+            self.tasks.discard(task)
         return subprocess.CompletedProcess(cmd, 0, "SUCCESS", "")
 
 
@@ -90,14 +93,22 @@ class TaskTest(WindowsTestCase):
         self.schtasks = FakeSchtasks()
         self.enterContext(mock.patch.object(windows.subprocess, "run", self.schtasks))
 
-    def test_install_registers_the_definition_it_keeps(self):
+    def test_install_registers_the_definitions_it_keeps(self):
         job = windows.install(6, 5)
-        self.assertEqual(self.schtasks.calls[0],
-                         ["/Create", "/TN", windows.TASK, "/XML", str(windows.task_file()), "/F"])
+        self.assertEqual(self.schtasks.calls[:2], [
+            ["/Create", "/TN", windows.TASK, "/XML", str(windows.task_file()), "/F"],
+            ["/Create", "/TN", windows.CHECK_TASK, "/XML", str(windows.check_task_file()),
+             "/F"]])
         self.assertTrue(windows.task_file().read_bytes().startswith(b"\xff\xfe"))
         self.assertEqual(job, {"installed": True, "loaded": True, "plist": windows.TASK,
                                "program": str(self.pythonw), "hour": 6, "minute": 5,
-                               "error": ""})
+                               "hourly": True, "error": ""})
+
+    def test_the_check_task_runs_cairn_check_every_hour(self):
+        text = windows.render_check(r"C:\py\pythonw.exe")
+        self.assertIn("<Arguments>-m cairn.cli check</Arguments>", text)
+        self.assertIn("<Repetition><Interval>PT1H</Interval></Repetition>", text)
+        self.assertIn("<StartWhenAvailable>true</StartWhenAvailable>", text)
 
     def test_the_task_runs_cairn_from_the_data_home_and_catches_up_after_sleep(self):
         text = windows.render(r"C:\Tools & more\pythonw.exe", 7, 0)
@@ -116,8 +127,9 @@ class TaskTest(WindowsTestCase):
         windows.install()
         job = windows.remove()
         self.assertIn(["/Delete", "/TN", windows.TASK, "/F"], self.schtasks.calls)
-        self.assertFalse(windows.task_file().exists())
-        self.assertEqual((job["installed"], job["loaded"]), (False, False))
+        self.assertIn(["/Delete", "/TN", windows.CHECK_TASK, "/F"], self.schtasks.calls)
+        self.assertFalse(windows.task_file().exists() or windows.check_task_file().exists())
+        self.assertEqual((job["installed"], job["loaded"], job["hourly"]), (False, False, False))
 
     def test_remove_without_a_task_deletes_nothing_in_task_scheduler(self):
         windows.remove()
@@ -167,13 +179,14 @@ class RealWindowsTest(unittest.TestCase):
         self.enterContext(temp_home())
         name = f"Cairn test {uuid.uuid4().hex[:8]}"
         self.enterContext(mock.patch.object(windows, "TASK", name))
+        self.enterContext(mock.patch.object(windows, "CHECK_TASK", f"{name} check"))
         self.enterContext(mock.patch.object(windows, "RUN_VALUE", name))
 
     def test_the_task_registers_reads_back_and_goes(self):
         self.addCleanup(windows.remove)
         job = windows.install(6, 5)
-        self.assertEqual((job["loaded"], job["hour"], job["minute"], job["error"]),
-                         (True, 6, 5, ""))
+        self.assertEqual((job["loaded"], job["hour"], job["minute"], job["hourly"],
+                          job["error"]), (True, 6, 5, True, ""))
         self.assertTrue(Path(job["program"]).exists())
         self.assertFalse(windows.remove()["loaded"])
 

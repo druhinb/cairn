@@ -157,6 +157,29 @@ class MessageTest(unittest.TestCase):
         self.assertNotIn(";", label)
 
 
+class CheckMessageTest(MessageTest):
+    def test_one_strong_match_names_the_company_in_the_title(self):
+        notify.check_finished([
+            {"company_name": "Stripe", "title": "SWE, New Grad", "fit": 88, "tier": 90,
+             "url": "https://x.test/s"},
+            {"company_name": "Stripe", "title": "Sales", "fit": 20, "tier": 90}])
+        self.assertEqual(self.titles, ["New at Stripe"])
+        self.assertEqual(self.sent, ["SWE, New Grad\nfit 88 · tier 90"])
+        self.assertEqual(self.kwargs[0]["link"], "https://x.test/s")
+
+    def test_several_are_listed_under_a_count(self):
+        notify.check_finished([{"company_name": f"Co{n}", "title": "SWE", "fit": 90,
+                                "tier": 90} for n in range(5)])
+        self.assertEqual(self.titles, ["5 new roles at companies you follow"])
+        self.assertTrue(self.sent[0].endswith("+2 more"))
+
+    def test_nothing_strong_sends_nothing(self):
+        self.assertEqual(notify.check_finished([
+            {"company_name": "Acme", "title": "SWE", "fit": 90, "tier": 10,
+             "below_floor": True}]), [])
+        self.assertEqual(self.sent, [])
+
+
 class FollowUpLineTest(unittest.TestCase):
     STRONG = [{"company_name": "Citadel", "title": "SWE", "fit": 90, "tier": 95,
                "below_floor": False}]

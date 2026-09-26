@@ -276,6 +276,29 @@ def fetch_new(dry_run=False, icons=True):
     return new, counts
 
 
+def fetch_watchlist():
+    """(postings, fetched) for the relevant, recent and unseen postings that appeared
+    on an enabled watchlist board since it was last read, newest first. fetched
+    counts the postings the boards list, all of which are stored.
+
+    A board read for the first time adds nothing, so a company just followed has its
+    backlog ranked by the daily run, under its cap, and not once an hour.
+    """
+    cfg = settings.get()
+    specs = [spec for spec in (sources.Source(**spec) for spec in cfg.watchlist)
+             if spec.enabled]
+    fetched, appeared = 0, set()
+    for source, rows in sources.fetch_all(specs):
+        known = store.source_ids(source)
+        ids = store.upsert_postings(rows, source)
+        store.mark_inactive_missing(source, ids)
+        fetched += len(ids)
+        if known:
+            appeared.update(set(ids) - known)
+    new = [job for job in store.new_postings(cfg, cfg.recent_days) if job["id"] in appeared]
+    return new, fetched
+
+
 def seed():
     """Mark the whole current backlog as seen so day one doesn't dump hundreds."""
     _refresh()

@@ -304,6 +304,10 @@ cairn schedule status
 cairn schedule remove
 ```
 
+Installing the daily run also installs an hourly `cairn check`. It reads only the job
+boards of the companies on your watchlist, ranks what is new, and pushes each strong
+match right away. The next daily run lists what the checks found.
+
 `install` adds a launchd job, `~/Library/LaunchAgents/app.cairn.daily.plist`, that
 runs `cairn run` once a day while you're logged in. Its output goes to
 `~/.cairn/launchd.out` and `launchd.err`. Each run's events also go to
@@ -347,6 +351,7 @@ see it too.
 | `init --from-resume FILE [--yes] [--overwrite]` | Draft `profile.md` from a `.pdf`, `.txt` or `.md` resume; `--yes` accepts the suggested answers, `--overwrite` replaces an edited profile |
 | `init --apply-draft [--overwrite]` | Apply the draft a previous `--from-resume` saved |
 | `run [--limit N] [--fit N] [--dry-run]` | Fetch, rank and summarize new postings; `--limit` takes the N newest, `--fit` changes the cutoff for this run, `--dry-run` changes nothing |
+| `check` | Rank what the watchlist boards list that is new, and push the strong matches |
 | `fetch [--limit N]` | List new postings without ranking them (25 by default) |
 | `seed` | Mark the current backlog seen |
 | `status` | Postings stored, applications logged, last run |
@@ -356,7 +361,7 @@ see it too.
 | `ui [--no-window] [--port N]` | Open the app in a window, or in the browser |
 | `icons [--limit N] [--reset-failures]` | Look up company websites and download their icons until none are left, or N companies; `--reset-failures` retries the ones that failed before |
 | `doctor` | Check this machine and print the fix for each failure |
-| `schedule install [--hour H] [--minute M]` | Install the daily run (launchd on a Mac, Task Scheduler on Windows) |
+| `schedule install [--hour H] [--minute M]` | Install the daily run and the hourly check (launchd on a Mac, Task Scheduler on Windows) |
 | `schedule status` / `schedule remove` | Show or remove it |
 | `autostart install` / `status` / `remove` | Open the app at login |
 | `llm` / `llm set PROVIDER [--model M] [--cheap-model M] [--base-url U] [--key-stdin]` / `llm test` | Show, choose or test the model provider; `set` asks for the key |

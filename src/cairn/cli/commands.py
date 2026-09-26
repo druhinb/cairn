@@ -47,6 +47,19 @@ def cmd_run(args):
     return 0
 
 
+def cmd_check(args):
+    try:
+        results, counts = pipeline.check()
+    except pipeline.RunInProgress:
+        ui.info("a run is in progress, so this check is skipped")
+        return 0
+    ui.postings(results)
+    ui.info(f"checked the watchlist: {counts['fetched']} postings listed, "
+            f"{counts['new']} new, {counts['ranked']} ranked.")
+    notify.check_finished(results)
+    return 0
+
+
 def cmd_fetch(args):
     new, _ = fetch.fetch_new()
     ui.postings(new[:args.limit], extra=max(0, len(new) - args.limit))

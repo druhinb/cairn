@@ -215,6 +215,55 @@ class GroupScoreTest(PipelineTestCase):
                          (80, result.run_id))
 
 
+class CheckTest(PipelineTestCase):
+    def setUp(self):
+        super().setUp()
+        self.listed = [_job("w0")]
+        self.enterContext(mock.patch.object(
+            fetch.sources, "fetch_all",
+            lambda specs: [(spec.name, list(self.listed)) for spec in specs]))
+        settings.use(dataclasses.replace(settings.get(), watchlist=[
+            {"kind": "greenhouse", "location": "acme", "company": "Acme", "enabled": True}]))
+        pipeline.check()
+        self.listed.append(_job("w1"))
+
+    def test_a_board_read_for_the_first_time_adds_nothing(self):
+        self.assertEqual(store.seen_ids(), set())
+        self.assertEqual(store.get_posting("w0")["active"], True)
+
+    def test_ranks_and_commits_what_appeared_on_the_boards(self):
+        store.upsert_postings([_job("feed1")], "feed")
+        results, counts = pipeline.check()
+        self.assertEqual([r["id"] for r in results], ["w1"])
+        self.assertEqual(counts, {"fetched": 2, "new": 1, "ranked": 1})
+        self.assertEqual(store.seen_ids(), {"w1"})
+        self.assertIsNone(store.get_posting("w1")["run_id"])
+        self.assertEqual(store.list_runs(), [])
+
+    def test_a_second_check_ranks_nothing(self):
+        pipeline.check()
+        self.assertEqual(pipeline.check()[1], {"fetched": 2, "new": 0, "ranked": 0})
+
+    def test_the_next_run_lists_what_a_check_found(self):
+        pipeline.run(RunOptions())
+        pipeline.check()
+        later = pipeline.run(RunOptions()).run_id
+        self.assertEqual(store.get_posting("w1")["run_id"], later)
+
+    def test_scores_older_than_the_last_run_stay_without_one(self):
+        store.upsert_postings([_job("old")], "feed")
+        store.save_scores([{"id": "old", "fit": 50, "tier": 50}])
+        with store.connect() as conn:
+            conn.execute("UPDATE scores SET scored_at = '2020-01-01T00:00:00'")
+        pipeline.run(RunOptions())
+        pipeline.run(RunOptions())
+        self.assertIsNone(store.get_posting("old")["run_id"])
+
+    def test_refused_while_a_run_holds_the_lock(self):
+        with pipeline.run_lock(), self.assertRaises(RunInProgress):
+            pipeline.check()
+
+
 class ClosedLinkTest(PipelineTestCase):
     def setUp(self):
         super().setUp()

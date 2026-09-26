@@ -48,7 +48,7 @@ def build_parser():
         formatter_class=argparse.RawDescriptionHelpFormatter, **kwargs)
     sub = parser.add_subparsers(
         dest="cmd",
-        metavar="{init,run,fetch,seed,icons,status,applied,track,serve,ui,doctor,schedule,"
+        metavar="{init,run,check,fetch,seed,icons,status,applied,track,serve,ui,doctor,schedule,"
                 "autostart,update-check,backup,restore,settings,llm}")
 
     init_p = sub.add_parser("init", help=f"seed {paths.home()} with example files")
@@ -74,6 +74,10 @@ def build_parser():
                           f"{settings.defaults().fit_threshold}). Applies to this "
                           "run only and leaves config.toml unchanged")
     run.set_defaults(func=commands.cmd_run)
+
+    check_p = sub.add_parser("check", help="rank what the watchlist boards list that is new, "
+                                           "and push the strong matches")
+    check_p.set_defaults(func=commands.cmd_check)
 
     fetch_p = sub.add_parser("fetch", help="dry run: show new postings, rank nothing")
     fetch_p.add_argument("--limit", type=_positive, default=25, metavar="N",

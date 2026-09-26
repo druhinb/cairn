@@ -1,5 +1,5 @@
-"""The schedule on Windows: a Task Scheduler task for the daily `cairn run`, and an
-entry under the Run key that opens `cairn ui` at login.
+"""The schedule on Windows: Task Scheduler tasks for the daily `cairn run` and the
+hourly `cairn check`, and an entry under the Run key that opens `cairn ui` at login.
 
 Both start pythonw.exe, which runs without a console window. The task definition is
 kept in the data home as the file Task Scheduler was given, the way launchd keeps a
@@ -15,6 +15,7 @@ from cairn.core import paths
 from cairn.system.schedule import DEFAULT_HOUR, DEFAULT_MINUTE, ScheduleError
 
 TASK = "Cairn daily run"
+CHECK_TASK = "Cairn hourly check"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 RUN_VALUE = "Cairn"
 TIMEOUT = 10  # seconds for any schtasks call
@@ -24,10 +25,7 @@ TASK_NS = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
 TASK_XML = """<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="{ns}">
   <Triggers>
-    <CalendarTrigger>
-      <StartBoundary>2026-01-01T{hour:02d}:{minute:02d}:00</StartBoundary>
-      <ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay>
-    </CalendarTrigger>
+    {trigger}
   </Triggers>
   <Principals>
     <Principal id="Author"><LogonType>InteractiveToken</LogonType></Principal>
@@ -41,16 +39,29 @@ TASK_XML = """<?xml version="1.0" encoding="UTF-16"?>
   <Actions Context="Author">
     <Exec>
       <Command>{program}</Command>
-      <Arguments>-m cairn.cli run</Arguments>
+      <Arguments>-m cairn.cli {command}</Arguments>
       <WorkingDirectory>{home}</WorkingDirectory>
     </Exec>
   </Actions>
 </Task>
 """
+DAILY_TRIGGER = """<CalendarTrigger>
+      <StartBoundary>2026-01-01T{hour:02d}:{minute:02d}:00</StartBoundary>
+      <ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay>
+    </CalendarTrigger>"""
+# a Repetition with no Duration repeats indefinitely
+HOURLY_TRIGGER = """<TimeTrigger>
+      <StartBoundary>2026-01-01T00:00:00</StartBoundary>
+      <Repetition><Interval>PT1H</Interval></Repetition>
+    </TimeTrigger>"""
 
 
 def task_file():
     return paths.home() / "daily-task.xml"
+
+
+def check_task_file():
+    return paths.home() / "check-task.xml"
 
 
 def program():
@@ -64,7 +75,17 @@ def program():
 
 def render(program_path, hour=DEFAULT_HOUR, minute=DEFAULT_MINUTE):
     """The Task Scheduler XML for a task running program_path daily at hour:minute."""
-    return TASK_XML.format(ns=TASK_NS["t"], hour=int(hour), minute=int(minute),
+    trigger = DAILY_TRIGGER.format(hour=int(hour), minute=int(minute))
+    return _task_xml(program_path, trigger, "run")
+
+
+def render_check(program_path):
+    """The Task Scheduler XML for a task running `cairn check` every hour."""
+    return _task_xml(program_path, HOURLY_TRIGGER, "check")
+
+
+def _task_xml(program_path, trigger, command):
+    return TASK_XML.format(ns=TASK_NS["t"], trigger=trigger, command=command,
                            program=escape(str(program_path)), home=escape(str(paths.home())))
 
 
@@ -85,27 +106,36 @@ def _checked(*args):
     return out.stdout
 
 
-def _registered():
-    return _schtasks("/Query", "/TN", TASK).returncode == 0
+def _registered(task):
+    return _schtasks("/Query", "/TN", task).returncode == 0
 
 
-def install(hour=DEFAULT_HOUR, minute=DEFAULT_MINUTE):
-    """Write the task definition and register it, replacing any earlier one.
-    Returns status()."""
-    text = render(program(), hour, minute)
-    path = task_file()
+def _register(task, path, text):
     path.parent.mkdir(parents=True, exist_ok=True)
     # schtasks reads a definition file as UTF-16 and turns down UTF-8
     path.write_text(text, encoding="utf-16")
-    _checked("/Create", "/TN", TASK, "/XML", path, "/F")
+    _checked("/Create", "/TN", task, "/XML", path, "/F")
+
+
+def install(hour=DEFAULT_HOUR, minute=DEFAULT_MINUTE):
+    """Write the daily and hourly task definitions and register them, replacing any
+    earlier ones. Returns status()."""
+    exe = program()
+    _register(TASK, task_file(), render(exe, hour, minute))
+    _register(CHECK_TASK, check_task_file(), render_check(exe))
     return status()
 
 
+def _unregister(task, path):
+    if _registered(task):
+        _checked("/Delete", "/TN", task, "/F")
+    path.unlink(missing_ok=True)
+
+
 def remove():
-    """Unregister the task and delete its definition. Returns status()."""
-    if _registered():
-        _checked("/Delete", "/TN", TASK, "/F")
-    task_file().unlink(missing_ok=True)
+    """Unregister both tasks and delete their definitions. Returns status()."""
+    _unregister(TASK, task_file())
+    _unregister(CHECK_TASK, check_task_file())
     return status()
 
 
@@ -125,13 +155,15 @@ def _one_line(e):
 
 
 def status():
-    """{installed, loaded, plist, program, hour, minute, error} for the daily task,
-    where plist names the task. Never raises."""
+    """{installed, loaded, plist, program, hour, minute, hourly, error} for the daily
+    task, where plist names the task and hourly says whether the hourly check is
+    registered. Never raises."""
     path = task_file()
     result = {"installed": path.exists(), "loaded": False, "plist": TASK,
-              "program": None, "hour": None, "minute": None, "error": ""}
+              "program": None, "hour": None, "minute": None, "hourly": False, "error": ""}
     try:
-        result["loaded"] = _registered()
+        result["loaded"] = _registered(TASK)
+        result["hourly"] = check_task_file().exists() and _registered(CHECK_TASK)
     except ScheduleError as e:
         result["error"] = str(e)
     if result["installed"]:

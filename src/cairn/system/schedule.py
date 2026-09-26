@@ -1,4 +1,5 @@
-"""The launchd jobs: the daily `cairn run`, and `cairn ui` at login.
+"""The launchd jobs: the daily `cairn run`, the hourly `cairn check`, and `cairn ui`
+at login.
 
 Install, remove, and inspect either one. On Windows, schedule_windows supplies the
 same six functions.
@@ -16,6 +17,8 @@ from xml.sax.saxutils import escape
 from cairn.core import paths
 
 LABEL = "app.cairn.daily"
+CHECK_LABEL = "app.cairn.check"
+CHECK_SECONDS = 3600
 UI_LABEL = "app.cairn.autostart"
 DEFAULT_HOUR, DEFAULT_MINUTE = 7, 0
 TIMEOUT = 10  # seconds for any launchctl call
@@ -29,6 +32,10 @@ class ScheduleError(Exception):
 
 def plist_path():
     return Path("~/Library/LaunchAgents").expanduser() / f"{LABEL}.plist"
+
+
+def check_plist_path():
+    return plist_path().with_name(f"{CHECK_LABEL}.plist")
 
 
 def autostart_plist_path():
@@ -73,6 +80,27 @@ def render(program_path, hour=DEFAULT_HOUR, minute=DEFAULT_MINUTE):
         stderr=escape(str(paths.home() / "launchd.err")))
 
 
+def _environment():
+    env = {"PATH": LAUNCHD_PATH.format(home=Path.home())}
+    if os.environ.get("CAIRN_HOME"):
+        env["CAIRN_HOME"] = os.environ["CAIRN_HOME"]
+    return env
+
+
+def render_check(program_path):
+    """The plist text for a job running `cairn check` every CHECK_SECONDS. launchd
+    runs an interval missed during sleep once, at wake."""
+    job = {"Label": CHECK_LABEL,
+           "ProgramArguments": [str(program_path), "check"],
+           "EnvironmentVariables": _environment(),
+           "StartInterval": CHECK_SECONDS,
+           "Umask": 0o077,
+           "RunAtLoad": False,
+           "StandardOutPath": str(paths.home() / "check.out"),
+           "StandardErrorPath": str(paths.home() / "check.err")}
+    return plistlib.dumps(job).decode()
+
+
 def _launchctl(*args):
     try:
         out = subprocess.run(["launchctl", *map(str, args)], capture_output=True,
@@ -94,28 +122,36 @@ def _unload(*args):
         pass  # not loaded is the state unload is asked for
 
 
-def install(hour=DEFAULT_HOUR, minute=DEFAULT_MINUTE):
-    """Write the plist and (re)load it. Returns status()."""
-    text = render(program(), hour, minute)
-    path = plist_path()
+def _load(path, text):
     path.parent.mkdir(parents=True, exist_ok=True)
     # launchd opens the log files before the job starts, so their directory must exist
     paths.home().mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
     _unload("unload", path)
     _launchctl("load", path)
+
+
+def install(hour=DEFAULT_HOUR, minute=DEFAULT_MINUTE):
+    """Write the daily and hourly plists and (re)load them. Returns status()."""
+    exe = program()
+    _load(plist_path(), render(exe, hour, minute))
+    _load(check_plist_path(), render_check(exe))
     return status()
 
 
-def remove():
-    """Unload and delete the plist. Returns status()."""
-    path = plist_path()
+def _remove(path, label):
     if path.exists():
         _unload("unload", path)
     else:
         # the file can be deleted while launchd still has the job loaded
-        _unload("remove", LABEL)
+        _unload("remove", label)
     path.unlink(missing_ok=True)
+
+
+def remove():
+    """Unload and delete both plists. Returns status()."""
+    _remove(plist_path(), LABEL)
+    _remove(check_plist_path(), CHECK_LABEL)
     return status()
 
 
@@ -157,16 +193,18 @@ def _one_line(e):
 
 
 def status():
-    """{installed, loaded, plist, program, hour, minute, error} for the daily job.
+    """{installed, loaded, plist, program, hour, minute, hourly, error} for the daily
+    job, where hourly says whether the hourly check is installed and loaded.
 
     Never raises: a plist or launchctl that cannot be read leaves the fields it
     would have filled at None and says why in error.
     """
     path = plist_path()
     result = {"installed": path.exists(), "loaded": False, "plist": str(path),
-              "program": None, "hour": None, "minute": None, "error": ""}
+              "program": None, "hour": None, "minute": None, "hourly": False, "error": ""}
     try:
         result["loaded"] = _loaded()
+        result["hourly"] = check_plist_path().exists() and _loaded(CHECK_LABEL)
     except ScheduleError as e:
         result["error"] = str(e)
     if result["installed"]:
@@ -179,12 +217,9 @@ def status():
 
 def render_autostart(program_path):
     """The plist text for a job that opens the app at login."""
-    env = {"PATH": LAUNCHD_PATH.format(home=Path.home())}
-    if os.environ.get("CAIRN_HOME"):
-        env["CAIRN_HOME"] = os.environ["CAIRN_HOME"]
     job = {"Label": UI_LABEL,
            "ProgramArguments": [str(program_path), "ui"],
-           "EnvironmentVariables": env,
+           "EnvironmentVariables": _environment(),
            "RunAtLoad": True,
            "KeepAlive": False,
            "StandardOutPath": str(paths.home() / "ui.out"),

@@ -565,7 +565,7 @@ class Settings {
     const installed = Boolean(schedule?.installed);
     const at = (h0, m0) => `${String(h0).padStart(2, "0")}:${String(m0 ?? 0).padStart(2, "0")}`;
     const status = schedule?.error && !installed ? "Couldn't read the schedule. Set the time again below."
-      : installed ? `On, daily at ${schedule.hour == null ? "an unknown time" : at(schedule.hour, schedule.minute)}${schedule.loaded ? "" : " (not running yet)"}`
+      : installed ? `On, daily at ${schedule.hour == null ? "an unknown time" : at(schedule.hour, schedule.minute)}${schedule.loaded ? "" : " (not running yet)"}${schedule.hourly ? "" : ". The hourly check is off; press Change time to turn it on."}`
         : "Off";
     const hour = h("input", { type: "number", id: "schedule-hour", class: "input input-num", min: "0", max: "23",
       value: String(schedule?.hour ?? 7) });
@@ -588,7 +588,7 @@ class Settings {
     const remove = installed ? h("button", { type: "button", class: "btn btn-sm", text: "Turn off" }) : null;
     remove?.addEventListener("click", () => act(remove, "/api/schedule/remove"));
     box.replaceChildren(this.sectionHead(section),
-      h("p", { class: "field-help", text: "Cairn runs once a day at this time while you're logged in to this computer." }),
+      h("p", { class: "field-help", text: "Cairn runs once a day at this time, and checks the companies you follow every hour, while you're logged in to this computer." }),
       h("p", { class: `schedule-status${installed ? (schedule.loaded ? " is-on" : " is-off") : ""}` }, h("span", { class: "run-dot", "aria-hidden": "true" }), status),
       h("div", { class: "add-row" },
         h("label", { class: "field-inline", for: "schedule-hour" }, h("span", { class: "field-inline-label", text: "Hour" }), hour),

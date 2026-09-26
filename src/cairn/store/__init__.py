@@ -52,6 +52,7 @@ from cairn.store.postings import (
     rename_sources,
     resolve,
     save_link_checks,
+    source_ids,
     upsert_postings,
 )
 from cairn.store.relevance import (
@@ -83,6 +84,7 @@ from cairn.store.schema import (
 )
 from cairn.store.scores import (
     FEEDBACK_REASONS,
+    claim_check_scores,
     clear_feedback,
     feedback,
     feedback_examples,

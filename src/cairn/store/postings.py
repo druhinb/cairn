@@ -87,6 +87,11 @@ def upsert_postings(rows, source):
     return stored
 
 
+def source_ids(source):
+    return {row[0] for row in connect().execute("SELECT id FROM postings WHERE source = ?",
+                                                (source,))}
+
+
 def mark_inactive_missing(source, seen_ids):
     """Deactivate this source's postings that its latest fetch no longer lists."""
     conn = connect()

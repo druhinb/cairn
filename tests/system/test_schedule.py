@@ -40,8 +40,10 @@ class FakeLaunchctl:
         verb = cmd[1]
         if verb in self.fail:
             return subprocess.CompletedProcess(cmd, 1, "", self.fail[verb])
-        if verb == "load":
+        if verb == "load" and Path(cmd[2]).stem == schedule.LABEL:
             self.loaded = True
+        elif verb == "load":
+            self.listed.add(Path(cmd[2]).stem)
         elif verb == "unload" and Path(cmd[2]).stem == schedule.LABEL:
             self.loaded = False
         elif verb == "unload":
@@ -116,7 +118,7 @@ class StatusTest(ScheduleTestCase):
     def test_not_installed(self):
         self.assertEqual(schedule.status(), {
             "installed": False, "loaded": False, "plist": str(self.plist),
-            "program": None, "hour": None, "minute": None, "error": ""})
+            "program": None, "hour": None, "minute": None, "hourly": False, "error": ""})
 
     def test_reads_an_installed_plist(self):
         self.plist.parent.mkdir(parents=True)
@@ -124,7 +126,7 @@ class StatusTest(ScheduleTestCase):
         self.launchctl.loaded = True
         self.assertEqual(schedule.status(), {
             "installed": True, "loaded": True, "plist": str(self.plist),
-            "program": PROGRAM, "hour": 6, "minute": 30, "error": ""})
+            "program": PROGRAM, "hour": 6, "minute": 30, "hourly": False, "error": ""})
 
     def test_calendar_interval_given_as_an_array_shows_the_first_time(self):
         self.write_plist({"Label": schedule.LABEL, "ProgramArguments": [PROGRAM, "run"],
@@ -188,14 +190,25 @@ class MalformedPlistTest(ScheduleTestCase):
 
 
 class InstallTest(ScheduleTestCase):
-    def test_writes_the_plist_and_reloads_it(self):
+    def test_writes_the_plists_and_reloads_them(self):
         result = schedule.install(8, 15)
-        self.assertEqual(self.verbs(), [["unload", str(self.plist)],
-                                        ["load", str(self.plist)]])
+        check = str(schedule.check_plist_path())
+        self.assertEqual(self.verbs(), [["unload", str(self.plist)], ["load", str(self.plist)],
+                                        ["unload", check], ["load", check]])
         self.assertEqual(result, {
             "installed": True, "loaded": True, "plist": str(self.plist),
-            "program": PROGRAM, "hour": 8, "minute": 15, "error": ""})
+            "program": PROGRAM, "hour": 8, "minute": 15, "hourly": True, "error": ""})
         self.assertTrue(self.home.is_dir())
+
+    def test_the_hourly_check_runs_cairn_check_every_hour(self):
+        schedule.install()
+        with schedule.check_plist_path().open("rb") as f:
+            job = plistlib.load(f)
+        self.assertEqual((job["Label"], job["ProgramArguments"], job["StartInterval"],
+                          job["Umask"], job["RunAtLoad"]),
+                         (schedule.CHECK_LABEL, [PROGRAM, "check"], 3600, 0o077, False))
+        self.assertEqual(job["EnvironmentVariables"]["CAIRN_HOME"], os.environ["CAIRN_HOME"])
+        self.assertEqual(job["StandardErrorPath"], str(self.home / "check.err"))
 
     def test_a_failed_unload_is_ignored(self):
         self.launchctl.fail["unload"] = "Could not find specified service"
@@ -220,19 +233,21 @@ class InstallTest(ScheduleTestCase):
 
 
 class RemoveTest(ScheduleTestCase):
-    def test_unloads_and_deletes(self):
+    def test_unloads_and_deletes_both_jobs(self):
         schedule.install()
         self.launchctl.calls.clear()
         result = schedule.remove()
-        self.assertEqual(self.verbs(), [["unload", str(self.plist)]])
-        self.assertFalse(self.plist.exists())
-        self.assertFalse(result["installed"])
-        self.assertFalse(result["loaded"])
+        check = schedule.check_plist_path()
+        self.assertEqual(self.verbs(), [["unload", str(self.plist)], ["unload", str(check)]])
+        self.assertFalse(self.plist.exists() or check.exists())
+        self.assertEqual((result["installed"], result["loaded"], result["hourly"]),
+                         (False, False, False))
 
     def test_a_loaded_job_without_its_file_is_removed_by_label(self):
         self.launchctl.fail["remove"] = "Could not find service"
         self.assertFalse(schedule.remove()["installed"])
-        self.assertEqual(self.verbs(), [["remove", schedule.LABEL]])
+        self.assertEqual(self.verbs(), [["remove", schedule.LABEL],
+                                        ["remove", schedule.CHECK_LABEL]])
 
 
 class AutostartTest(ScheduleTestCase):

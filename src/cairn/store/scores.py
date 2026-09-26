@@ -38,6 +38,16 @@ def save_scores(results, run_id=None):
     return len(rows)
 
 
+def claim_check_scores(run_id):
+    """Give run_id the scores a watchlist check stored since the run before it started.
+    Scores imported from the old JSON files also have no run, and are older."""
+    conn = connect()
+    with conn:
+        conn.execute("UPDATE scores SET run_id = ? WHERE run_id IS NULL AND scored_at >= "
+                     "(SELECT started_at FROM runs WHERE id < ? ORDER BY id DESC LIMIT 1)",
+                     (run_id, run_id))
+
+
 def save_reasons(posting_id, fit_reason, tier_reason):
     """Set the reasons of a stored score, leaving the score and its run as they are."""
     conn = connect()
