@@ -485,7 +485,7 @@ def _write_atomic(path, text):
 
 
 def _is_example(path):
-    return path.read_bytes() == _example(path.name).encode("utf-8")
+    return path.read_text(encoding="utf-8", errors="replace") == _example(path.name)
 
 
 def _holds_own_content(path):

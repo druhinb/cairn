@@ -333,6 +333,13 @@ class ApplyTest(unittest.TestCase):
         onboard.apply(self.draft, {})
         self.assertFalse(onboard.needs_setup())
 
+    def test_an_example_saved_with_windows_line_endings_is_still_the_example(self):
+        cli.cmd_init(cli._parser().parse_args(["init"]))
+        profile = paths.profile_md()
+        profile.write_bytes(profile.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+        self.assertTrue(onboard.needs_setup())
+        self.assertEqual(onboard.conflicts(), [])
+
     def test_the_examples_are_replaced_without_asking(self):
         cli.cmd_init(cli._parser().parse_args(["init"]))
         applied = onboard.apply(self.draft, {"roles": ["quant"]})
