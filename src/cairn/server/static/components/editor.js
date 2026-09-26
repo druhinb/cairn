@@ -18,8 +18,7 @@ export function editor(text, { label, onInput }) {
     marks.replaceChildren(...lines.map((line) => h("div",
       { class: /^\s*(?:[-*]\s*)?TODO:/.test(line) ? "todo" : "" }, "​")));
     const count = marks.querySelectorAll(".todo").length;
-    // an empty file has no TODOs because it has no answers either, so the foot says nothing
-    todos.textContent = count ? `${count} TODO${count === 1 ? "" : "s"} left` : area.value.trim() ? "No TODOs left" : "";
+    todos.textContent = count ? `${count} TODO${count === 1 ? "" : "s"} left` : "";
     return count;
   };
   area.addEventListener("input", () => onInput?.(area.value, draw()));
