@@ -12,8 +12,8 @@ import { switchControl } from "../components/switch.js";
 import { tagInput } from "../components/tagInput.js";
 import { toast } from "../components/toast.js";
 
-const STEPS = ["AI provider", "Resume", "Review", "Preferences"];
-const [AI_STEP, RESUME_STEP, REVIEW_STEP, PREFS_STEP] = STEPS.keys();
+const STEPS = ["AI", "Resume", "Review", "Preferences", "Companies", "Alerts"];
+const [AI_STEP, RESUME_STEP, REVIEW_STEP, PREFS_STEP, COMPANIES_STEP, ALERTS_STEP] = STEPS.keys();
 const CLAUDE_CODE = "claude-code";
 const CLAUDE_CODE_URL = "https://claude.com/claude-code";
 const ROLE_LABELS = { backend: "Backend", frontend: "Frontend", fullstack: "Full stack", systems: "Systems",
@@ -72,6 +72,7 @@ class Setup {
     this.profile = "";
     this.prefs = null;
     this.options = null;
+    this.starters = [];
     /** what the settings held when the wizard opened, so Finish sends only what changed */
     this.initial = { ntfy_topic: "", watchlist: [] };
     this.graduation = "";
@@ -131,7 +132,7 @@ class Setup {
   render() {
     const done = this.result != null;
     const body = done ? this.finished()
-      : [this.aiStep, this.resumeStep, this.reviewStep, this.prefsStep][this.step].call(this);
+      : [this.aiStep, this.resumeStep, this.reviewStep, this.prefsStep, this.companiesStep, this.alertsStep][this.step].call(this);
     this.card.replaceChildren(
       h("header", { class: "setup-head" }, pixelArt("checklist"),
         h("h1", { class: "display", tabindex: "-1", text: done ? "You are set up" : "Set up Cairn" }),
@@ -328,10 +329,12 @@ class Setup {
 
   /** The role and authorization choices, kept once known; a failure falls back to the built-in ones. */
   async loadOptions() {
-    this.options ??= await api("/api/onboard/options", { quiet: true }).catch((error) => {
-      toast("Couldn't load the setup choices, so these are the defaults", { tone: "error" });
-      return BUILT_IN_OPTIONS;
-    });
+    [this.options, this.starters] = await Promise.all([
+      this.options ?? api("/api/onboard/options", { quiet: true }).catch(() => {
+        toast("Couldn't load the setup choices, so these are the defaults", { tone: "error" });
+        return BUILT_IN_OPTIONS;
+      }),
+      this.starters.length ? this.starters : api("/api/watchlist/starters", { quiet: true }).catch(() => [])]);
   }
 
   conflictFiles(error) {
@@ -363,6 +366,7 @@ class Setup {
       calibre_anchors: ["", "", ""],
       ntfy_topic: this.initial.ntfy_topic,
       watchlist: [...watchlist],
+      starter_watchlists: [],
     };
   }
 
@@ -537,9 +541,8 @@ class Setup {
     const auth = h("select", { class: "select", id: "pref-auth", onchange: (event) => { p.work_authorization = event.target.value; } },
       this.options.work_authorization.map((value) => h("option", { value, selected: value === p.work_authorization,
         text: value === "unknown" ? "Prefer not to say" : value })));
-    const finish = h("button", { type: "button", class: "btn btn-primary", text: "Finish",
-      disabled: Boolean(this.graduationError) || !this.aiDone(),
-      title: this.aiDone() ? null : "Set up the AI provider first", onclick: () => this.finish(finish) });
+    const next = h("button", { type: "button", class: "btn btn-primary", text: "Next: companies",
+      disabled: Boolean(this.graduationError), onclick: () => this.go(COMPANIES_STEP) });
     const monthError = h("p", { class: "field-error", id: "pref-month-error", role: "alert",
       hidden: !this.graduationError, text: this.graduationError || "" });
     const month = h("input", { type: "month", class: "input input-month", id: "pref-month", min: "2000-01", max: "2100-12",
@@ -553,14 +556,11 @@ class Setup {
         monthError.hidden = !error;
         monthError.textContent = error || "";
         month.setAttribute("aria-invalid", String(Boolean(error)));
-        finish.disabled = Boolean(error) || !this.aiDone();
+        next.disabled = Boolean(error);
       } });
     const anchors = h("div", { class: "anchor-inputs" }, p.calibre_anchors.map((value, i) => h("input", {
       type: "text", class: "input input-text", value, placeholder: ANCHOR_HINTS[i], "aria-label": `Company tier example ${i + 1}`,
       oninput: (event) => { p.calibre_anchors[i] = event.target.value; } })));
-    const topic = h("input", { type: "text", class: "input input-text", id: "pref-ntfy", value: p.ntfy_topic,
-      autocomplete: "off", spellcheck: "false", placeholder: "Leave empty for no alerts",
-      oninput: (event) => { p.ntfy_topic = event.target.value; } });
     return h("div", { class: "setup-body" },
       h("p", { class: "setup-lead", text: "Cairn filled these in from your resume. You can change them later in Settings." }),
       field("Roles", "Leave all unchecked to see every kind of engineering job.", roles),
@@ -576,15 +576,89 @@ class Setup {
       field("Internship terms", "Terms you can intern in, such as “Fall 2026”. Leave empty to skip internships.",
         tagInput(p.internship_terms, { id: "pref-terms", onChange: (tags) => { p.internship_terms = tags; } }), "pref-terms"),
       field("Company tier examples", "Name up to three companies and the score out of 100 you'd give each. Cairn rates other companies against them.", anchors),
-      field("Phone alerts", "Get an alert on your phone after each run. Install the ntfy app, subscribe to a name only you know, and enter it here.", topic, "pref-ntfy"),
-      field("Watchlist", ["Companies to follow. Type a name or paste a link to their careers page. Remove companies in ",
-        h("a", { href: "#settings?section=sources", class: "link", text: "Settings › Sources" }), "."],
-        tagInput(p.watchlist, { id: "pref-watchlist", placeholder: "Stripe, jobs.lever.co/palantir…", onChange: (tags) => { p.watchlist = tags; } }), "pref-watchlist"),
+      this.actions(REVIEW_STEP, next));
+  }
+
+  /** The row under a step: Back to the step before, then its main button. */
+  actions(back, main) {
+    return h("div", { class: "setup-actions" },
+      h("button", { type: "button", class: "btn btn-ghost", text: "Back", onclick: () => this.go(back) }),
+      h("span", { class: "filter-spacer" }), main);
+  }
+
+  // step 5, companies to follow
+  companiesStep() {
+    const p = this.prefs;
+    const lists = h("div", { class: "starter-list", role: "group", "aria-label": "Starter lists" },
+      this.starters.map((list) => h("label", { class: "check starter", title: list.companies.join(", ") },
+        h("input", { type: "checkbox", checked: p.starter_watchlists.includes(list.id), onchange: (event) => {
+          p.starter_watchlists = this.starters.map((l) => l.id)
+            .filter((id) => (id === list.id ? event.target.checked : p.starter_watchlists.includes(id)));
+        } }),
+        h("span", { class: "starter-text" },
+          h("strong", { text: list.name }),
+          h("span", { class: "muted", text: ` · ${list.companies.length} companies` }),
+          h("span", { class: "starter-names", text: `${list.companies.slice(0, 4).join(", ")} and more` })))));
+    return h("div", { class: "setup-body" },
+      h("p", { class: "setup-lead", text: "Cairn checks the careers pages of companies you follow every hour, so you hear about their new jobs first." }),
+      h("div", { class: "field" },
+        h("span", { class: "field-label", text: "Start with a list" }),
+        h("p", { class: "field-help", text: "Pick any number. You can remove single companies later in Settings." }),
+        lists),
+      h("div", { class: "field" },
+        h("label", { class: "field-label", for: "pref-watchlist", text: "Other companies" }),
+        h("p", { class: "field-help", text: "Type a name or paste a link to their careers page." }),
+        tagInput(p.watchlist, { id: "pref-watchlist", placeholder: "Stripe, jobs.lever.co/palantir…", onChange: (tags) => { p.watchlist = tags; } })),
+      this.actions(PREFS_STEP, h("button", { type: "button", class: "btn btn-primary", text: "Next: alerts",
+        onclick: () => this.go(ALERTS_STEP) })));
+  }
+
+  // step 6, phone alerts
+  alertsStep() {
+    const p = this.prefs;
+    const status = h("p", { class: "field-help", role: "status" });
+    const topic = h("input", { type: "text", class: "input input-text", id: "pref-ntfy", value: p.ntfy_topic,
+      autocomplete: "off", spellcheck: "false", placeholder: "Leave empty for no alerts",
+      oninput: () => {
+        p.ntfy_topic = topic.value.trim();
+        test.disabled = !p.ntfy_topic;
+        status.textContent = "";
+      } });
+    const make = h("button", { type: "button", class: "btn", text: "Make one", onclick: () => {
+      topic.value = `cairn-${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      topic.dispatchEvent(new Event("input"));
+    } });
+    const test = h("button", { type: "button", class: "btn", text: "Send a test", disabled: !p.ntfy_topic,
+      onclick: async () => {
+        test.disabled = true;
+        status.textContent = "Sending…";
+        try {
+          await api("/api/notify/test", { method: "POST", quiet: true, body: { topic: p.ntfy_topic } });
+          status.textContent = "Sent. It should reach your phone in a few seconds.";
+        } catch (error) {
+          status.textContent = error.status === 400
+            ? "A topic can use only letters, numbers, - and _, up to 64 of them."
+            : `Couldn't send it: ${error.message}`;
+        }
+        test.disabled = !p.ntfy_topic;
+      } });
+    const finish = h("button", { type: "button", class: "btn btn-primary", text: "Finish",
+      disabled: !this.aiDone(), title: this.aiDone() ? null : "Set up the AI provider first",
+      onclick: () => this.finish(finish) });
+    return h("div", { class: "setup-body" },
+      h("p", { class: "setup-lead", text: "Cairn can send an alert to your phone when it finds a strong match. This is optional, and you can set it up later in Settings." }),
+      h("ol", { class: "setup-howto" },
+        h("li", { text: "Install the free ntfy app from the App Store or Google Play." }),
+        h("li", { text: "Press Make one below. Anyone who knows this topic can read your alerts, so keep it long." }),
+        h("li", { text: "In the ntfy app, tap + and subscribe to the same topic." }),
+        h("li", { text: "Press Send a test and check your phone." })),
+      h("div", { class: "field" },
+        h("label", { class: "field-label", for: "pref-ntfy", text: "Topic" }),
+        h("div", { class: "topic-row" }, topic, make, test),
+        status),
       this.conflict && this.conflictBox(() => this.finish(finish)),
       this.error && h("p", { class: "field-error", role: "alert", text: this.error }),
-      h("div", { class: "setup-actions" },
-        h("button", { type: "button", class: "btn btn-ghost", text: "Back", onclick: () => this.go(REVIEW_STEP) }),
-        h("span", { class: "filter-spacer" }), finish));
+      this.actions(COMPANIES_STEP, finish));
   }
 
   /**

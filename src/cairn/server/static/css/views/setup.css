@@ -182,3 +182,49 @@
     padding: 20px 16px;
   }
 }
+
+.starter-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.check.starter {
+  align-items: flex-start;
+}
+
+.check.starter input {
+  margin-top: 3px;
+}
+
+.starter-names {
+  display: block;
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+}
+
+.setup-howto {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 20px;
+  list-style: decimal;
+  font-size: var(--text-sm);
+}
+
+.topic-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.field .topic-row .input-text {
+  flex: 1 1 240px;
+  margin-top: 0;
+}
+
+/* six steps fit on one line of the card */
+.setup-card .step + .step::before {
+  width: 16px;
+}

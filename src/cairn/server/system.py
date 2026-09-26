@@ -7,11 +7,12 @@ import time
 from fastapi import APIRouter, Body, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, PlainTextResponse
+from pydantic import BaseModel, Field
 from starlette.datastructures import UploadFile
 
 from cairn.ai import llm
 from cairn.core import paths, secrets
-from cairn.jobs import insights, logos, pipeline
+from cairn.jobs import insights, logos, notify, pipeline
 from cairn.system import backup, schedule, update
 
 router = APIRouter()
@@ -101,6 +102,19 @@ def install_autostart():
 @router.post("/api/autostart/remove")
 def remove_autostart():
     return _autostart_call(schedule.autostart_remove)
+
+
+class TopicBody(BaseModel):
+    topic: str = Field(pattern=r"^[A-Za-z0-9_-]{1,64}$")
+
+
+@router.post("/api/notify/test")
+def test_alert(body: TopicBody):
+    try:
+        notify.test(body.topic)
+    except OSError as e:
+        raise HTTPException(502, f"ntfy.sh did not take the alert: {e}") from None
+    return {"sent": True}
 
 
 @router.get("/api/update")

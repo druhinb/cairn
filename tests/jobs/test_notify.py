@@ -9,7 +9,7 @@ import unittest
 import urllib.error
 from unittest import mock
 
-from helpers import temp_home
+from helpers import app_client, temp_home
 
 from cairn import store
 from cairn.core import settings
@@ -229,6 +229,30 @@ class FollowUpLineTest(unittest.TestCase):
         with mock.patch.object(settings, "get", return_value=cfg):
             notify.run_finished(self.STRONG)
         self.assertNotIn("follow-up", self.sent[0])
+
+
+class TestAlertTest(unittest.TestCase):
+    def setUp(self):
+        self.enterContext(temp_home())
+        self.client = app_client(self)
+
+    def test_the_test_goes_to_the_topic_typed_in(self):
+        with mock.patch.object(notify, "_publish", return_value=True) as publish:
+            response = self.client.post("/api/notify/test", json={"topic": "cairn-x1"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(publish.call_args.args[0], "cairn-x1")
+
+    def test_a_topic_ntfy_cannot_take_is_refused_before_sending(self):
+        with mock.patch.object(notify, "_publish") as publish:
+            response = self.client.post("/api/notify/test", json={"topic": "a/b"})
+        self.assertEqual(response.status_code, 400)
+        publish.assert_not_called()
+
+    def test_an_unreachable_ntfy_is_502(self):
+        with mock.patch.object(notify, "_publish",
+                               side_effect=urllib.error.URLError("offline")):
+            response = self.client.post("/api/notify/test", json={"topic": "cairn-x1"})
+        self.assertEqual(response.status_code, 502)
 
 
 class SuiteIsolationTest(unittest.TestCase):

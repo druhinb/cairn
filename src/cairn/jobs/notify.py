@@ -32,11 +32,20 @@ def _header_safe(value):
     return value
 
 
+def _publish(topic, title, message, headers=()):
+    req = urllib.request.Request(f"https://ntfy.sh/{topic}", data=message.encode("utf-8"),
+                                 headers={"Title": title,
+                                          "Content-Type": "text/plain; charset=utf-8",
+                                          **dict(headers)})
+    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+        return 200 <= r.status < 300
+
+
 def _ntfy(title, message, link=None, priority=None, tags=None, actions=None):
     topic = (settings.get().notify_ntfy_topic or "").strip()
     if not topic:
         return False
-    headers = {"Title": title, "Content-Type": "text/plain; charset=utf-8"}
+    headers = {}
     link = _header_safe(link)
     if link:
         headers["Click"] = link
@@ -46,10 +55,14 @@ def _ntfy(title, message, link=None, priority=None, tags=None, actions=None):
         headers["Tags"] = ",".join(tags)
     if actions:
         headers["Actions"] = "; ".join(actions)
-    req = urllib.request.Request(f"https://ntfy.sh/{topic}",
-                                 data=message.encode("utf-8"), headers=headers)
-    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-        return 200 <= r.status < 300
+    return _publish(topic, title, message, headers)
+
+
+def test(topic):
+    """Send a sample alert to topic, whether or not it is saved. Raises OSError when
+    ntfy.sh cannot be reached or refuses it."""
+    return _publish(topic, "Cairn can reach this phone",
+                    "Alerts about new jobs will look like this.")
 
 
 def _macos_banner(title, message):
