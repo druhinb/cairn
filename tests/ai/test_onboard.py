@@ -257,6 +257,14 @@ class PreferencesTest(unittest.TestCase):
                 self.assertLessEqual(set(words), set(settings.DEFAULT_TITLE_EXCLUDE_FIELD))
                 self.assertLessEqual(set(words), set(onboard.ROLE_KEYWORDS[role]))
 
+    def test_the_skip_groups_split_the_default_skip_lists(self):
+        for title_list in ("title_exclude", "title_exclude_field"):
+            words = [word for kind, group in onboard.SKIP_GROUPS.values() if kind == title_list
+                     for word in group]
+            with self.subTest(title_list=title_list):
+                self.assertEqual(len(words), len(set(words)))
+                self.assertEqual(set(words), set(onboard.TITLE_DEFAULTS[title_list]))
+
     def test_title_words_become_the_settings(self):
         mapped = self.mapped(title_keywords=["Quant", "trader", "quant"], title_exclude=[],
                              title_exclude_field=["hardware"])

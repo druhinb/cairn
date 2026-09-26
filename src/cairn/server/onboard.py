@@ -117,6 +117,8 @@ def onboard_status():
 def onboard_options():
     return {"roles": {role: {"keywords": keywords, "unskips": onboard.ROLE_UNSKIPS.get(role, [])}
                       for role, keywords in onboard.ROLE_KEYWORDS.items()},
+            "skips": {group: {"list": title_list, "words": words}
+                      for group, (title_list, words) in onboard.SKIP_GROUPS.items()},
             "work_authorization": list(onboard.WORK_AUTHORIZATION)}
 
 

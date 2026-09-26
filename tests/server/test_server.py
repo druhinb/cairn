@@ -1061,12 +1061,15 @@ class OnboardTest(ServerTestCase):
         paths.profile_md().write_text("mine", encoding="utf-8")
         self.assertFalse(self.client.get("/api/onboard/status").json()["needs_setup"])
 
-    def test_options_list_each_roles_words_and_the_authorizations(self):
+    def test_options_list_each_roles_words_the_skip_groups_and_the_authorizations(self):
         body = self.client.get("/api/onboard/options").json()
         self.assertEqual(list(body["roles"]), list(onboard.ROLE_KEYWORDS))
         self.assertEqual(body["roles"]["embedded"],
                          {"keywords": ["embedded", "firmware"], "unskips": ["firmware"]})
         self.assertEqual(body["roles"]["quant"]["unskips"], [])
+        self.assertEqual(list(body["skips"]), list(onboard.SKIP_GROUPS))
+        self.assertEqual(body["skips"]["managers"],
+                         {"list": "title_exclude", "words": ["manager", "director"]})
         self.assertEqual(body["work_authorization"], list(onboard.WORK_AUTHORIZATION))
 
     def test_draft_from_pasted_text(self):

@@ -2,7 +2,7 @@ import { api } from "../lib/api.js";
 import { fmt, h, safeUrl } from "../lib/dom.js";
 import { subscribe } from "../lib/events.js";
 import { readNumber } from "../lib/numbers.js";
-import { withRole } from "../lib/roles.js";
+import { heldSkips, withRole, withSkip } from "../lib/roles.js";
 import { doctorList } from "../components/doctor.js";
 import { editor } from "../components/editor.js";
 import { activeFirstRun, FirstRunScreen, launchFrame } from "../components/firstRun.js";
@@ -22,6 +22,9 @@ const CLAUDE_CODE_URL = "https://claude.com/claude-code";
 const ROLE_LABELS = { backend: "Backend", frontend: "Frontend", fullstack: "Full stack", systems: "Systems",
   ml: "Machine learning", data: "Data", quant: "Quant", research: "Research", platform: "Platform",
   security: "Security", mobile: "Mobile", embedded: "Embedded" };
+const SKIP_LABELS = { senior: "Senior roles", managers: "Managers", phd: "PhD roles", hardware: "Hardware",
+  engineering: "Other engineering", testing: "Test and quality", support: "Field and support",
+  business: "Sales and recruiting" };
 const ANCHOR_HINTS = ["e.g. Stripe, Databricks, Jane Street = 90", "e.g. Datadog, Snowflake = 75",
   "e.g. a strong regional company = 60"];
 const ACCEPT = ".pdf,.txt,.md";
@@ -30,8 +33,8 @@ const AI_LIMIT_KEYS = ["model_concurrency", "rank_batch_size", "rank_retries", "
 const SETTING_FIELDS = SECTIONS.flatMap((section) => section.fields || []);
 const AI_LIMITS = AI_LIMIT_KEYS.map((key) => SETTING_FIELDS.find((spec) => spec.key === key));
 // what /api/onboard/options answers, for when it cannot be reached; without the
-// role keywords there are no role checkboxes
-const BUILT_IN_OPTIONS = { roles: {}, work_authorization: ["US citizen", "F-1 OPT", "needs sponsorship", "unknown"] };
+// role keywords and skip groups there are no checkboxes
+const BUILT_IN_OPTIONS = { roles: {}, skips: {}, work_authorization: ["US citizen", "F-1 OPT", "needs sponsorship", "unknown"] };
 const GRADUATION_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const DEFAULT_GRADUATION_MONTH = "06";
 const DEFAULT_MAX_YEARS = 2;
@@ -42,7 +45,7 @@ const SLOW_DRAFT_SECONDS = 60;
 // long enough to see the draft pass its check before Review replaces the screen
 const CHECKED_PAUSE_MS = 700;
 
-const roleLabel = (role) => ROLE_LABELS[role] || role[0].toUpperCase() + role.slice(1);
+const labelOf = (labels, name) => labels[name] || name[0].toUpperCase() + name.slice(1);
 
 /**
  * The graduation year in a month field, or why the field refuses its text. The
@@ -91,6 +94,8 @@ class Setup {
     this.profile = "";
     this.prefs = null;
     this.options = null;
+    /** the role and skip group checkboxes checked on the preferences step */
+    this.checked = { roles: [], skips: [] };
     this.starters = [];
     /** what the settings held when the wizard opened, so Finish sends only what changed */
     this.initial = { ntfy_topic: "", watchlist: [] };
@@ -380,8 +385,7 @@ class Setup {
       ? String(suggestions.graduation_month).padStart(2, "0") : DEFAULT_GRADUATION_MONTH;
     this.graduation = year == null ? "" : `${year}-${month}`;
     this.initial = { ntfy_topic: current?.notify_ntfy_topic || "", watchlist };
-    this.roles = suggestions.roles || [];
-    return {
+    const prefs = {
       title_keywords: suggestions.title_keywords ?? current?.title_keywords ?? [],
       title_exclude: suggestions.title_exclude ?? current?.title_exclude ?? [],
       title_exclude_field: suggestions.title_exclude_field ?? current?.title_exclude_field ?? [],
@@ -400,6 +404,9 @@ class Setup {
       watchlist: [...watchlist],
       starter_watchlists: [],
     };
+    const roles = suggestions.roles || [];
+    this.checked = { roles, skips: heldSkips(prefs, this.options, roles) };
+    return prefs;
   }
 
   // step 3, review profile.md
@@ -637,21 +644,28 @@ class Setup {
       help && h("p", { class: "field-help" }, help), control);
     const words = (key, id) => tagInput(p[key], { id, onChange: (tags) => { p[key] = tags; } });
     const lists = { title_keywords: words("title_keywords", "pref-title-keywords"),
+      title_exclude: words("title_exclude", "pref-title-exclude"),
       title_exclude_field: words("title_exclude_field", "pref-title-field") };
-    const toggle = (role, on) => {
-      Object.assign(p, withRole(p, this.options.roles, this.roles, role, on));
-      this.roles = Object.keys(this.options.roles).filter((r) => (r === role ? on : this.roles.includes(r)));
+    const change = { roles: withRole, skips: withSkip };
+    const toggle = (kind, name, on) => {
+      Object.assign(p, change[kind](p, this.options, this.checked, name, on));
+      this.checked[kind] = Object.keys(this.options[kind])
+        .filter((other) => (other === name ? on : this.checked[kind].includes(other)));
       for (const key of Object.keys(lists)) {
         const fresh = words(key, lists[key].querySelector("input").id);
         lists[key].replaceWith(fresh);
         lists[key] = fresh;
       }
     };
-    const roleNames = Object.keys(this.options.roles);
-    const roles = roleNames.length > 0 && h("div", { class: "check-grid", role: "group", "aria-label": "Roles" },
-      roleNames.map((role) => h("label", { class: "check" },
-        h("input", { type: "checkbox", checked: this.roles.includes(role),
-          onchange: (event) => toggle(role, event.target.checked) }), roleLabel(role))));
+    const checks = (kind, labels, groupLabel) => {
+      const names = Object.keys(this.options[kind]);
+      return names.length > 0 && h("div", { class: "check-grid", role: "group", "aria-label": groupLabel },
+        names.map((name) => h("label", { class: "check" },
+          h("input", { type: "checkbox", checked: this.checked[kind].includes(name),
+            onchange: (event) => toggle(kind, name, event.target.checked) }), labelOf(labels, name))));
+    };
+    const roles = checks("roles", ROLE_LABELS, "Roles");
+    const skips = checks("skips", SKIP_LABELS, "Jobs to skip");
     const auth = h("select", { class: "select", id: "pref-auth", onchange: (event) => { p.work_authorization = event.target.value; } },
       this.options.work_authorization.map((value) => h("option", { value, selected: value === p.work_authorization,
         text: value === "unknown" ? "Prefer not to say" : value })));
@@ -694,8 +708,9 @@ class Setup {
       roles && field("Roles", "Checking a role adds its job titles to the lists below. Unchecking it takes them out.", roles),
       field("Title keywords", "Cairn shows only jobs whose title has one of these words. Leave it empty to use Cairn’s own list.",
         lists.title_keywords, "pref-title-keywords"),
+      skips && field("Jobs to skip", "Checking a group adds its words to the two skip lists below. Unchecking it takes them out.", skips),
       field("Skip titles with", "Cairn hides jobs whose title has any of these words, such as senior roles.",
-        words("title_exclude", "pref-title-exclude"), "pref-title-exclude"),
+        lists.title_exclude, "pref-title-exclude"),
       field("Skip field roles with", "Cairn hides jobs in fields your resume doesn’t point to, such as hardware.",
         lists.title_exclude_field, "pref-title-field"),
       field("Locations", "Leave empty to see jobs in every location.",

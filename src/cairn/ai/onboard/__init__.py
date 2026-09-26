@@ -41,6 +41,7 @@ from cairn.ai.onboard.resume import (
     ROLE_KEYWORDS,
     ROLE_UNSKIPS,
     SECTION_GUIDE,
+    SKIP_GROUPS,
     SUGGESTION_SHAPES,
     TITLE_DEFAULTS,
     WORK_AUTHORIZATION,

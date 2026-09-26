@@ -44,6 +44,25 @@ ROLE_KEYWORDS = {
     "embedded": ["embedded", "firmware"],
 }
 ROLE_UNSKIPS = {"embedded": ["firmware"]}
+# setup's skip checkboxes: each group's words and the title list they go in; the
+# groups hold every default skip word between them
+SKIP_GROUPS = {
+    "senior": ("title_exclude", ["senior", "sr.", "staff", "principal", "lead"]),
+    "managers": ("title_exclude", ["manager", "director"]),
+    "phd": ("title_exclude", ["phd"]),
+    "hardware": ("title_exclude_field", ["hardware", "firmware", "fpga", "asic", "silicon",
+                                         "analog", "photonics", "optical", "electrical"]),
+    "engineering": ("title_exclude_field", [
+        "mechanical", "civil", "chemical", "biomedical", "aerospace", "structural",
+        "industrial engineer", "manufacturing", "process engineer", "environmental",
+        "geotechnical", "packaging", "drafter", "meteorolog"]),
+    "testing": ("title_exclude_field", ["test engineer", "validation engineer", "quality",
+                                        "failure analysis"]),
+    "support": ("title_exclude_field", ["field engineer", "field service", "application engineer",
+                                        "application analyst", "support engineer", "technician",
+                                        "facilities"]),
+    "business": ("title_exclude_field", ["sales", "marketing", "account manager", "recruit"]),
+}
 
 # The prompt shows each example profile.md heading with one of these under it. A
 # heading added to the example without an entry here fails the draft with a KeyError.
