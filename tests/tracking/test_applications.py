@@ -3,7 +3,8 @@ import unittest
 
 from helpers import temp_home
 
-from cairn import applications, cli, store
+from cairn import cli, store
+from cairn.tracking import applications
 
 
 def _posting(job_id, company="Acme"):

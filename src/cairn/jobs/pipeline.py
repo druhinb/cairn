@@ -9,9 +9,10 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 
-from cairn import applications, store, tracking
+from cairn import store, tracking
 from cairn.core import events, locks, paths, settings
 from cairn.jobs import descriptions, fetch, rank
+from cairn.tracking import applications
 
 
 LINK_WAIT_SECONDS = 30

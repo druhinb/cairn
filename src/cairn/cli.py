@@ -19,11 +19,12 @@ except ImportError:
           "uv pip install -e <your cairn checkout>", file=sys.stderr)
     sys.exit(2)
 
-from cairn import applications, store
+from cairn import store
 from cairn.ai import claude, llm, onboard
 from cairn.core import logfile, paths, secrets, settings
 from cairn.jobs import fetch, logos, notify, pipeline
 from cairn.system import backup, doctor, schedule, update
+from cairn.tracking import applications
 
 TOP_SHOWN = 15  # ranked postings echoed to the terminal; the app has them all
 LOGGED_COMMANDS = {"run", "serve", "icons"}  # their events are appended to paths.run_log()

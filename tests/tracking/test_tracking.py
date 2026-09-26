@@ -303,12 +303,12 @@ class CalendarTest(unittest.TestCase):
                            (datetime.datetime(2026, 11, 1, 3, 0), "20261101T110000Z"),
                            (datetime.datetime(2026, 3, 8, 2, 30), "20260308T103000Z"),
                            (datetime.datetime(2026, 3, 8, 5, 0), "20260308T120000Z")):
-            self.assertEqual(tracking._utc(local), utc)
-            self.assertEqual(tracking._utc(local.replace(tzinfo=zone)), utc)
+            self.assertEqual(tracking.calendar_feed._utc(local), utc)
+            self.assertEqual(tracking.calendar_feed._utc(local.replace(tzinfo=zone)), utc)
 
     def test_folding_never_splits_a_character(self):
         line = "DESCRIPTION:" + "é" * 100
-        folded = tracking._fold(line)
+        folded = tracking.calendar_feed._fold(line)
         self.assertEqual(folded.replace("\r\n ", ""), line)
         for piece in folded.split("\r\n"):
             self.assertLessEqual(len(piece.encode()), 75)
