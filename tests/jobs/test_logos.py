@@ -12,7 +12,7 @@ from unittest import mock
 from urllib.parse import urlencode
 
 from helpers import temp_home
-from test_net import PUBLIC_IP, LocalWeb, drip, resolver
+from core.test_net import PUBLIC_IP, LocalWeb, drip, resolver
 
 from cairn import __version__, store
 from cairn.core import events, net

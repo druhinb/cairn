@@ -10,7 +10,7 @@ import unittest
 from unittest import mock
 
 from helpers import temp_home
-from test_llm import KEY, llm_home
+from ai.test_llm import KEY, llm_home
 
 from cairn import cli, store
 from cairn.ai import llm

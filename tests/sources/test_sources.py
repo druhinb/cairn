@@ -1,6 +1,6 @@
 """Every source kind maps its API's reply to the one posting shape the store takes.
 
-Fixtures in tests/fixtures are hand-written samples in each API's real shape, or
+Fixtures in tests/sources/fixtures are hand-written samples in each API's real shape, or
 trimmed live replies with the company renamed.
 """
 import dataclasses

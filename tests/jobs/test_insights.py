@@ -10,7 +10,7 @@ from unittest import mock
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from helpers import temp_home
-from test_net import drip, serve_web
+from core.test_net import drip, serve_web
 
 from cairn import store
 from cairn.core import events, settings

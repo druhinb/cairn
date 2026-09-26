@@ -23,7 +23,7 @@ import httpx
 import sys
 from fastapi.testclient import TestClient
 from helpers import app_client, temp_home, user_home
-from test_onboard import PROFILE, SUGGESTIONS, envelope
+from ai.test_onboard import PROFILE, SUGGESTIONS, envelope
 
 from cairn import cli, server, sources, store
 from cairn.ai import claude, onboard

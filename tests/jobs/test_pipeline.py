@@ -58,7 +58,7 @@ def _lock_held_by_child():
 
     The pid comes from the child, because on Windows a venv's python.exe starts the
     real interpreter as a separate process and Popen's pid is the launcher's."""
-    src = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
+    src = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "src")
     proc = subprocess.Popen([sys.executable, "-c", HOLD_LOCK], stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE, text=True,
                             env={**os.environ, "PYTHONPATH": src})

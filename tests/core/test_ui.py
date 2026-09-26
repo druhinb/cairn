@@ -14,7 +14,7 @@ import unittest
 
 import helpers  # noqa: F401 - installs the suite settings guard
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC = os.path.join(REPO, "src")
 
 # Every renderer, including the styled paths.

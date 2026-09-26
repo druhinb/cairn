@@ -16,7 +16,7 @@ from helpers import temp_home
 from cairn import cli
 from cairn.core import events, paths, settings
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BAD_CONFIG = 'fit_treshold = 70\nlocation_allow = ["Nowhere"]\n'
 
 
