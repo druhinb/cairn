@@ -71,9 +71,9 @@ function suggestedList(view) {
       fresh.length ? h("ul", { class: "spec-list" }, fresh.map((row) => {
         const off = Boolean(entry(row));
         const follow = h("button", { type: "button", class: "btn btn-sm",
-          title: off ? "You follow view company, but it's turned off" : "Follow view company" },
+          title: off ? "You follow this company, but it's turned off" : "Follow this company" },
         icon("plus"), off ? "Turn on" : "Follow");
-        follow.addEventListener("click", () => follow(view, row.company, follow));
+        follow.addEventListener("click", () => followSuggested(view, row.company, follow));
         return h("li", { class: "spec-row suggested-row" },
           h("span", { class: "spec-company", text: row.company }),
           h("span", { class: "spec-name mono", text: `${fmt.plural(row.postings, "strong posting")} · best fit ${row.best_fit}` }),
@@ -86,7 +86,7 @@ function suggestedList(view) {
 }
 
 /** Follow a suggested company in the draft; Save keeps it. */
-async function follow(view, company, button) {
+async function followSuggested(view, company, button) {
   button.disabled = true;
   try {
     const { spec, watchlist, turnedOn } = await followCompany(company, { watchlist: view.draft.watchlist || [] });
