@@ -121,6 +121,12 @@ class ClaudeInvocationTest(unittest.TestCase):
         self.assertEqual(cheap["env"]["MAX_THINKING_TOKENS"], "0")
         self.assertIsNone(strong["env"])
 
+    def test_the_command_runs_from_where_path_lookup_finds_it(self):
+        with mock.patch.object(claude.shutil, "which", return_value=r"C:\npm\claude.CMD"):
+            self.assertEqual(self._command()[0][0], r"C:\npm\claude.CMD")
+        with mock.patch.object(claude.shutil, "which", return_value=None):
+            self.assertEqual(self._command()[0][0], "claude")
+
     def test_an_os_error_is_returned_as_an_error(self):
         with mock.patch.object(claude.subprocess, "run",
                                side_effect=OSError(7, "Argument list too long")):

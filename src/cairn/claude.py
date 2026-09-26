@@ -7,6 +7,7 @@ mechanical extraction that Haiku does for a fraction of the cost.
 """
 import json
 import os
+import shutil
 import subprocess
 
 from cairn import llm, paths, settings
@@ -70,7 +71,10 @@ def run_cli(prompt, model=None, timeout=240, thinking=True):
     # resume or ranking batch passed as an argument failed with OSError. The data
     # home as the working directory keeps a project's CLAUDE.md and memory out.
     cfg = settings.get()
-    cmd = [cfg.claude_bin, "-p", "--output-format", "json", *LEAN_FLAGS]
+    # which finds the claude.cmd an npm install leaves on Windows; a bare name there
+    # only ever runs a .exe
+    cmd = [shutil.which(cfg.claude_bin) or cfg.claude_bin, "-p", "--output-format", "json",
+           *LEAN_FLAGS]
     model = model or cfg.claude_model
     if model:
         cmd += ["--model", model]
