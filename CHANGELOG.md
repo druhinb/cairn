@@ -6,6 +6,11 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+## [0.0.4] — 2026-09-26
+
+- Job lists show each internship's season, such as Summer 2027, in place of the
+  source it came from. The posting's details still name the source.
+
 ## [0.0.3] — 2026-09-26
 
 - Cairn runs on Windows 10 and 11. Install it with uv; the daily run uses Task
@@ -68,5 +73,6 @@ The first release.
 - All data stays in `~/.cairn` on your Mac. The app only answers the window it
   opened.
 
+[0.0.4]: https://github.com/druhinb/cairn/releases/tag/v0.0.4
 [0.0.3]: https://github.com/druhinb/cairn/releases/tag/v0.0.3
 [0.0.2]: https://github.com/druhinb/cairn/releases/tag/v0.0.2
