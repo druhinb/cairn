@@ -89,6 +89,19 @@ function dayText(isoDay) {
 }
 
 /**
+ * The posting's age, and under it how long ago Cairn saw it appear when that was in
+ * the last day. The backlog of a source's first read has no found_at.
+ */
+function rowAge(job) {
+  const found = fmt.since(job.found_at);
+  const posted = fmt.full(job.posted_at);
+  const title = [posted && `Posted ${posted}`, found && `Cairn saw it appear ${found} ago`].filter(Boolean);
+  return h("span", { class: "row-age mono", title: title.join(". ") || null },
+    h("span", { text: fmt.age(job.posted_at) }),
+    found && h("span", { class: "row-found", text: `found ${found}` }));
+}
+
+/**
  * One posting as a two-line list row: company and title, then location and chips;
  * on the right the verdict, pay, fit and tier, status and age, and the hover actions
  * (buttons with `data-action` open, saved, applied or passed). The caller sets
@@ -97,18 +110,6 @@ function dayText(isoDay) {
  * @param {{selected?: boolean, unread?: boolean}} [options]
  * @returns {HTMLElement}
  */
-/**
- * The posting's age, or how long ago Cairn saw it appear when that was in the last
- * day. The backlog of a source's first read has no found_at.
- */
-function rowAge(job) {
-  const found = fmt.since(job.found_at);
-  const posted = fmt.full(job.posted_at);
-  if (!found) return h("span", { class: "row-age mono", text: fmt.age(job.posted_at), title: posted });
-  return h("span", { class: "row-age row-found mono", text: found,
-    title: `Cairn found this ${found} ago${posted ? `. Posted ${posted}` : ""}` });
-}
-
 export function jobRow(job, { selected = false, unread = false } = {}) {
   const repeat = job.applied_before && !SENT.has(job.status);
   const loc = locationText(job.locations);
