@@ -6,6 +6,17 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+- Setup and Settings ask how many years of full-time experience you have and
+  the most a job can ask for. Full-time jobs asking for more stay out of your
+  matches and are never scored.
+- Each row shows when the job was posted, with how long ago Cairn found it
+  underneath. Postings from a source's first read have no found age.
+- The Found filter is gone.
+- Postings not posted or updated within Recent days no longer show in Jobs,
+  unless you saved, applied to or otherwise tracked them.
+- Search also looks at location, category and internship term, so Winter 2027
+  lists the postings for that term.
+
 ## [0.0.5] — 2026-09-26
 
 - Cairn checks the careers pages of companies you follow every hour, even with

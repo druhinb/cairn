@@ -113,10 +113,13 @@ is how many AI requests Cairn made in the last 30 days.
 ![Today](docs/screenshots/today.png)
 
 **Jobs** lists every posting that matches your preferences, best first. Turn off
-*Matches my preferences* to see the whole feed. Filters narrow it by fit, company
-score, source, category, location, age and status. *Hide passed* is on by default.
-Search looks at the company, title and requirements. You can group by date or
-company, or sort by newest, company or recently updated.
+*Matches my preferences* to see the whole feed. Postings not posted or updated
+within *Recent days* stay out of both unless you gave them a status. Filters
+narrow the list by fit, company score, source, category, location, age and
+status. *Hide passed* is on by default. Search looks at the company, title,
+requirements, location, category and internship term, so *Winter 2027* lists the
+postings for that term. You can group by date or company, or sort by newest,
+company or recently updated.
 
 Click a posting to see both scores and the reason for each, a summary of its
 requirements (or a *Summarize requirements* button), a note that saves as you
