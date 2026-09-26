@@ -4,14 +4,13 @@ Progress goes out through events.py, so a caller chooses how to show it. Posting
 are marked seen only once their scores are stored, so a failed run retries in full.
 """
 import dataclasses
-import fcntl
 import os
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 
-from cairn import (applications, descriptions, events, fetch, paths, rank, settings, store,
-                         tracking)
+from cairn import (applications, descriptions, events, fetch, locks, paths, rank, settings,
+                   store, tracking)
 
 
 LINK_WAIT_SECONDS = 30
@@ -107,7 +106,7 @@ def run_settings(opts):
         yield
 
 
-# flock, released by the kernel when the holder dies. The earlier O_EXCL file plus
+# a file lock, released by the system when the holder dies. The earlier O_EXCL file plus
 # pid-liveness check had two takeover races: a reader seeing the file before its pid
 # was written, and two processes replacing the same dead pid.
 @contextmanager
@@ -118,18 +117,15 @@ def run_lock():
     """
     lock = paths.run_lock()
     lock.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(lock, os.O_CREAT | os.O_RDWR, 0o644)
+    fd = locks.open_file(lock, os.O_CREAT | os.O_RDWR)
     try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            raise RunInProgress(_holder(fd)) from None
-        os.ftruncate(fd, 0)
-        os.pwrite(fd, str(os.getpid()).encode(), 0)
+        if not locks.acquire(fd):
+            raise RunInProgress(locks.read_pid(fd))
+        locks.write_pid(fd)
         try:
             yield
         finally:
-            fcntl.flock(fd, fcntl.LOCK_UN)
+            locks.release(fd)
     finally:
         os.close(fd)
 
@@ -140,25 +136,16 @@ def lock_holder():
     Also None while the holder has the lock but has not yet written its pid.
     """
     try:
-        fd = os.open(paths.run_lock(), os.O_RDONLY)
+        fd = locks.open_file(paths.run_lock(), os.O_RDONLY)
     except FileNotFoundError:
         return None
     try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            return _holder(fd)
-        fcntl.flock(fd, fcntl.LOCK_UN)
+        if not locks.acquire(fd):
+            return locks.read_pid(fd)
+        locks.release(fd)
         return None
     finally:
         os.close(fd)
-
-
-def _holder(fd):
-    try:
-        return int(os.pread(fd, 32, 0).decode().strip())
-    except ValueError:
-        return None
 
 
 def _log_size(log):
