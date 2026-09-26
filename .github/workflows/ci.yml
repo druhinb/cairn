@@ -33,6 +33,24 @@ jobs:
       - name: Run the Python tests
         run: .venv/bin/python -m unittest discover -s tests
 
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - name: Install Cairn and its test tools
+        run: uv sync --locked --extra test
+      - name: Run the Python tests
+        run: .venv\Scripts\python -m unittest discover -s tests
+      - name: Start the installed command
+        run: uv tool run --from . cairn --help
+
   javascript:
     name: JavaScript
     runs-on: macos-26

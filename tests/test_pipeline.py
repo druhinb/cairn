@@ -2,7 +2,6 @@
 import contextlib
 import dataclasses
 import datetime
-import fcntl
 import os
 import subprocess
 import sys
@@ -13,7 +12,7 @@ from unittest import mock
 
 from helpers import temp_home
 
-from cairn import (descriptions, events, fetch, logfile, paths, pipeline, rank,
+from cairn import (descriptions, events, fetch, locks, logfile, paths, pipeline, rank,
                          settings, store)
 from cairn.pipeline import RunInProgress, RunOptions
 
@@ -428,9 +427,9 @@ class LockTest(PipelineTestCase):
         paths.run_lock().write_text("not a pid", encoding="utf-8")
         self.assertEqual(pipeline.run(RunOptions(dry_run=True)).status, "dry-run")
 
-        fd = os.open(paths.run_lock(), os.O_RDWR)
+        fd = locks.open_file(paths.run_lock(), os.O_RDWR)
         self.addCleanup(os.close, fd)
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        self.assertTrue(locks.acquire(fd))
         os.ftruncate(fd, 0)
         os.write(fd, b"not a pid")
         with self.assertRaises(RunInProgress) as caught:

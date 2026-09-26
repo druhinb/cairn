@@ -5,6 +5,7 @@ import datetime
 import io
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -78,6 +79,7 @@ class DoctorTest(unittest.TestCase):
         self.assertEqual(home["detail"], "Setup isn't finished")
         self.assertEqual(home["fix"], "finish setup in the app")
 
+    @unittest.skipIf(sys.platform == "win32", "launchd is macOS only")
     def test_schedule_is_informational(self):
         schedule_check = self.checks()["schedule"]
         self.assertTrue(schedule_check["ok"])

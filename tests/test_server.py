@@ -20,6 +20,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 import httpx
+import sys
 from fastapi.testclient import TestClient
 from helpers import app_client, temp_home
 from test_onboard import PROFILE, SUGGESTIONS, envelope
@@ -757,6 +758,7 @@ class StatusTest(ServerTestCase):
         self.assertFalse(by_name["home"]["ok"])
         self.assertEqual(by_name["home"]["fix"], "finish setup in the app")
 
+    @unittest.skipIf(sys.platform == "win32", "launchd is macOS only")
     def test_schedule(self):
         plist = self.home / "app.cairn.daily.plist"
         self.patch(server_app.schedule, "plist_path", lambda: plist)
