@@ -6,6 +6,26 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+## [0.0.5] — 2026-09-26
+
+- Cairn checks the careers pages of companies you follow every hour, even with
+  the app closed, and sends a phone alert when a strong match appears. If you
+  set up the daily run before this version, press Change time in Settings ›
+  Schedule to turn the hourly check on.
+- Job lists show how long ago Cairn found each posting, and the Found filter
+  shows only postings from the last hour, day or three days.
+- A role taken down and posted again carries a Reposted mark.
+- Save your watchlist as a file to share it, or add the companies from a file
+  someone shared, in Settings › Sources or with `cairn watchlist export` and
+  `cairn watchlist import`.
+- Five starter watchlists: Big tech, AI labs, Quant and trading, Fintech and
+  dev tools, and Hot startups. Pick them during setup or add them in
+  Settings › Sources.
+- Setup has a step for phone alerts, with instructions for the ntfy app and a
+  button that sends a test alert.
+- Run setup again from the top of Settings › Profile.
+- The Follow button on suggested companies works again.
+
 ## [0.0.4] — 2026-09-26
 
 - Job lists show each internship's season, such as Summer 2027, in place of the
@@ -73,6 +93,7 @@ The first release.
 - All data stays in `~/.cairn` on your Mac. The app only answers the window it
   opened.
 
+[0.0.5]: https://github.com/druhinb/cairn/releases/tag/v0.0.5
 [0.0.4]: https://github.com/druhinb/cairn/releases/tag/v0.0.4
 [0.0.3]: https://github.com/druhinb/cairn/releases/tag/v0.0.3
 [0.0.2]: https://github.com/druhinb/cairn/releases/tag/v0.0.2
