@@ -57,8 +57,8 @@ def _seed():
     store.upsert_postings([
         _row("alpha", company="Alpha", locations=["New York, NY"], terms=["Winter 2027"]),
         _row("beta", company="Beta", category="Quant", title="Quant Developer"),
-        _row("gamma", company="Gamma", date_posted=NOW - 40 * DAY,
-             date_updated=NOW - 40 * DAY),
+        _row("gamma", company="Gamma", date_posted=NOW - 10 * DAY,
+             date_updated=NOW - 10 * DAY),
         _row("delta", company="Delta", active=False),
         _row("senior", company="Epsilon", title="Senior Software Engineer"),
     ], "feed-one")

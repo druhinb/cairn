@@ -258,9 +258,9 @@ class StoredRelevanceTest(unittest.TestCase):
         v11 = sqlite3.connect(paths.db_file())
         v11.executescript(schema_v11 + """
             INSERT INTO meta VALUES ('schema_version', '11');
-            INSERT INTO postings (id, title, category, active, visible)
-                VALUES ('swe', 'Software Engineer', 'Software', 1, 1),
-                       ('senior', 'Senior Software Engineer', 'Software', 1, 1);
+            INSERT INTO postings (id, title, category, active, visible, posted_at)
+                VALUES ('swe', 'Software Engineer', 'Software', 1, 1, unixepoch()),
+                       ('senior', 'Senior Software Engineer', 'Software', 1, 1, unixepoch());
         """)
         v11.close()
         self.assertEqual(store.counts()["schema_version"], store.SCHEMA_VERSION)
@@ -1162,7 +1162,7 @@ class SearchTest(StoreTestCase):
             _row("citadel", "Quantitative Developer", "Citadel", category="Quant",
                  locations=["Chicago, IL"], date_posted=NOW - DAY),
             _row("acme", "Backend Engineer", "Acme", locations=["Remote"],
-                 date_posted=NOW - 40 * DAY, date_updated=NOW - 40 * DAY),
+                 date_posted=NOW - 10 * DAY, date_updated=NOW - 10 * DAY),
             _row("senior", "Senior Software Engineer", "Globex"),
         ], "one")
         store.upsert_postings([_row("other", "Platform Engineer", "Initech")], "two")
@@ -1226,7 +1226,19 @@ class SearchTest(StoreTestCase):
         self.assertEqual(self._ids(category="Quant"), ["citadel"])
         self.assertEqual(self._ids(location="chicago"), ["citadel"])
         self.assertEqual(self._ids(source="two"), ["other"])
-        self.assertNotIn("acme", self._ids(posted_within_days=21))
+        self.assertNotIn("acme", self._ids(posted_within_days=7))
+
+    def test_postings_older_than_recent_days_show_only_with_a_status(self):
+        store.upsert_postings([
+            _row("stale", "Software Engineer", "Hooli", date_posted=NOW - 30 * DAY,
+                 date_updated=None),
+            _row("kept", "Software Engineer", "Pied Piper", date_posted=NOW - 30 * DAY,
+                 date_updated=None),
+        ], "one")
+        store.set_status("kept", "saved")
+        ids = self._ids(relevant_only=False)
+        self.assertNotIn("stale", ids)
+        self.assertIn("kept", ids)
 
     def test_status_filter(self):
         store.set_status("citadel", "saved")

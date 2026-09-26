@@ -126,6 +126,8 @@ def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=Non
         values = [values] if isinstance(values, str) else list(values)
         clauses.append(f"{column} IN ({_marks(values)})" if values else "0")
         params.extend(values)
+    clauses.append(f"({_RECENCY} >= ? OR applications.status IS NOT NULL)")
+    params.append(time.time() - settings.get().recent_days * 86400)
     status_clauses, status_params = _status_clauses(status, hide_passed)
     clauses.extend(status_clauses)
     params.extend(status_params)
@@ -148,7 +150,8 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
     maximum, hourly pay scaled by 2080 hours, must reach; pay stated in another
     currency counts as unstated, here and for sort="salary".
 
-    The postings of one group come back as a single row, the one _representatives
+    Postings not posted or updated in the last recent_days stay out unless they have
+    a status. The postings of one group come back as a single row, the one _representatives
     picks, with also_on listing the others, and total counts groups. Status
     filters read the group's application, so a posting applied to through one
     source leaves the inbox with its copies.
