@@ -24,6 +24,7 @@ SETTING_FOR_PREF = {
     "experience_years": "experience_years",
     "max_years_required": "max_years_required",
     "us_only": "us_only",
+    "recent_days": "recent_days",
 }
 
 PREF_SHAPES = {
@@ -42,6 +43,7 @@ PREF_SHAPES = {
     "experience_years": (lambda v: type(v) is int and 0 <= v <= 50, "a whole number from 0 to 50"),
     "max_years_required": (lambda v: v is None or (type(v) is int and 0 <= v <= 50),
                            "a whole number from 0 to 50, or null"),
+    "recent_days": (lambda v: type(v) is int and 1 <= v <= 365, "a whole number from 1 to 365"),
     "watchlist": (_str_list, "a list of strings"),
     "starter_watchlists": (lambda v: _str_list(v) and set(v) <= set(STARTERS),
                            f"a list drawn from {', '.join(STARTERS)}"),
@@ -105,6 +107,7 @@ def default_prefs(suggestions):
             "internship_terms": suggestions.get("internship_terms", []),
             "work_authorization": suggestions.get("work_authorization", "unknown"),
             "calibre_anchors": [],
+            "recent_days": settings.base().recent_days,
             "ntfy_topic": "",
             "watchlist": []}
 

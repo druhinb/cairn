@@ -283,11 +283,11 @@ class PreferencesTest(unittest.TestCase):
     def test_the_direct_settings(self):
         mapped = self.mapped(graduation_year=2027, degrees_held=["Bachelor's"],
                              internship_terms=["fall 2026", " "],
-                             ntfy_topic="secret-topic")
+                             ntfy_topic="secret-topic", recent_days=120)
         self.assertEqual(
             (mapped.graduation_year, mapped.degrees_held, mapped.wanted_intern_terms,
-             mapped.notify_ntfy_topic),
-            (2027, ["Bachelor's"], ["fall 2026"], "secret-topic"))
+             mapped.notify_ntfy_topic, mapped.recent_days),
+            (2027, ["Bachelor's"], ["fall 2026"], "secret-topic", 120))
 
     def test_keys_left_out_keep_the_base(self):
         base = dataclasses.replace(settings.defaults(), location_allow=["NY"], fit_threshold=70)
@@ -300,7 +300,8 @@ class PreferencesTest(unittest.TestCase):
                  ({"remote_ok": "yes"}, "'remote_ok'"),
                  ({"daily_resume_budget": 5}, "unknown preference 'daily_resume_budget'"),
                  ({"calibre_anchors": ["a", "b", "c", "d"]}, "'calibre_anchors'"),
-                 ({"work_authorization": "citizen"}, "'work_authorization'")]
+                 ({"work_authorization": "citizen"}, "'work_authorization'"),
+                 ({"recent_days": 0}, "'recent_days' should be a whole number from 1 to 365")]
         for prefs, message in cases:
             with self.subTest(prefs=prefs), self.assertRaises(onboard.OnboardError) as caught:
                 onboard.preferences_to_settings(prefs, settings.defaults())
@@ -468,7 +469,7 @@ class InitFromResumeTest(unittest.TestCase):
         self.assertEqual(settings.load().wanted_intern_terms, ["fall 2026"])
 
     def test_on_a_terminal_each_answer_is_asked(self):
-        replies = iter(["Quant, trader", "", "", "", "y", "F-1 OPT", "soon", "", "", "",
+        replies = iter(["Quant, trader", "", "", "", "y", "F-1 OPT", "soon", "", "", "", "0", "120",
                         "Stripe = 90; Datadog = 70", "t-123", ""])
         with mock.patch.object(sys.stdin, "isatty", return_value=True), \
                 mock.patch("builtins.input", lambda prompt: next(replies)):
@@ -478,6 +479,7 @@ class InitFromResumeTest(unittest.TestCase):
         self.assertEqual(loaded.title_exclude_field, ["hardware"])
         self.assertEqual(loaded.location_allow, ["Seattle, WA", "Remote"])
         self.assertEqual(loaded.notify_ntfy_topic, "t-123")
+        self.assertEqual(loaded.recent_days, 120)
         profile = paths.profile_md().read_text(encoding="utf-8")
         self.assertIn("- Stripe = 90\n- Datadog = 70", profile)
         self.assertIn("- Work authorization: F-1 OPT.", profile)

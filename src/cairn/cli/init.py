@@ -50,6 +50,7 @@ PREF_QUESTIONS = [
     ("graduation_year", "int", "Graduation year"),
     ("degrees_held", "list", "Degrees held (Bachelor's, Master's, PhD, Associate's)"),
     ("internship_terms", "list", "Internship terms you can take, e.g. fall 2026"),
+    ("recent_days", "int", "Show jobs posted in the last this many days"),
     ("calibre_anchors", "anchors",
      "Up to 3 company tier examples separated by ';', e.g. Stripe, Databricks = 90"),
     ("ntfy_topic", "text", "ntfy topic for phone pushes (treat it as a password)"),

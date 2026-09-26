@@ -1,6 +1,7 @@
 import { api } from "../lib/api.js";
 import { fmt, h, safeUrl } from "../lib/dom.js";
 import { subscribe } from "../lib/events.js";
+import { readNumber } from "../lib/numbers.js";
 import { withRole } from "../lib/roles.js";
 import { doctorList } from "../components/doctor.js";
 import { editor } from "../components/editor.js";
@@ -29,6 +30,8 @@ const BUILT_IN_OPTIONS = { roles: {}, work_authorization: ["US citizen", "F-1 OP
 const GRADUATION_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const DEFAULT_GRADUATION_MONTH = "06";
 const DEFAULT_MAX_YEARS = 2;
+const LOOKBACK = { min: 1, max: 365 };
+const DEFAULT_LOOKBACK_DAYS = 90;
 const READ_LINE = /^\[setup\] read (\d+) words/;
 const SLOW_DRAFT_SECONDS = 60;
 // long enough to see the draft pass its check before Review replaces the screen
@@ -379,6 +382,7 @@ class Setup {
       max_years_required: current ? current.max_years_required : DEFAULT_MAX_YEARS,
       degrees_held: either(suggestions.degrees_held, current?.degrees_held),
       internship_terms: either(suggestions.internship_terms, current?.wanted_intern_terms),
+      recent_days: current?.recent_days ?? DEFAULT_LOOKBACK_DAYS,
       work_authorization: suggestions.work_authorization || "unknown",
       calibre_anchors: ["", "", ""],
       ntfy_topic: this.initial.ntfy_topic,
@@ -572,6 +576,8 @@ class Setup {
         text: value === "unknown" ? "Prefer not to say" : value })));
     const next = h("button", { type: "button", class: "btn btn-primary", text: "Next: companies",
       disabled: Boolean(this.graduationError), onclick: () => this.go(COMPANIES_STEP) });
+    let lookbackBad = false;
+    const syncNext = () => { next.disabled = Boolean(this.graduationError) || lookbackBad; };
     const monthError = h("p", { class: "field-error", id: "pref-month-error", role: "alert",
       hidden: !this.graduationError, text: this.graduationError || "" });
     const month = h("input", { type: "month", class: "input input-month", id: "pref-month", min: "2000-01", max: "2100-12",
@@ -585,7 +591,19 @@ class Setup {
         monthError.hidden = !error;
         monthError.textContent = error || "";
         month.setAttribute("aria-invalid", String(Boolean(error)));
-        next.disabled = Boolean(error);
+        syncNext();
+      } });
+    const lookbackError = h("p", { class: "field-error", id: "pref-recent-error", role: "alert", hidden: true });
+    const lookback = h("input", { type: "number", class: "input input-num", id: "pref-recent", min: LOOKBACK.min,
+      max: LOOKBACK.max, step: "1", value: p.recent_days, "aria-describedby": "pref-recent-error",
+      oninput: () => {
+        const { value, error } = readNumber(lookback, LOOKBACK);
+        if (!error) p.recent_days = value;
+        lookbackBad = Boolean(error);
+        lookbackError.hidden = !error;
+        lookbackError.textContent = error || "";
+        lookback.setAttribute("aria-invalid", String(lookbackBad));
+        syncNext();
       } });
     const anchors = h("div", { class: "anchor-inputs" }, p.calibre_anchors.map((value, i) => h("input", {
       type: "text", class: "input input-text", value, placeholder: ANCHOR_HINTS[i], "aria-label": `Company tier example ${i + 1}`,
@@ -619,6 +637,9 @@ class Setup {
         tagInput(p.degrees_held, { id: "pref-degrees", placeholder: "Bachelor's, Master's…", onChange: (tags) => { p.degrees_held = tags; } }), "pref-degrees"),
       field("Internship terms", "Terms you can intern in, such as “Fall 2026”. Leave empty to skip internships.",
         tagInput(p.internship_terms, { id: "pref-terms", onChange: (tags) => { p.internship_terms = tags; } }), "pref-terms"),
+      field("Posted within", "Cairn shows jobs posted in the last this many days. New grad and intern jobs often open in July and stay open for months.",
+        h("div", { class: "field-stack" },
+          h("div", { class: "number-input" }, lookback, h("span", { class: "unit", text: "days" })), lookbackError), "pref-recent"),
       field("Company tier examples", "Name up to three companies and the score out of 100 you'd give each. Cairn rates other companies against them.", anchors),
       this.actions(REVIEW_STEP, next));
   }
