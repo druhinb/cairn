@@ -112,7 +112,8 @@ function rowAge(job) {
  */
 export function jobRow(job, { selected = false, unread = false } = {}) {
   const repeat = job.applied_before && !SENT.has(job.status);
-  const loc = locationText(job.locations);
+  const places = [...new Set([...(job.locations || []), ...job.other_openings.flatMap((o) => o.locations)])];
+  const loc = locationText(places);
   const pay = fmt.pay(job.salary);
   const verdict = VERDICTS[job.feedback?.verdict];
   const action = (name, label, value) => h("button", { type: "button", class: "icon-btn",
@@ -135,7 +136,7 @@ export function jobRow(job, { selected = false, unread = false } = {}) {
         title: "The last link check found this posting closed" }),
       job.reposts > 0 && h("span", { class: "pill pill-repost", text: job.reposts > 1 ? `Reposted ${job.reposts}×` : "Reposted",
         title: `${job.company || "The company"} took this role down and posted it again. A role that keeps coming back may not be hiring.` }),
-      loc && h("span", { class: "row-loc", text: loc, title: (job.locations || []).join("\n") }),
+      loc && h("span", { class: "row-loc", text: loc, title: places.join("\n") }),
       job.timing && timingChip(job.timing, job.starts_before_graduation),
       repeat && h("span", { class: "row-repeat", text: `applied before · ${dayText(job.applied_before)}`,
         title: `You applied to ${job.company || "this company"} on ${dayText(job.applied_before)}` }),

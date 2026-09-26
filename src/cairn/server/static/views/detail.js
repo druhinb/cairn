@@ -619,6 +619,14 @@ function header(job) {
             const link = safeUrl(url);
             return link ? h("a", { class: "also-link", href: link, target: "_blank", rel: "noopener noreferrer",
               title: `Open the ${source} posting` }, sourceChip(source)) : sourceChip(source);
+          })),
+        job.other_openings?.length > 0 && h("p", { class: "detail-also" },
+          h("span", { class: "detail-also-label", text: "Also open in" }),
+          job.other_openings.map(({ locations, url }) => {
+            const place = locationText(locations) || "a place it doesn't name";
+            const link = safeUrl(url);
+            return link ? h("a", { href: link, target: "_blank", rel: "noopener noreferrer",
+              title: (locations || []).join("\n") || null }, place) : h("span", { text: place });
           })))));
 }
 

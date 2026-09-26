@@ -69,8 +69,12 @@ def location_key(locations):
     return "|".join(sorted(places))
 
 
+def role_key(company, title):
+    return f"{name_key(company) or ''}\n{title_key(title)}"
+
+
 def match_key(company, title, locations):
-    return f"{name_key(company) or ''}\n{title_key(title)}\n{location_key(locations)}"
+    return f"{role_key(company, title)}\n{location_key(locations)}"
 
 
 _REQUISITION_PARAM = re.compile(r"gh_jid|jobid|req\w*", re.IGNORECASE)

@@ -5,9 +5,9 @@ from cairn.core import ui
 from cairn.jobs import places
 from cairn.store import db
 from cairn.store.db import connect
-from cairn.store.keys import _regroup, url_key, web_url
+from cairn.store.keys import _regroup, role_key, url_key, web_url
 from cairn.store.relevance import _flag_relevance, relevant_query
-from cairn.store.rows import _json_list, _posting
+from cairn.store.rows import _json_list, _list, _posting
 from cairn.store.schema import FTS_ROWS, SENT
 
 
@@ -28,10 +28,11 @@ def _stored_id(conn, job, key):
 _UPSERT = """
 INSERT INTO postings (id, source, company, title, url, url_key, locations, category,
                       terms, degrees, sponsorship, company_url, active, visible,
-                      posted_at, updated_at, first_seen_at, found_at, last_seen_at)
+                      posted_at, updated_at, first_seen_at, found_at, last_seen_at,
+                      role_key)
 VALUES (:id, :source, :company, :title, :url, :url_key, :locations, :category,
         :terms, :degrees, :sponsorship, :company_url, :active, :visible, :posted_at,
-        :updated_at, :now, CASE WHEN :known THEN :now END, :now)
+        :updated_at, :now, CASE WHEN :known THEN :now END, :now, :role_key)
 ON CONFLICT(id) DO UPDATE SET
     source = excluded.source, company = excluded.company, title = excluded.title,
     url = excluded.url, url_key = excluded.url_key, locations = excluded.locations,
@@ -40,7 +41,8 @@ ON CONFLICT(id) DO UPDATE SET
     active = excluded.active, visible = excluded.visible,
     posted_at = CASE WHEN :date_is_relative THEN coalesce(posted_at, excluded.posted_at)
                      ELSE excluded.posted_at END,
-    updated_at = excluded.updated_at, last_seen_at = excluded.last_seen_at
+    updated_at = excluded.updated_at, last_seen_at = excluded.last_seen_at,
+    role_key = excluded.role_key
 """
 
 
@@ -71,6 +73,7 @@ def upsert_postings(rows, source):
             conn.execute(_UPSERT, {
                 "id": posting_id, "source": source, "company": job.get("company_name"),
                 "title": job.get("title"), "url": job.get("url"), "url_key": key,
+                "role_key": role_key(job.get("company_name"), job.get("title")),
                 "locations": _json_list(_canonical_places(job.get("locations"))),
                 "category": job.get("category"), "terms": _json_list(job.get("terms")),
                 "degrees": _json_list(job.get("degrees")),
@@ -183,6 +186,7 @@ def get_posting(posting_id):
         return None
     job = _posting(row)
     _add_also_on([job])
+    _add_other_openings([job])
     _add_reposts([job])
     return job
 
@@ -201,6 +205,28 @@ def _add_also_on(jobs):
         job["also_on"] = [{"source": row["source"], "url": web_url(row["url"])}
                           for row in by_group.get(job.get("group_key"), ())
                           if row["id"] != job["id"]]
+
+
+def _add_other_openings(jobs):
+    """Set other_openings on each job: the id, places, and url of the earliest seen
+    active, visible posting of each other group of its role."""
+    rows = connect().execute(
+        "SELECT role_key, group_key, id, locations, url FROM postings "
+        "WHERE active = 1 AND visible = 1 AND role_key IN (SELECT value FROM json_each(?)) "
+        "ORDER BY first_seen_at, id",
+        (json.dumps([job["role_key"] for job in jobs if job.get("role_key")]),))
+    by_role = {}
+    for row in rows:
+        by_role.setdefault(row["role_key"], []).append(row)
+    for job in jobs:
+        listed = {job.get("group_key")}
+        job["other_openings"] = []
+        for row in by_role.get(job.get("role_key"), ()):
+            if row["id"] == job["id"] or row["group_key"] in listed:
+                continue
+            listed.add(row["group_key"])
+            job["other_openings"].append({"id": row["id"], "locations": _list(row["locations"]),
+                                          "url": web_url(row["url"])})
 
 
 def _match_key(group_key):

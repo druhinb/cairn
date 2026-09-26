@@ -5,7 +5,7 @@ from cairn.core import settings
 from cairn.jobs import places
 from cairn.store.db import connect
 from cairn.store.postings import (_DETAIL, _DETAIL_PARAMS, _SPONSORSHIP, _add_also_on,
-                                  _add_reposts)
+                                  _add_other_openings, _add_reposts)
 from cairn.store.relevance import _RECENCY, _marks, relevant_query
 from cairn.store.rows import _posting
 
@@ -57,12 +57,12 @@ LEFT JOIN applications ON applications.posting_id = coalesce(own.posting_id, gro
 
 
 def _representatives(where):
-    """SQL for the id of one matching posting per group: the member holding the
-    group's application, else the earliest seen, so a new score never swaps it."""
+    """SQL for the id of one matching posting per role: the one holding its group's
+    application, else the earliest seen, so a new score never swaps it."""
     return f"""
 SELECT id FROM (
     SELECT postings.id, row_number() OVER (
-        PARTITION BY coalesce(postings.group_key, postings.id)
+        PARTITION BY coalesce(postings.role_key, postings.id)
         ORDER BY applications.posting_id IS NOT postings.id,
                  postings.first_seen_at, postings.id) AS place
     {_FILTERED} WHERE {where})
@@ -150,11 +150,12 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
     maximum, hourly pay scaled by 2080 hours, must reach; pay stated in another
     currency counts as unstated, here and for sort="salary".
 
-    Postings posted more than recent_days ago stay out unless they have
-    a status. The postings of one group come back as a single row, the one _representatives
-    picks, with also_on listing the others, and total counts groups. Status
-    filters read the group's application, so a posting applied to through one
-    source leaves the inbox with its copies.
+    Postings posted more than recent_days ago stay out unless they have a status.
+    The postings of one role come back as a single row, the one _representatives
+    picks, with also_on listing its group's other sources, other_openings the
+    role's other places, and total counting roles. Status filters read the group's
+    application, so a posting applied to through one source leaves the inbox with
+    its copies.
     """
     where, params = _filters(
         q=q, relevant_only=relevant_only, fit_min=fit_min, tier_min=tier_min,
@@ -170,6 +171,7 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
                         _DETAIL_PARAMS + params + [limit, offset]).fetchall()
     jobs = [_posting(row) for row in rows]
     _add_also_on(jobs)
+    _add_other_openings(jobs)
     _add_reposts(jobs)
     return jobs, total
 
@@ -208,14 +210,14 @@ def _candidates(where):
     """SQL naming, as candidates, the postings matching where with every facet's value."""
     return f"""
 candidates AS MATERIALIZED (
-    SELECT coalesce(postings.group_key, postings.id) AS posting_group, postings.source,
+    SELECT coalesce(postings.role_key, postings.id) AS posting_role, postings.source,
            postings.category, applications.status, {_SPONSORSHIP} AS sponsorship
     {_FILTERED} WHERE {where})"""
 
 
 def facets(source=None, category=None, status=None, hide_passed=True, sponsorship=None,
            **filters):
-    """{facet: {value: groups}} under search's filters, each facet with its own
+    """{facet: {value: roles}} under search's filters, each facet with its own
     filter left out, so a value's count is the total that choosing it would give."""
     where, params = _filters(**filters, hide_passed=False)
     own = _facet_filters(source, category, status, hide_passed, sponsorship)
@@ -224,7 +226,7 @@ def facets(source=None, category=None, status=None, hide_passed=True, sponsorshi
         clauses = [c for other, (cs, _) in own.items() if other != name for c in cs]
         params += [p for other, (_, ps) in own.items() if other != name for p in ps]
         parts.append(f"SELECT '{name}' AS facet, {value} AS value, "
-                     f"count(DISTINCT posting_group) AS n FROM candidates "
+                     f"count(DISTINCT posting_role) AS n FROM candidates "
                      f"WHERE {' AND '.join(clauses) or '1'} GROUP BY value")
     rows = connect().execute(f"WITH {_candidates(where)} SELECT * FROM ("
                              + " UNION ALL ".join(parts) + ") ORDER BY n DESC, value", params)

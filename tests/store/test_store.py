@@ -1324,26 +1324,45 @@ class GroupTest(StoreTestCase):
         self.assertNotEqual(groups["one-swe"], groups["one-swe-2"])
         self.assertNotEqual(groups["one-swe"], groups["one-sre"])
 
-    def test_search_returns_one_row_per_group_with_the_other_sources(self):
+    def test_search_returns_one_row_per_role_with_the_other_sources(self):
         rows, total = store.search()
-        self.assertEqual(total, 3)
+        self.assertEqual(total, 2)
         by_id = {row["id"]: row for row in rows}
-        self.assertEqual(set(by_id), {"one-swe", "one-swe-2", "one-sre"})
+        self.assertEqual(set(by_id), {"one-swe", "one-sre"})
         self.assertEqual(by_id["one-swe"]["also_on"],
                          [{"source": "two", "url": "https://jobs.test/two-swe"}])
         self.assertEqual(by_id["one-sre"]["also_on"], [])
         self.assertEqual(store.get_posting("two-swe")["also_on"],
                          [{"source": "one", "url": "https://jobs.test/one-swe"}])
 
+    def test_a_role_open_in_several_places_is_one_row_listing_the_others(self):
+        store.upsert_postings([_row("one-nyc", "Software Engineer (New Grad)", "Acme",
+                                    locations=["New York, NY"])], "one")
+        rows, total = store.search()
+        self.assertEqual(total, 2)
+        swe = next(row for row in rows if row["id"] != "one-sre")
+        openings = {swe["id"]: swe["locations"]}
+        openings.update((o["id"], o["locations"]) for o in swe["other_openings"])
+        self.assertEqual(openings, {"one-swe": ["Seattle, WA"], "one-swe-2": ["Seattle, WA"],
+                                    "one-nyc": ["New York, NY"]})
+        self.assertEqual(store.facets()["source"], {"one": 2, "two": 1})
+
+    def test_the_migration_keys_every_stored_role(self):
+        with store.connect() as conn:
+            conn.execute("UPDATE postings SET role_key = NULL")
+            store.schema._add_role_key(conn)
+        self.assertEqual(store.search()[1], 2)
+
     def test_a_role_listed_again_after_it_came_down_counts_its_reposts(self):
         with store.connect() as conn:
             conn.execute("UPDATE postings SET active = 0, first_seen_at = '2026-01-01T00:00:00', "
-                         "last_seen_at = '2026-02-01T00:00:00' WHERE id IN ('one-swe', 'two-swe')")
+                         "last_seen_at = '2026-02-01T00:00:00' "
+                         "WHERE id IN ('one-swe', 'one-swe-2', 'two-swe')")
         store.upsert_postings([_row("three-swe", "Software Engineer (New Grad)", "Acme")],
                               "three")
         by_id = {row["id"]: row for row in store.search()[0]}
-        self.assertEqual((by_id["three-swe"]["reposts"], by_id["one-sre"]["reposts"]), (2, 0))
-        self.assertEqual(store.get_posting("three-swe")["reposts"], 2)
+        self.assertEqual((by_id["three-swe"]["reposts"], by_id["one-sre"]["reposts"]), (3, 0))
+        self.assertEqual(store.get_posting("three-swe")["reposts"], 3)
         self.assertEqual(store.get_posting("one-swe")["reposts"], 0)
 
     def test_the_earliest_seen_member_stands_for_its_group_whatever_the_scores(self):
@@ -1704,7 +1723,8 @@ class CompanyTest(StoreTestCase):
             _row("old", company="Globex", url="https://globex.example/1", date_posted=NOW - 9),
             _row("new", company="Acme", url="https://acme.example/1",
                  company_url="https://simplify.jobs/c/Acme"),
-            _row("same", company="  ACME ", url="https://acme.example/2", date_posted=NOW - 1),
+            _row("same", "Backend Engineer", company="  ACME ", url="https://acme.example/2",
+                 date_posted=NOW - 1),
             _row("mid", company="Initech", url="https://initech.example/1", date_posted=NOW - 5),
             _row("gone", company="Hooli", active=False),
             _row("nameless", company=None)], "feed")

@@ -1,9 +1,9 @@
 """The database schema, and the migrations that bring an older database up to it."""
 from pathlib import Path
 
-from cairn.store.keys import _GROUP_COLUMNS, _assign_groups, url_key
+from cairn.store.keys import _GROUP_COLUMNS, _assign_groups, role_key, url_key
 
-SCHEMA_VERSION = 15
+SCHEMA_VERSION = 16
 
 # pipeline order; a posting with no applications row has no status, and `passed`
 # keeps it out of the default jobs list
@@ -147,6 +147,8 @@ CREATE TABLE IF NOT EXISTS postings (
     last_seen_at TEXT,
     -- postings of one company and title across sources share it; see group_key()
     group_key TEXT,
+    -- postings of one company and title in any place; see role_key()
+    role_key TEXT,
     -- open or closed from the last apply-link check, NULL before one decided
     link_status TEXT,
     link_checked_at TEXT,
@@ -239,6 +241,7 @@ CREATE TABLE IF NOT EXISTS runs (
 # migration adds them
 _AFTER_MIGRATION = """
 CREATE INDEX IF NOT EXISTS postings_group ON postings(group_key);
+CREATE INDEX IF NOT EXISTS postings_role ON postings(role_key);
 CREATE INDEX IF NOT EXISTS postings_relevant ON postings(relevant, active, visible);
 CREATE INDEX IF NOT EXISTS scores_run ON scores(run_id);
 """
@@ -358,6 +361,15 @@ def _index_search(conn):
     conn.execute(FTS_ROWS)
 
 
+def _add_role_key(conn):
+    present = {row["name"] for row in conn.execute("PRAGMA table_info(postings)")}
+    if "role_key" not in present:
+        conn.execute("ALTER TABLE postings ADD COLUMN role_key TEXT")
+    conn.executemany("UPDATE postings SET role_key = ? WHERE id = ?", [
+        (role_key(row["company"], row["title"]), row["id"])
+        for row in conn.execute("SELECT id, company, title FROM postings")])
+
+
 def _add_relevant(conn):
     # a postings table created by this connect() already has the column
     present = {row["name"] for row in conn.execute("PRAGMA table_info(postings)")}
@@ -399,6 +411,8 @@ _MIGRATIONS = {
     14: (_add_years,),
     # search reads a posting's terms, category, and locations too
     15: (_index_search,),
+    # the jobs list shows one row for a role a company lists in several places
+    16: (_add_role_key,),
 }
 
 
