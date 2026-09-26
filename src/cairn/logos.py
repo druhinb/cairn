@@ -16,7 +16,6 @@ answering 429 or 5xx, records nothing, so the company or icon stays pending.
 """
 import collections
 import contextlib
-import fcntl
 import functools
 import http.client
 import json
@@ -30,7 +29,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlencode, urljoin, urlsplit
 
-from cairn import events, net, paths, store
+from cairn import events, locks, net, paths, store
 
 MAX_BYTES = 512 * 1024
 # the part of a home page searched for its title
@@ -804,26 +803,23 @@ def _marker():
     return paths.run_lock().with_name("icons.pid")
 
 
-# flock, which the kernel releases when its holder dies, so a marker left by a
-# process that died holds nothing
+# a file lock, which the system releases when its holder dies, so a marker left by
+# a process that died holds nothing
 @contextlib.contextmanager
 def icon_job():
     """Hold the icons.pid marker, which one icon fetch at a time holds across
     processes and threads. Raises IconsRunning when another fetch holds it."""
     marker = _marker()
     marker.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(marker, os.O_CREAT | os.O_RDWR, 0o644)
+    fd = locks.open_file(marker, os.O_CREAT | os.O_RDWR)
     try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            raise IconsRunning() from None
-        os.ftruncate(fd, 0)
-        os.pwrite(fd, str(os.getpid()).encode(), 0)
+        if not locks.acquire(fd):
+            raise IconsRunning()
+        locks.write_pid(fd)
         try:
             yield
         finally:
-            fcntl.flock(fd, fcntl.LOCK_UN)
+            locks.release(fd)
     finally:
         os.close(fd)
 
@@ -831,15 +827,13 @@ def icon_job():
 def icons_running():
     """Whether an icon fetch holds the icons.pid marker, here or in another process."""
     try:
-        fd = os.open(_marker(), os.O_RDONLY)
+        fd = locks.open_file(_marker(), os.O_RDONLY)
     except FileNotFoundError:
         return False
     try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
-        except BlockingIOError:
+        if not locks.acquire(fd, shared=True):
             return True
-        fcntl.flock(fd, fcntl.LOCK_UN)
+        locks.release(fd)
         return False
     finally:
         os.close(fd)

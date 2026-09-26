@@ -1,18 +1,18 @@
 """Back the home directory up to one zip, and restore it from one."""
 import contextlib
 import datetime
-import fcntl
 import itertools
 import json
 import os
 import shutil
 import sqlite3
+import sys
 import tempfile
 import zipfile
 import zlib
 from pathlib import Path
 
-from cairn import __version__, paths, pipeline, settings, store
+from cairn import __version__, locks, paths, pipeline, settings, store
 
 FORMAT = 1
 MANIFEST = "manifest.json"
@@ -345,20 +345,20 @@ def serving():
     restore from the command line can tell the app is open."""
     marker = server_marker()
     marker.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(marker, os.O_CREAT | os.O_RDWR, 0o600)
+    fd = locks.open_file(marker, os.O_CREAT | os.O_RDWR, 0o600)
     try:
-        fcntl.flock(fd, fcntl.LOCK_SH)
-        os.ftruncate(fd, 0)
-        os.pwrite(fd, str(os.getpid()).encode(), 0)
+        locks.acquire(fd, shared=True, wait=True)
+        locks.write_pid(fd)
         try:
             yield
         finally:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except BlockingIOError:
-                pass  # another server still holds it and keeps the file
-            else:
-                marker.unlink(missing_ok=True)
+            locks.release(fd)
+            # another server that still holds it keeps the file. Windows can't delete
+            # a file this process has open, and the lock alone marks a running server.
+            if locks.acquire(fd):
+                if sys.platform != "win32":
+                    marker.unlink(missing_ok=True)
+                locks.release(fd)
     finally:
         os.close(fd)
 
@@ -366,14 +366,13 @@ def serving():
 def app_running():
     """Whether an app server holds server.pid, in this process or another."""
     try:
-        fd = os.open(server_marker(), os.O_RDONLY)
+        fd = locks.open_file(server_marker(), os.O_RDONLY)
     except FileNotFoundError:
         return False
     try:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
+        if not locks.acquire(fd):
             return True
+        locks.release(fd)
         return False
     finally:
         os.close(fd)
