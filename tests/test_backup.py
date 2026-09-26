@@ -14,7 +14,7 @@ from unittest import mock
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from helpers import temp_home
+from helpers import temp_home, user_home
 
 from cairn import backup, cli, insights, logos, paths, pipeline, settings, store
 from cairn.server import system
@@ -340,7 +340,7 @@ class RouteTest(BackupTestCase):
         self.client = self.enterContext(TestClient(app))
 
     def test_backup_goes_to_downloads(self):
-        with mock.patch.dict(os.environ, HOME=str(self.root / "user")):
+        with user_home(self.root / "user"):
             body = self.client.post("/api/backup").json()
         path = Path(body["path"])
         self.assertEqual(path.parent, self.root / "user" / "Downloads")

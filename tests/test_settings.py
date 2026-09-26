@@ -250,7 +250,7 @@ class SuiteGuardTest(unittest.TestCase):
         os.makedirs(os.path.join(home.name, ".cairn"))
         with open(os.path.join(home.name, ".cairn", "config.toml"), "w", encoding="utf-8") as f:
             f.write(BAD_CONFIG)
-        env = {**os.environ, "HOME": home.name, "CAIRN_HOME": home.name,
+        env = {**os.environ, "HOME": home.name, "USERPROFILE": home.name, "CAIRN_HOME": home.name,
                "PYTHONPATH": os.path.join(REPO, "src")}
         proc = subprocess.run(
             [sys.executable, "-m", "unittest", "discover", "-s", "tests",

@@ -19,7 +19,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from helpers import temp_home
+from helpers import temp_home, user_home
 
 from cairn import fetch, logos, paths, settings, sources, store
 
@@ -994,7 +994,7 @@ class StageTest(StoreTestCase):
         store.set_status("a", "applied")
         store.add_stage("a", "screen", "2026-10-01")
         home = self.enterContext(tempfile.TemporaryDirectory())
-        self.enterContext(mock.patch.dict(os.environ, {"HOME": home}))
+        self.enterContext(user_home(home))
         path = Path(home) / "cv.pdf"
         path.write_text("cv", encoding="utf-8")
         store.add_attachment("a", "CV", str(path))
@@ -1065,7 +1065,7 @@ class AttachmentTest(StoreTestCase):
         super().setUp()
         store.upsert_postings([_row("a")], "feed")
         self.fake_home = Path(self.enterContext(tempfile.TemporaryDirectory()))
-        self.enterContext(mock.patch.dict(os.environ, {"HOME": str(self.fake_home)}))
+        self.enterContext(user_home(self.fake_home))
         self.outside = Path(self.enterContext(tempfile.TemporaryDirectory()))
         self.cv = self.fake_home / "cv.pdf"
         self.cv.write_text("cv", encoding="utf-8")
