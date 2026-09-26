@@ -1048,7 +1048,7 @@ class OnboardTest(ServerTestCase):
     def test_a_fresh_home_needs_setup(self):
         self.assertEqual(self.client.get("/api/onboard/status").json(),
                          {"initialised": False, "needs_setup": True})
-        cli.cmd_init(cli._parser().parse_args(["init"]))
+        cli.init.cmd_init(cli.parser.build_parser().parse_args(["init"]))
         self.assertEqual(self.client.get("/api/onboard/status").json(),
                          {"initialised": True, "needs_setup": True})
         paths.profile_md().write_text("mine", encoding="utf-8")
@@ -1432,11 +1432,11 @@ class GuardTest(ServerTestCase):
     def test_serve_refuses_a_host_other_machines_reach(self):
         with contextlib.redirect_stderr(io.StringIO()) as err, \
                 self.assertRaises(SystemExit):
-            cli._parser().parse_args(["serve", "--host", "0.0.0.0"])
+            cli.parser.build_parser().parse_args(["serve", "--host", "0.0.0.0"])
         self.assertIn("invalid choice: '0.0.0.0'", err.getvalue())
-        for host in cli.LOCAL_HOSTS:
+        for host in cli.commands.LOCAL_HOSTS:
             with self.subTest(host):
-                self.assertEqual(cli._parser().parse_args(["serve", "--host", host]).host, host)
+                self.assertEqual(cli.parser.build_parser().parse_args(["serve", "--host", host]).host, host)
 
 
 class KeysTest(ServerTestCase):

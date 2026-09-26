@@ -159,12 +159,12 @@ class CheckTest(unittest.TestCase):
     def test_cli_exits_1_when_the_check_fails(self):
         self.urlopen.side_effect = OSError("offline")
         with contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(cli.cmd_update_check(SimpleNamespace(force=False)), 1)
+            self.assertEqual(cli.commands.cmd_update_check(SimpleNamespace(force=False)), 1)
 
     def test_cli_prints_one_line(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            code = cli.cmd_update_check(SimpleNamespace(force=False))
+            code = cli.commands.cmd_update_check(SimpleNamespace(force=False))
         self.assertEqual(code, 0)
         self.assertEqual(out.getvalue(), f"Cairn 9.1.0 is out (you have {__version__}): "
                                          f"{RELEASE['html_url']}\n")

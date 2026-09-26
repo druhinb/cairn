@@ -293,26 +293,26 @@ class BadConfigCliTest(unittest.TestCase):
 class InitTest(unittest.TestCase):
     def setUp(self):
         self.home = self.enterContext(temp_home())
-        self.args = cli._parser().parse_args(["init"])
+        self.args = cli.parser.build_parser().parse_args(["init"])
 
     def _seeded(self):
         return sorted(p.name for p in self.home.rglob("*") if p.is_file())
 
     def test_init_seeds_the_home_directory(self):
-        self.assertEqual(cli.cmd_init(self.args), 0)
+        self.assertEqual(cli.init.cmd_init(self.args), 0)
         self.assertEqual(self._seeded(), ["config.toml", "profile.md"])
         self.assertEqual(settings.load(), settings.defaults())  # example is all comments
 
     def test_init_never_overwrites(self):
-        cli.cmd_init(self.args)
+        cli.init.cmd_init(self.args)
         paths.profile_md().write_text("my own profile", encoding="utf-8")
-        self.assertEqual(cli.cmd_init(self.args), 0)
+        self.assertEqual(cli.init.cmd_init(self.args), 0)
         self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), "my own profile")
 
     def test_init_restores_only_the_missing_files(self):
-        cli.cmd_init(self.args)
+        cli.init.cmd_init(self.args)
         paths.profile_md().unlink()
-        cli.cmd_init(self.args)
+        cli.init.cmd_init(self.args)
         self.assertTrue(paths.profile_md().exists())
 
 

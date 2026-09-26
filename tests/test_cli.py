@@ -14,7 +14,7 @@ from ai.test_llm import KEY, llm_home
 
 from cairn import cli, store
 from cairn.ai import llm
-from cairn.core import paths, secrets, settings
+from cairn.core import paths, secrets, settings, ui
 from cairn.jobs import logos, pipeline
 from cairn.system import schedule
 
@@ -31,11 +31,11 @@ class IconsCommandTest(unittest.TestCase):
         store.upsert_postings([_posting("a", "Acme"), _posting("b", "Globex")], "feed")
         self.fetch_all = self.enterContext(
             mock.patch.object(logos, "fetch_all", return_value=logos.Job(2, False)))
-        self.info = self.enterContext(mock.patch.object(cli.ui, "info"))
-        self.error = self.enterContext(mock.patch.object(cli.ui, "error"))
+        self.info = self.enterContext(mock.patch.object(ui, "info"))
+        self.error = self.enterContext(mock.patch.object(ui, "error"))
 
     def _icons(self, *argv):
-        return cli.cmd_icons(cli._parser().parse_args(["icons", *argv]))
+        return cli.commands.cmd_icons(cli.parser.build_parser().parse_args(["icons", *argv]))
 
     def test_fetches_everything_by_default_and_up_to_a_limit_when_given(self):
         self.assertEqual(self._icons(), 0)
@@ -101,7 +101,7 @@ def run_main(*argv, stdin=""):
     out = io.StringIO()
     with mock.patch.object(sys, "argv", ["cairn", *argv]), \
             mock.patch.object(sys, "stdin", io.StringIO(stdin)), \
-            mock.patch.object(cli.ui, "attach"), \
+            mock.patch.object(ui, "attach"), \
             contextlib.redirect_stdout(out), contextlib.redirect_stderr(out), \
             unittest.TestCase().assertRaises(SystemExit) as exited:
         cli.main()
@@ -176,7 +176,7 @@ class MainTest(unittest.TestCase):
         self.assertTrue(out.splitlines()[-1].startswith(
             f"ERROR {secrets.secrets_file()} is not valid TOML"), out)
         self.assertNotIn("Traceback", out)
-        with mock.patch.object(cli, "cmd_status",
+        with mock.patch.object(cli.commands, "cmd_status",
                                side_effect=schedule.ScheduleError("launchctl list failed")):
             self.assertEqual(run_main("status"), (2, "ERROR launchctl list failed\n"))
 
@@ -227,7 +227,7 @@ class WindowsOutputTest(unittest.TestCase):
     def test_without_a_console_output_goes_to_files_in_the_home(self):
         home = self.enterContext(temp_home())
         with mock.patch.object(sys, "stdout", None), mock.patch.object(sys, "stderr", None):
-            cli._windows_output()
+            cli.entry._windows_output()
             opened = sys.stdout, sys.stderr
             print("✓ ranked Zürich AG")
             print("boom", file=sys.stderr)
@@ -241,7 +241,7 @@ class WindowsOutputTest(unittest.TestCase):
         raw = io.BytesIO()
         stream = io.TextIOWrapper(raw, encoding="cp1252", newline="\n")
         with mock.patch.object(sys, "stdout", stream), mock.patch.object(sys, "stderr", stream):
-            cli._windows_output()
+            cli.entry._windows_output()
             print("✓")
         stream.flush()
         self.assertEqual(raw.getvalue(), "✓\n".encode())

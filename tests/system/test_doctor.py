@@ -116,7 +116,7 @@ class DoctorTest(unittest.TestCase):
     def cli_doctor(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            code = cli.cmd_doctor(SimpleNamespace())
+            code = cli.commands.cmd_doctor(SimpleNamespace())
         return code, out.getvalue()
 
 
@@ -199,7 +199,7 @@ class ProviderDoctorTest(unittest.TestCase):
 
     def cli_code(self):
         with contextlib.redirect_stdout(io.StringIO()):
-            return cli.cmd_doctor(SimpleNamespace())
+            return cli.commands.cmd_doctor(SimpleNamespace())
 
 
 if __name__ == "__main__":

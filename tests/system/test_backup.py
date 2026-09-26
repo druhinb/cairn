@@ -287,7 +287,7 @@ class ExportRestoreTest(BackupTestCase):
 class CommandTest(BackupTestCase):
     def run_cli(self, *argv):
         out, err = io.StringIO(), io.StringIO()
-        args = cli._parser().parse_args(list(argv))
+        args = cli.parser.build_parser().parse_args(list(argv))
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
             code = args.func(args)
         return code, out.getvalue() + err.getvalue()
@@ -298,7 +298,7 @@ class CommandTest(BackupTestCase):
         (path,) = self.out.iterdir()
         self.assertIn(str(path), output)
         self.use_home("b")
-        with mock.patch.object(cli.sys.stdin, "isatty", return_value=False):
+        with mock.patch.object(sys.stdin, "isatty", return_value=False):
             code, output = self.run_cli("restore", str(path))
         self.assertEqual((code, output),
                          (2, "ERROR restore replaces your data. Pass --yes to confirm\n"))
@@ -326,7 +326,7 @@ class CommandTest(BackupTestCase):
 
     def test_restore_asks_on_a_terminal(self):
         path = backup.export(self.out)
-        with mock.patch.object(cli.sys.stdin, "isatty", return_value=True), \
+        with mock.patch.object(sys.stdin, "isatty", return_value=True), \
                 mock.patch("builtins.input", return_value="n"):
             code, _ = self.run_cli("restore", str(path))
         self.assertEqual(code, 1)

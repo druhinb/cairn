@@ -46,15 +46,15 @@ class ApplicationsTest(unittest.TestCase):
 
     def test_unknown_id_writes_nothing_and_exits_non_zero(self):
         self.assertIsNone(applications.record("not-a-real-id"))
-        args = cli._parser().parse_args(["applied", "not-a-real-id"])
-        self.assertEqual(cli.cmd_applied(args), 1)
+        args = cli.parser.build_parser().parse_args(["applied", "not-a-real-id"])
+        self.assertEqual(cli.commands.cmd_applied(args), 1)
         self.assertEqual(store.applications(), [])
 
     def test_track_sets_and_clears_a_status(self):
         store.upsert_postings([_posting("abcdef123")], "feed")
 
         def track(*argv):
-            return cli.cmd_track(cli._parser().parse_args(["track", *argv]))
+            return cli.commands.cmd_track(cli.parser.build_parser().parse_args(["track", *argv]))
 
         self.assertEqual(track("abcdef", "offer", "--note", "verbal"), 0)
         self.assertEqual((store.application("abcdef123")["status"],

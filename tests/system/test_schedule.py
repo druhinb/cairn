@@ -175,7 +175,7 @@ class MalformedPlistTest(ScheduleTestCase):
         for _ in self.each_shape():
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
-                code = cli.cmd_schedule(SimpleNamespace(action="status"))
+                code = cli.commands.cmd_schedule(SimpleNamespace(action="status"))
             self.assertEqual(code, 0)
             self.assertIn("cannot read", out.getvalue())
 
@@ -314,7 +314,7 @@ class AutostartTest(ScheduleTestCase):
     def test_cli(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            code = cli.cmd_autostart(cli._parser().parse_args(["autostart", "install"]))
+            code = cli.commands.cmd_autostart(cli.parser.build_parser().parse_args(["autostart", "install"]))
         self.assertEqual(code, 0)
         self.assertIn("The app opens at your next login.", out.getvalue())
         self.assertTrue(self.ui_plist.exists())
@@ -365,8 +365,8 @@ class ProgramTest(unittest.TestCase):
             with self.subTest(action), temp_home():
                 err = io.StringIO()
                 with contextlib.redirect_stderr(err), contextlib.redirect_stdout(err):
-                    code = cli._parser().parse_args([action, "install"]).func(
-                        cli._parser().parse_args([action, "install"]))
+                    code = cli.parser.build_parser().parse_args([action, "install"]).func(
+                        cli.parser.build_parser().parse_args([action, "install"]))
                 self.assertEqual(code, 1)
                 self.assertIn(fix, err.getvalue())
 

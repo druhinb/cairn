@@ -3,6 +3,7 @@ import dataclasses
 import io
 import json
 import subprocess
+import sys
 import tomllib
 import unittest
 from unittest import mock
@@ -11,7 +12,7 @@ from helpers import temp_home
 
 from cairn import cli, sources
 from cairn.ai import claude, onboard
-from cairn.core import paths, settings
+from cairn.core import paths, settings, ui
 
 
 def _doc(title, name, sections=None):
@@ -342,21 +343,21 @@ class ApplyTest(unittest.TestCase):
     def test_a_fresh_home_needs_setup_until_applied(self):
         self.assertTrue(onboard.needs_setup())
         self.assertFalse(onboard.initialised())
-        cli.cmd_init(cli._parser().parse_args(["init"]))
+        cli.init.cmd_init(cli.parser.build_parser().parse_args(["init"]))
         self.assertTrue(onboard.initialised())
         self.assertTrue(onboard.needs_setup())
         onboard.apply(self.draft, {})
         self.assertFalse(onboard.needs_setup())
 
     def test_an_example_saved_with_windows_line_endings_is_still_the_example(self):
-        cli.cmd_init(cli._parser().parse_args(["init"]))
+        cli.init.cmd_init(cli.parser.build_parser().parse_args(["init"]))
         profile = paths.profile_md()
         profile.write_bytes(profile.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
         self.assertTrue(onboard.needs_setup())
         self.assertEqual(onboard.conflicts(), [])
 
     def test_the_examples_are_replaced_without_asking(self):
-        cli.cmd_init(cli._parser().parse_args(["init"]))
+        cli.init.cmd_init(cli.parser.build_parser().parse_args(["init"]))
         applied = onboard.apply(self.draft, {"roles": ["quant"]})
         self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), PROFILE)
         self.assertEqual(applied.written, [paths.profile_md(), paths.config_file()])
@@ -416,7 +417,7 @@ class InitFromResumeTest(unittest.TestCase):
         self.enterContext(mock.patch("sys.stdin", io.StringIO()))
 
     def init(self, *args):
-        return cli.cmd_init(cli._parser().parse_args(["init", *args]))
+        return cli.init.cmd_init(cli.parser.build_parser().parse_args(["init", *args]))
 
     def test_yes_applies_the_suggested_answers(self):
         self.assertEqual(self.init("--from-resume", str(self.resume), "--yes"), 0)
@@ -441,7 +442,7 @@ class InitFromResumeTest(unittest.TestCase):
     def test_on_a_terminal_each_answer_is_asked(self):
         replies = iter(["ml, astronaut", "quant", "", "y", "F-1 OPT", "", "", "",
                         "Stripe = 90; Datadog = 70", "t-123", ""])
-        with mock.patch.object(cli.sys.stdin, "isatty", return_value=True), \
+        with mock.patch.object(sys.stdin, "isatty", return_value=True), \
                 mock.patch("builtins.input", lambda prompt: next(replies)):
             self.assertEqual(self.init("--from-resume", str(self.resume)), 0)
         loaded = settings.load()
@@ -464,7 +465,7 @@ class InitFromResumeTest(unittest.TestCase):
         self.assertEqual(onboard.conflicts(), [])
         paths.profile_md().write_text("mine", encoding="utf-8")
         err = io.StringIO()
-        with mock.patch.object(cli.ui, "error", lambda text: err.write(text)):
+        with mock.patch.object(ui, "error", lambda text: err.write(text)):
             self.assertEqual(self.init("--from-resume", str(self.resume), "--yes"), 1)
         self.assertEqual(calls, [])
         self.assertIn(str(paths.profile_md()), err.getvalue())
