@@ -5,6 +5,6 @@
 ## Checklist
 
 - [ ] This pull request does one thing.
-- [ ] Both test suites pass on my Mac.
+- [ ] Both test suites pass on my computer.
 - [ ] A bug fix has a test that fails without the fix.
 - [ ] Text people see in the app uses plain words.

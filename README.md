@@ -1,6 +1,7 @@
 # Cairn
 
-Cairn is a job feed for new-grad and early-career engineers. It runs on your Mac.
+Cairn is a job feed for new-grad and early-career engineers. It runs on your Mac
+or Windows PC.
 
 Each day it collects new postings from public job lists and from the job boards of
 companies you follow. It hides the ones that don't match what you're looking for,
@@ -8,22 +9,24 @@ scores the rest on how well they fit you and how strong the company is, and can
 send the best ones to your phone. It also tracks every application, from saved to offer.
 
 Cairn doesn't apply for you, and it doesn't scrape LinkedIn or Indeed. It needs no
-account, and everything stays in one folder on your Mac.
+account, and everything stays in one folder on your computer.
 
 ![Jobs](docs/screenshots/jobs.png)
 
 ## What you need
 
-- A Mac with macOS 13 or later.
+- A Mac with macOS 13 or later, or a PC with Windows 10 or 11.
 - Something to score postings with. The default is
   [Claude Code](https://claude.com/claude-code), installed and logged in. You can
   pick another provider instead; see [AI providers](#ai-providers).
 - Optional: `pdftotext`, so setup can read a PDF resume. Install it with
-  `brew install poppler`. Without it, paste your resume text instead.
+  `brew install poppler` on a Mac. On Windows, install
+  [Poppler](https://github.com/oschwartz10612/poppler-windows/releases) and add its
+  `bin` folder to your PATH. Without it, paste your resume text instead.
 
 ## Install
 
-### The app
+### The Mac app
 
 1. Download `Cairn-<version>.zip` from the
    [latest release](https://github.com/druhinb/cairn/releases/latest).
@@ -32,12 +35,19 @@ account, and everything stays in one folder on your Mac.
    Cairn isn't signed with an Apple developer certificate yet. Go to
    System Settings › Privacy & Security, scroll down, and click Open Anyway.
 
-The app runs on Macs with Apple silicon. On an Intel Mac, use the command line
-install below.
+The app runs on Macs with Apple silicon. There is no app download for Windows or
+Intel Macs; use the command line install below.
 
 ### The command line
 
-Install [uv](https://docs.astral.sh/uv/) with `brew install uv`, then:
+Install [uv](https://docs.astral.sh/uv/). On a Mac, run `brew install uv`. On
+Windows, run this in PowerShell:
+
+```
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Then, in Terminal or PowerShell:
 
 ```
 uv tool install git+https://github.com/druhinb/cairn
@@ -80,7 +90,7 @@ check that fails.
 ## Updating
 
 When Cairn opens, it checks for a new version, at most once a day. A new version
-shows up in the sidebar and in the menu bar.
+shows up in the sidebar, and in the menu bar on a Mac.
 
 - The app: download the new zip from the release page and replace Cairn in
   Applications.
@@ -144,8 +154,8 @@ daily run on or off, and run the checkup.
 - `⌘K` opens a list of every action: go to a view, pin the current filters, switch
   theme, fetch company icons, run now, open a Settings section, or search Jobs.
 - The sidebar footer switches between the Auto, Light, Dark and Contrast themes
-  (Auto follows your Mac's contrast setting), and between comfortable and compact
-  rows.
+  (Auto follows your computer's contrast setting), and between comfortable and
+  compact rows.
 - A five-step tour shows the main controls on your first visit. Take the tour, in
   the `⌘K` list or the shortcuts panel, shows it again.
 - In Jobs, Shift-click or `⇧J`/`⇧K` selects several postings. Then `x`, `s` or `a`
@@ -156,6 +166,8 @@ daily run on or off, and run the checkup.
   finds it.
 
 ### Keyboard shortcuts
+
+On Windows, use Ctrl where this list says `⌘`.
 
 | Key | Action |
 |---|---|
@@ -237,7 +249,7 @@ in Settings › AI provider, or run `cairn llm set`. The choices:
 
 - the Anthropic API, paid as you go ($5 minimum),
 - the free tier of Google Gemini, Groq, Mistral or OpenRouter,
-- Ollama, which runs models on your Mac, offline and free.
+- Ollama, which runs models on your computer, offline and free.
 
 Each provider's panel shows how to get a key and has a Test button. Keys are
 saved in `~/.cairn/secrets.toml`, which only you can read, or can be set in
@@ -263,12 +275,12 @@ To spend less, raise `fit_threshold`, lower `max_summaries_per_run`, or turn off
 
 ## Privacy
 
-Your notes, statuses and application history never leave your Mac. The app's pages
-load nothing from the internet.
+Your notes, statuses and application history never leave your computer. The app's
+pages load nothing from the internet.
 
 Your profile, resume text and postings go only to the AI provider you chose in
 setup: the local `claude` command, which sends them to Claude under your own
-account; a hosted API under your own key; or Ollama on your Mac.
+account; a hosted API under your own key; or Ollama on your computer.
 
 Cairn also connects to:
 
@@ -299,6 +311,12 @@ runs `cairn run` once a day while you're logged in. Its output goes to
 `~/.cairn/run.log` and the Runs view. You can also turn the daily run on or off in
 Settings.
 
+On Windows, `install` adds a Task Scheduler task named Cairn daily run instead.
+It runs while you're logged in, and runs as soon as it can if the computer was
+asleep or off at the set time. Its output goes to `background.out` and
+`background.err` in your data folder. `cairn autostart install` adds Cairn to the
+programs Windows opens when you log in.
+
 ## Where your data lives
 
 ```
@@ -312,8 +330,15 @@ Settings.
   launchd.err
 ```
 
-Set `CAIRN_HOME` to use a different folder. `cairn backup` saves your settings,
-profile, database and icons to one zip, and `cairn restore` brings them back.
+On Windows the folder is `%USERPROFILE%\.cairn`, and the scheduled run writes
+`background.out` and `background.err` there in place of the two launchd files.
+
+Set `CAIRN_HOME` to use a different folder. On Windows, set it for your account,
+for example with `setx CAIRN_HOME D:\cairn`, so the daily run and the login entry
+see it too.
+
+`cairn backup` saves your settings, profile, database and icons to one zip, and
+`cairn restore` brings them back.
 
 ## Command line
 
@@ -332,7 +357,7 @@ profile, database and icons to one zip, and `cairn restore` brings them back.
 | `ui [--no-window] [--port N]` | Open the app in a window, or in the browser |
 | `icons [--limit N] [--reset-failures]` | Look up company websites and download their icons until none are left, or N companies; `--reset-failures` retries the ones that failed before |
 | `doctor` | Check this machine and print the fix for each failure |
-| `schedule install [--hour H] [--minute M]` | Install the daily launchd run |
+| `schedule install [--hour H] [--minute M]` | Install the daily run (launchd on a Mac, Task Scheduler on Windows) |
 | `schedule status` / `schedule remove` | Show or remove it |
 | `autostart install` / `status` / `remove` | Open the app at login |
 | `llm` / `llm set PROVIDER [--model M] [--cheap-model M] [--base-url U] [--key-stdin]` / `llm test` | Show, choose or test the model provider; `set` asks for the key |

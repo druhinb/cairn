@@ -6,6 +6,9 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+- Cairn runs on Windows 10 and 11. Install it with uv; the daily run uses Task
+  Scheduler. The app download is still for Macs only.
+
 ## [0.0.2] — 2026-09-26
 
 - `cairn ui` shows as Cairn, with the Cairn icon, in the Dock and the app
