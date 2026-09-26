@@ -40,6 +40,11 @@
   gap: 16px;
 }
 
+.setup-limits-body {
+  display: grid;
+  gap: 16px;
+}
+
 .setup-body > .link-btn {
   justify-self: start;
 }

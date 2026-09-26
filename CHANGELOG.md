@@ -18,6 +18,9 @@ This file lists every notable change to this project. It follows
 - Recent days is 90 by default, up from 21, so new grad and intern roles
   posted in July and still open show up in the fall. Setup asks for it too,
   as Posted within.
+- Setup's AI step has the AI limits, such as requests at once and postings
+  per batch, filled in with Cairn's defaults. Change them there or later in
+  Settings › Ranking.
 - A role one company lists in several cities shows as one row. The posting's
   details list the other places, with a link to each.
 - Postings with a fit under your fit threshold are hidden. Jobs shows how many

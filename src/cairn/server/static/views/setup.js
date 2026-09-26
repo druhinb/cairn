@@ -13,6 +13,7 @@ import { stepper } from "../components/stepper.js";
 import { switchControl } from "../components/switch.js";
 import { tagInput } from "../components/tagInput.js";
 import { toast } from "../components/toast.js";
+import { SECTIONS } from "./settingsFields.js";
 
 const STEPS = ["AI", "Resume", "Review", "Preferences", "Companies", "Alerts"];
 const [AI_STEP, RESUME_STEP, REVIEW_STEP, PREFS_STEP, COMPANIES_STEP, ALERTS_STEP] = STEPS.keys();
@@ -24,6 +25,10 @@ const ROLE_LABELS = { backend: "Backend", frontend: "Frontend", fullstack: "Full
 const ANCHOR_HINTS = ["e.g. Stripe, Databricks, Jane Street = 90", "e.g. Datadog, Snowflake = 75",
   "e.g. a strong regional company = 60"];
 const ACCEPT = ".pdf,.txt,.md";
+const AI_LIMIT_KEYS = ["model_concurrency", "rank_batch_size", "rank_retries", "max_rank_per_run",
+  "max_summaries_per_run", "monthly_call_cap", "fetch_descriptions"];
+const SETTING_FIELDS = SECTIONS.flatMap((section) => section.fields || []);
+const AI_LIMITS = AI_LIMIT_KEYS.map((key) => SETTING_FIELDS.find((spec) => spec.key === key));
 // what /api/onboard/options answers, for when it cannot be reached; without the
 // role keywords there are no role checkboxes
 const BUILT_IN_OPTIONS = { roles: {}, work_authorization: ["US citizen", "F-1 OPT", "needs sponsorship", "unknown"] };
@@ -100,6 +105,12 @@ class Setup {
      * picker lives for the whole wizard, so its drafts and typed key survive Back.
      */
     this.ai = { mode: null, data: null, error: null, loading: false, tested: false, saved: false };
+    /**
+     * The AI limits from /api/settings: values holds the edits, saved what config.toml
+     * holds. Null hides them, as when the settings can't be read.
+     */
+    this.limits = null;
+    this.limitsOpen = false;
     this.picker = null;
   }
 
@@ -430,7 +441,13 @@ class Setup {
     ai.loading = true;
     ai.error = null;
     try {
-      ai.data = await loadProviders({ keys: false });
+      let current;
+      [ai.data, current] = await Promise.all([loadProviders({ keys: false }),
+        this.limits ? null : api("/api/settings", { quiet: true }).catch(() => null)]);
+      if (current) {
+        const saved = Object.fromEntries(AI_LIMIT_KEYS.map((key) => [key, current[key]]));
+        this.limits = { saved, values: { ...saved } };
+      }
     } catch (error) {
       ai.error = error.message;
     } finally {
@@ -480,10 +497,12 @@ class Setup {
     this.loadAi();
     const ai = this.ai;
     const next = h("button", { type: "button", class: "btn btn-primary", onclick: () => this.leaveAi(next) });
+    const badLimits = new Set();
     this.syncAiNext = () => {
-      next.disabled = !this.aiReady();
+      next.disabled = !this.aiReady() || badLimits.size > 0;
       next.textContent = ai.mode === "other" && !ai.saved ? "Save and continue" : "Next: resume";
       next.title = !next.disabled ? ""
+        : badLimits.size > 0 ? "Fix the AI limits first"
         : ai.mode === "claude" ? "Install Claude Code first, or pick another provider"
           : ai.mode === "other" ? "Test the provider first" : "Pick an AI provider";
     };
@@ -519,13 +538,71 @@ class Setup {
         choice("other", "I don't have Claude Code", h("span", { class: "provider-notes", text: "Use Gemini, Groq, Mistral, OpenRouter, Anthropic, Ollama or another service." }))),
       recheck,
       ai.mode === "other" && ai.data && this.otherPicker(),
+      this.limits && this.limitsSection(badLimits),
       h("div", { class: "setup-actions" }, h("span", { class: "filter-spacer" }), next));
+  }
+
+  /** The AI limits, folded away; `bad` collects the keys whose box holds no usable number. */
+  limitsSection(bad) {
+    const { values } = this.limits;
+    const label = (spec, id) => h("label", { class: "field-label", for: id, text: spec.label });
+    const help = (spec, id) => h("p", { class: "field-help", id: `${id}-help`, text: spec.help });
+    const numberField = (spec) => {
+      const id = `ai-${spec.key}`;
+      const error = h("p", { class: "field-error", id: `${id}-error`, role: "alert", hidden: true });
+      const input = h("input", { type: "number", class: "input input-num", id, min: spec.min, max: spec.max, step: "1",
+        value: values[spec.key] ?? "", placeholder: spec.nullable ? "none" : null,
+        "aria-describedby": `${id}-help ${id}-error`,
+        oninput: () => {
+          const { value, error: problem } = readNumber(input, spec);
+          if (problem) bad.add(spec.key);
+          else {
+            bad.delete(spec.key);
+            values[spec.key] = value;
+          }
+          error.hidden = !problem;
+          error.textContent = problem || "";
+          input.setAttribute("aria-invalid", String(Boolean(problem)));
+          this.syncAiNext();
+        } });
+      return h("div", { class: "field field-number" }, label(spec, id), help(spec, id),
+        h("div", { class: "number-input" }, input, spec.unit && h("span", { class: "unit", text: spec.unit })), error);
+    };
+    const switchField = (spec) => {
+      const id = `ai-${spec.key}`;
+      const control = switchControl(null, values[spec.key], (on) => { values[spec.key] = on; }, { id, key: spec.key });
+      control.querySelector("input").setAttribute("aria-describedby", `${id}-help`);
+      return h("div", { class: "field field-switch" }, label(spec, id), help(spec, id), control);
+    };
+    return h("details", { class: "details setup-limits", open: this.limitsOpen,
+      ontoggle: (event) => { this.limitsOpen = event.target.open; } },
+      h("summary", { text: "AI limits" }),
+      h("div", { class: "setup-limits-body" },
+        h("p", { class: "field-help", text: "Cairn starts with limits that suit most providers. Lower them if your provider says you sent too many requests. You can change them later in Settings › Ranking." }),
+        AI_LIMITS.map((spec) => (spec.type === "switch" ? switchField(spec) : numberField(spec)))));
+  }
+
+  /** Save the AI limits that differ from config.toml; false when the save fails. */
+  async saveLimits() {
+    if (!this.limits) return true;
+    const { saved, values } = this.limits;
+    const changed = Object.fromEntries(AI_LIMIT_KEYS.filter((key) => values[key] !== saved[key])
+      .map((key) => [key, values[key]]));
+    if (Object.keys(changed).length === 0) return true;
+    try {
+      await api("/api/settings", { method: "PUT", body: changed });
+    } catch {
+      // api() has shown the error
+      return false;
+    }
+    Object.assign(saved, changed);
+    return true;
   }
 
   /**
    * Make the choice the active provider and go on: Claude Code through PUT
    * /api/llm, another provider through the picker's Save, which takes only a
-   * provider that answered a test.
+   * provider that answered a test. The AI limits save after it.
    */
   async leaveAi(button) {
     button.disabled = true;
@@ -544,6 +621,10 @@ class Setup {
         this.syncAiNext();
         return;
       }
+    }
+    if (!(await this.saveLimits())) {
+      button.disabled = false;
+      return;
     }
     if (this.mounted) this.go(RESUME_STEP);
   }
