@@ -2,10 +2,8 @@ import { api } from "../lib/api.js";
 import { subscribe } from "../lib/events.js";
 import { copyText } from "../lib/clipboard.js";
 import { fmt, h, safeUrl } from "../lib/dom.js";
-import { followCompany, followedAt } from "../lib/follow.js";
 import { MAC, register } from "../lib/keys.js";
 import { setPref } from "../lib/store.js";
-import { kindLabel, sourceChip, specName } from "../components/chip.js";
 import { doctorList } from "../components/doctor.js";
 import { editor } from "../components/editor.js";
 import { icon } from "../components/icons.js";
@@ -13,25 +11,9 @@ import { loadProviders, providerPicker } from "../components/providers.js";
 import { switchControl } from "../components/switch.js";
 import { tagInput } from "../components/tagInput.js";
 import { toast } from "../components/toast.js";
+import { SECTIONS, USAJOBS_EMAIL } from "./settingsFields.js";
+import { KIND_HINTS, renderSources } from "./settingsSources.js";
 
-const KIND_HINTS = {
-  github: "listings.json URL on raw.githubusercontent.com",
-  greenhouse: "board slug, e.g. stripe",
-  lever: "board slug, e.g. palantir",
-  ashby: "board slug, e.g. ramp",
-  smartrecruiters: "company id, e.g. Visa",
-  workable: "account slug, e.g. huggingface",
-  bamboohr: "subdomain, e.g. bamboohr",
-  workday: "<tenant>.<wdN>/<site>, e.g. acme.wd5/Careers",
-  github_readme: "raw README URL, e.g. https://raw.githubusercontent.com/owner/repo/main/README.md",
-  hn_hiring: "whoishiring for the newest thread, or a thread URL",
-  yc_waas: "YC jobs URL, e.g. https://www.ycombinator.com/jobs/role/software-engineer",
-  remoteok: "https://remoteok.com/api",
-  usajobs: "search keyword, e.g. software engineer",
-  page: "careers page URL, e.g. https://example.com/careers",
-};
-const WORKDAY_HELP = "A Workday board has no short name to guess. Copy <tenant>.<wdN>/<site> from the board URL, "
-  + "https://<tenant>.<wdN>.myworkdayjobs.com/<site>, or add the company below by that URL.";
 const TYPE_WORDS = { int: "a whole number", str: "text", bool: "on or off" };
 const SPY_OFFSET = 48;
 const CLAUDE_CODE = "claude-code";
@@ -43,93 +25,6 @@ const pathText = (path) => path.split(/(?<=\/)/).map((part) => h("span", { class
 /** @type {{checks: object[], at: number} | null} the newest Doctor result this page load */
 let lastDoctor = null;
 
-/**
- * @typedef {object} Field
- * @property {string} key       the config.toml setting
- * @property {string} label
- * @property {string} help
- * @property {"tags" | "number" | "switch" | "text"} type
- * @property {string} [unit]
- * @property {boolean} [nullable] an empty number means null
- * @property {number} [min]
- * @property {number} [max]
- * @property {boolean} [claudeOnly] shown only while Claude Code is the AI provider
- * @property {boolean} [macOnly] shown only on a Mac
- */
-
-/** @type {{id: string, title: string, fields?: Field[]}[]} */
-export const SECTIONS = [
-  { id: "profile", title: "Profile" },
-  { id: "preferences", title: "Preferences", fields: [
-    { key: "title_keywords", label: "Title keywords", type: "tags",
-      help: "Cairn shows only postings whose title has one of these words." },
-    { key: "title_exclude", label: "Skip titles with", type: "tags",
-      help: "Cairn hides postings whose title has any of these words. The defaults skip senior, staff, lead and manager roles." },
-    { key: "title_exclude_field", label: "Skip field roles with", type: "tags",
-      help: "Cairn hides hardware and field jobs that the word “engineer” would let in." },
-    { key: "allowed_categories", label: "Categories", type: "tags",
-      help: "Job categories to keep. A posting needs one of these and a title keyword." },
-    { key: "location_allow", label: "Locations", type: "tags",
-      help: "Leave empty to see postings in every location." },
-    { key: "degrees_held", label: "Degrees", type: "tags",
-      help: "Cairn hides postings that accept none of your degrees. Leave empty to show them all." },
-    { key: "graduation_year", label: "Graduation year", type: "number", nullable: true, min: 2000, max: 2100,
-      help: "Cairn flags postings that start before you graduate. Leave empty to skip the flag." },
-    { key: "wanted_intern_terms", label: "Internship terms", type: "tags",
-      help: "Cairn shows internships only for these terms, such as “Fall 2026”. Leave empty to hide every internship." },
-    { key: "include_off_season_internships", label: "Internships", type: "switch",
-      help: "Turn off to hide every internship. When on, Cairn shows internships for the terms above." },
-    { key: "intern_terms", label: "Internship words", type: "tags",
-      help: "Words in a title that mark a posting as an internship." },
-    { key: "recent_days", label: "Recent days", type: "number", unit: "days", min: 1,
-      help: "Cairn skips postings that haven't been posted or updated in this many days." },
-  ] },
-  { id: "sources", title: "Sources" },
-  { id: "icons", title: "Company icons", fields: [
-    { key: "company_icons", label: "Fetch icons", type: "switch",
-      help: "Cairn shows each company's icon next to its postings." },
-  ] },
-  { id: "provider", title: "AI provider" },
-  { id: "ranking", title: "Ranking", fields: [
-    { key: "fit_threshold", label: "Minimum fit", type: "number", unit: "0–100", min: 0, max: 100,
-      help: "Postings below this fit score get no summary and no phone alert." },
-    { key: "tier_floor", label: "Minimum company tier", type: "number", unit: "0–100", min: 0, max: 100,
-      help: "Postings from companies below this score stay in the list but get no summary or phone alert." },
-    { key: "rank_batch_size", label: "Postings per batch", type: "number", unit: "postings", min: 1,
-      help: "How many postings Cairn sends the AI at once. Lower it if ranking keeps failing." },
-    { key: "rank_retries", label: "Retries", type: "number", unit: "tries", min: 0,
-      help: "How many times Cairn tries a batch again when it can't read the answer." },
-    { key: "max_rank_per_run", label: "Max ranked per run", type: "number", unit: "postings", nullable: true, min: 1,
-      help: "Leave empty to rank every new posting. With a limit, Cairn ranks the newest first and saves the rest for later runs. The first run ranks every match either way." },
-    { key: "max_summaries_per_run", label: "Max summaries per run", type: "number", unit: "postings", min: 0,
-      help: "Each summary uses one AI request." },
-    { key: "monthly_call_cap", label: "Monthly AI limit", type: "number", unit: "requests", nullable: true, min: 1,
-      help: "Cairn stops ranking and summarizing after this many AI requests in 30 days. Leave empty for no limit." },
-    { key: "fetch_descriptions", label: "Summarize requirements", type: "switch",
-      help: "Reads the posting pages of your best matches and summarizes what they ask for." },
-    { key: "claude_model", label: "Ranking model", type: "text", claudeOnly: true,
-      help: "The Claude Code model Cairn ranks postings with, such as sonnet." },
-    { key: "description_model", label: "Summary model", type: "text", claudeOnly: true,
-      help: "The Claude Code model Cairn summarizes posting pages with, such as haiku. A cheaper model is enough here." },
-    { key: "model_concurrency", label: "Requests at once", type: "number", unit: "requests", min: 1, max: 8,
-      help: "How many AI requests Cairn sends at the same time. A higher number finishes a run sooner. Lower it if your AI provider says you sent too many." },
-    { key: "claude_bin", label: "Claude command", type: "text",
-      help: "Where Cairn finds Claude Code. Leave it alone unless Checkup can't find Claude Code." },
-  ] },
-  { id: "notifications", title: "Notifications", fields: [
-    { key: "notify_ntfy_topic", label: "Phone alerts", type: "text",
-      help: "The ntfy topic your phone subscribes to. Pick a name only you know, or leave it empty to turn alerts off." },
-    { key: "notify_macos", label: "Mac notifications", type: "switch", macOnly: true,
-      help: "Show a banner on this Mac when a run finishes." },
-  ] },
-  { id: "schedule", title: "Schedule" },
-  { id: "system", title: "System" },
-  { id: "doctor", title: "Checkup" },
-  { id: "advanced", title: "Advanced" },
-];
-/** @type {Field} shown in Sources, beside the USAJOBS key */
-const USAJOBS_EMAIL = { key: "usajobs_email", label: "USAJOBS email", type: "text",
-  help: "The email you used to get your USAJOBS key." };
 const FIELDS = SECTIONS.flatMap((section) => section.fields || []);
 const KEYS = new Set([...FIELDS.map((field) => field.key), USAJOBS_EMAIL.key, "sources", "watchlist"]);
 const FEEDBACK_HELP = "Cairn uses your recent Agree and Too high marks when it ranks new postings.";
@@ -410,7 +305,7 @@ class Settings {
     this.fields.clear();
     this.defaultButtons.clear();
     for (const section of SECTIONS.filter((s) => s.fields)) this.renderFields(section);
-    this.renderSources();
+    renderSources(this);
     this.renderIcons();
     this.renderDirty();
   }
@@ -631,218 +526,6 @@ class Settings {
   // -------------------------------------------------------------------------
   // Sources and the watchlist
   // -------------------------------------------------------------------------
-  renderSources() {
-    const section = SECTIONS.find((s) => s.id === "sources");
-    const errorFor = (key) => {
-      const error = h("p", { class: "field-error", role: "alert", hidden: true });
-      const wrap = h("div", { class: "field", "data-field": key });
-      this.fields.set(key, { wrap, error });
-      return { wrap, error };
-    };
-    const feeds = errorFor("sources");
-    feeds.wrap.append(
-      h("h3", { class: "field-label", text: "Feeds and boards" }),
-      h("p", { class: "field-help", text: "The job sites Cairn checks on every run." }),
-      this.specList("sources", (spec) => [spec.company && h("span", { class: "spec-company", text: spec.company }),
-        h("span", { class: "spec-name mono", title: spec.location, text: spec.location })]),
-      this.addSourceForm(), feeds.error);
-    const watch = errorFor("watchlist");
-    watch.wrap.append(
-      h("h3", { class: "field-label", text: "Watchlist" }),
-      h("p", { class: "field-help", text: "Companies you follow. Cairn checks their careers pages on every run." }),
-      this.specList("watchlist", (spec) => [h("span", { class: "spec-company", text: spec.company || spec.location }),
-        h("span", { class: "spec-name mono", text: spec.location })]),
-      this.addCompanyForm(), watch.error,
-      this.suggestedList());
-    this.sections.get("sources").replaceChildren(this.sectionHead(section),
-      h("div", { class: "fields" }, feeds.wrap, watch.wrap, this.usajobsBlock()));
-    this.showError("sources");
-    this.showError("watchlist");
-  }
-
-  /** Companies with strong recent postings and no watchlist board, each with Follow. */
-  suggestedList() {
-    const box = h("div", { class: "suggested" }, h("h4", { class: "field-label", text: "Suggested" }),
-      h("p", { class: "muted", text: "Looking for companies with several strong postings…" }));
-    api("/api/insights/companies", { quiet: true }).then((rows) => {
-      if (!this.mounted) return;
-      const list = this.draft.watchlist || [];
-      const entry = (row) => list[followedAt(list, { company: row.company })];
-      const fresh = rows.filter((row) => !entry(row) || entry(row).enabled === false);
-      box.replaceChildren(h("h4", { class: "field-label", text: "Suggested" }),
-        h("p", { class: "field-help", text: "Companies with three or more postings scoring 80+ for fit in the last 60 days that you don't follow yet." }),
-        fresh.length ? h("ul", { class: "spec-list" }, fresh.map((row) => {
-          const off = Boolean(entry(row));
-          const follow = h("button", { type: "button", class: "btn btn-sm",
-            title: off ? "You follow this company, but it's turned off" : "Follow this company" },
-          icon("plus"), off ? "Turn on" : "Follow");
-          follow.addEventListener("click", () => this.follow(row.company, follow));
-          return h("li", { class: "spec-row suggested-row" },
-            h("span", { class: "spec-company", text: row.company }),
-            h("span", { class: "spec-name mono", text: `${fmt.plural(row.postings, "strong posting")} · best fit ${row.best_fit}` }),
-            follow);
-        })) : h("p", { class: "muted", text: "No suggestions right now." }));
-    }, (error) => {
-      box.querySelector(".muted").textContent = `Couldn't load suggestions: ${error.message}`;
-    });
-    return box;
-  }
-
-  /** Follow a suggested company in the draft; Save keeps it. */
-  async follow(company, button) {
-    button.disabled = true;
-    try {
-      const { spec, watchlist, turnedOn } = await followCompany(company, { watchlist: this.draft.watchlist || [] });
-      if (!this.mounted) return;
-      this.set("watchlist", watchlist);
-      this.renderSources();
-      toast(`${turnedOn ? "Turned on" : "Added"} ${spec.company || company}. Save to keep the change`);
-    } catch (error) {
-      button.disabled = false;
-      toast(error.status === 404 ? `${error.message}. Paste a link to its careers page under Watchlist.`
-        : error.status === 409 ? error.message : `Couldn't look it up: ${error.message}`, { tone: "error" });
-    }
-  }
-
-  /** The USAJOBS email setting and its key, which the API keeps out of config.toml. */
-  usajobsBlock() {
-    const status = h("span", { class: "key-status muted", text: "Checking…" });
-    const input = h("input", { type: "password", class: "input input-text", id: "usajobs-key", autocomplete: "new-password",
-      "data-1p-ignore": true, "data-lpignore": "true", spellcheck: "false", placeholder: "Paste your key" });
-    const save = h("button", { type: "button", class: "btn btn-sm", text: "Save key" });
-    const clear = h("button", { type: "button", class: "btn btn-sm", text: "Clear", disabled: true });
-    const show = (stored) => {
-      status.textContent = stored ? "Key saved" : "No key yet";
-      clear.disabled = !stored;
-      input.placeholder = stored ? "Paste a new key to replace it" : "Paste your key";
-    };
-    api("/api/keys", { quiet: true }).then((keys) => show(Boolean(keys.usajobs)), () => {
-      status.textContent = "Couldn't check for a saved key";
-    });
-    save.addEventListener("click", async () => {
-      const key = input.value.trim();
-      if (!key) {
-        input.focus();
-        return;
-      }
-      save.disabled = true;
-      try {
-        const keys = await api("/api/keys/usajobs", { method: "PUT", body: { key } });
-        input.value = "";
-        show(Boolean(keys.usajobs));
-        toast("Saved the USAJOBS key");
-      } catch {
-        // api() has shown the error; the typed key stays for another try
-      } finally {
-        save.disabled = false;
-      }
-    });
-    clear.addEventListener("click", async () => {
-      clear.disabled = true;
-      try {
-        const keys = await api("/api/keys/usajobs", { method: "DELETE" });
-        show(Boolean(keys.usajobs));
-        toast("Removed the USAJOBS key");
-      } catch {
-        clear.disabled = false;
-      }
-    });
-    return h("div", { class: "field usajobs" },
-      h("h3", { class: "field-label", text: "USAJOBS" }),
-      h("p", { class: "field-help" }, "To search USAJOBS, request a free key at ",
-        h("a", { class: "link", href: "https://developer.usajobs.gov/apirequest/", target: "_blank", rel: "noopener noreferrer",
-          text: "developer.usajobs.gov" }), ". USAJOBS emails it to you. Then enter the key and the email you used."),
-      this.field(USAJOBS_EMAIL),
-      h("div", { class: "field" }, h("label", { class: "field-label", for: "usajobs-key", text: "USAJOBS key" }),
-        h("div", { class: "provider-key" }, input, save, clear), status));
-  }
-
-  specList(key, describe) {
-    const specs = this.draft[key] || [];
-    if (!specs.length) {
-      return h("p", { class: "spec-empty muted", text: key === "watchlist" ? "No companies yet." : "No sources yet. Add one so Cairn has jobs to find." });
-    }
-    return h("ul", { class: "spec-list" }, specs.map((spec, index) => {
-      const name = specName(spec);
-      const label = spec.company || name;
-      const row = h("li", { class: `spec-row${spec.enabled === false ? " spec-off" : ""}` },
-        sourceChip(name), describe(spec),
-        switchControl(null, spec.enabled !== false, (on) => {
-          const next = clone(this.draft[key]);
-          if (on) delete next[index].enabled;
-          else next[index].enabled = false;
-          row.classList.toggle("spec-off", !on);
-          this.set(key, next);
-        }, { key: `${key}-${index}` }),
-        h("button", { type: "button", class: "icon-btn", title: "Remove", "aria-label": `Remove ${label}`,
-          onclick: () => {
-            this.set(key, this.draft[key].filter((_, i) => i !== index));
-            this.renderSources();
-            toast(`Removed ${label}. Save to keep the change`);
-          } }, icon("trash")));
-      row.querySelector("input[role=switch]").setAttribute("aria-label", `Fetch ${label}`);
-      return row;
-    }));
-  }
-
-  addSourceForm() {
-    const kind = h("select", { class: "select", "aria-label": "Source kind" },
-      this.kinds.map((value) => h("option", { value, text: kindLabel(value) })));
-    const location = h("input", { type: "text", class: "input input-text", placeholder: KIND_HINTS.github,
-      "aria-label": "Source location", spellcheck: "false" });
-    const company = h("input", { type: "text", class: "input input-text source-company", placeholder: "Company name",
-      "aria-label": "Company", hidden: true });
-    const help = h("p", { class: "field-help add-note", hidden: true, text: WORKDAY_HELP });
-    kind.addEventListener("change", () => {
-      location.placeholder = KIND_HINTS[kind.value] || "";
-      help.hidden = kind.value !== "workday";
-      company.hidden = kind.value !== "page";
-    });
-    const form = h("form", { class: "add-row", onsubmit: (event) => {
-      event.preventDefault();
-      const value = location.value.trim();
-      if (!value) return;
-      const spec = { kind: kind.value, location: value };
-      if (kind.value === "page") {
-        if (!company.value.trim()) {
-          company.focus();
-          return;
-        }
-        spec.company = company.value.trim();
-      }
-      this.set("sources", [...(this.draft.sources || []), spec]);
-      this.renderSources();
-      this.sections.get("sources").querySelector(".add-row select")?.focus();
-    } }, kind, location, company, h("button", { type: "submit", class: "btn btn-sm" }, icon("plus"), "Add source"));
-    return h("div", {}, form, help);
-  }
-
-  addCompanyForm() {
-    const query = h("input", { type: "text", class: "input input-text", placeholder: "Company name or careers page link",
-      "aria-label": "Company name or careers page link", spellcheck: "false" });
-    const note = h("p", { class: "field-help add-note", "aria-live": "polite" });
-    const button = h("button", { type: "submit", class: "btn btn-sm" }, icon("plus"), "Add company");
-    const form = h("form", { class: "add-row", onsubmit: async (event) => {
-      event.preventDefault();
-      const text = query.value.trim();
-      if (!text) return;
-      button.disabled = true;
-      note.textContent = "Looking for its careers page…";
-      try {
-        const { spec, watchlist, turnedOn } = await followCompany(text, { watchlist: this.draft.watchlist || [] });
-        if (!this.mounted) return;
-        this.set("watchlist", watchlist);
-        this.renderSources();
-        toast(`${turnedOn ? "Turned on" : "Added"} ${spec.company || text}. Save to keep the change`);
-      } catch (error) {
-        note.textContent = error.status === 404 ? `${error.message}. Paste a link to its careers page instead.`
-          : error.status === 409 ? `${error.message}.` : `Couldn't look it up: ${error.message}`;
-      } finally {
-        button.disabled = false;
-      }
-    } }, query, button);
-    return h("div", {}, form, note);
-  }
 
   // -------------------------------------------------------------------------
   // Profile, schedule, doctor, advanced

@@ -16,6 +16,7 @@ import * as insights from "./views/insights.js";
 import * as jobs from "./views/jobs.js";
 import * as runs from "./views/runs.js";
 import * as settings from "./views/settings.js";
+import { SECTIONS as SETTINGS_SECTIONS } from "./views/settingsFields.js";
 import * as setup from "./views/setup.js";
 import * as today from "./views/today.js";
 
@@ -720,7 +721,7 @@ function registerCommands() {
     { id: "app:backup", label: "Save a backup", group: "General", run: () => settings.saveBackup().catch(() => {}) },
     { id: "app:update", label: "Check for updates", group: "General", run: () => checkUpdate(true) },
     { id: "app:provider-test", label: "Test provider", group: "General", run: testProvider },
-    ...settings.SECTIONS.map((section) => ({ id: `settings:${section.id}`, label: `Open settings › ${section.title}`,
+    ...SETTINGS_SECTIONS.map((section) => ({ id: `settings:${section.id}`, label: `Open settings › ${section.title}`,
       group: "Settings", run: () => navigate("settings", new URLSearchParams({ section: section.id })) })),
   ]);
 }
