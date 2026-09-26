@@ -24,6 +24,27 @@ TITLE_DEFAULTS = {
 MAX_TITLE_WORDS = 80
 MAX_TITLE_WORD_CHARS = 40
 
+# the title keywords each of setup's role checkboxes adds, and the words it takes
+# off title_exclude_field
+ROLE_KEYWORDS = {
+    "backend": ["backend", "software engineer", "software developer", "swe", "sde",
+                "engineer", "developer", "programmer"],
+    "frontend": ["frontend", "front end"],
+    "fullstack": ["full stack", "fullstack"],
+    "systems": ["systems engineer", "infrastructure", "distributed", "compiler", "platform",
+                "site reliability", "sre"],
+    "ml": ["machine learning", "ml engineer", "research scientist", "research engineer",
+           "data scientist"],
+    "data": ["data engineer", "data scientist", "analytics engineer"],
+    "quant": ["quant", "trader", "trading", "quantitative"],
+    "research": ["research scientist", "research engineer"],
+    "platform": ["platform", "infrastructure", "site reliability", "sre"],
+    "security": ["security engineer"],
+    "mobile": ["ios", "android", "mobile"],
+    "embedded": ["embedded", "firmware"],
+}
+ROLE_UNSKIPS = {"embedded": ["firmware"]}
+
 # The prompt shows each example profile.md heading with one of these under it. A
 # heading added to the example without an entry here fails the draft with a KeyError.
 SECTION_GUIDE = {
@@ -68,10 +89,12 @@ Suggestion keys, again from the resume only:
 - "graduation_month": that graduation's month as an integer 1-12, or null
 - "degrees_held": degrees earned or in progress, from "Associate's", "Bachelor's",
   "Master's", "PhD"
+- "roles": role kinds the experience suits, from these, each shown with the title
+  keywords it stands for: {roles}
 - "title_keywords": lowercase words or phrases, one of which a job title must contain
   to be shown, covering the roles the resume points to. Start from these defaults,
   drop the ones for roles the resume shows no sign of wanting, and add titles it
-  does: {title_keywords}
+  does, including the keywords of every role you list: {title_keywords}
 - "title_exclude": lowercase words that mark a title too senior or the wrong kind for
   this candidate. Start from these defaults and drop any that fit the resume, such
   as "phd" for a PhD holder or "lead" for someone with years of experience leading:
@@ -197,6 +220,7 @@ def draft_prompt(text):
     for delimiter in RESUME_DELIMITERS:
         text = text.replace(delimiter, delimiter.replace("RESUME", "resume"))
     return DRAFT_PROMPT.format(profile=_skeleton("profile.md"),
+                               roles=json.dumps(ROLE_KEYWORDS),
                                **{key: json.dumps(words) for key, words in TITLE_DEFAULTS.items()},
                                authorizations=", ".join(f'"{a}"' for a in WORK_AUTHORIZATION),
                                envelope=ENVELOPE, resume=text)
@@ -254,6 +278,7 @@ SUGGESTION_SHAPES = {
     "graduation_year": (_int_or_none, "an integer year or null"),
     "graduation_month": (_month_or_none, "a month 1-12 or null"),
     "degrees_held": (_str_list, "a list of strings"),
+    "roles": (_str_list, "a list of strings"),
     **{key: (_str_list, "a list of strings") for key in TITLE_DEFAULTS},
     "locations": (_str_list, "a list of strings"),
     "work_authorization": (lambda v: v in WORK_AUTHORIZATION,
@@ -278,6 +303,7 @@ def _suggestions(raw):
             raise OnboardError(f"suggestions: '{key}' should be {expected}, "
                                f"got {json.dumps(data[key])[:80]}")
     kept = {key: data[key] for key in SUGGESTION_SHAPES}
+    kept["roles"] = [role for role in kept["roles"] if role in ROLE_KEYWORDS]
     for key in TITLE_DEFAULTS:
         kept[key] = title_words(kept[key])
     # an empty title_keywords would hide every posting

@@ -1,6 +1,7 @@
 import { api } from "../lib/api.js";
 import { fmt, h, safeUrl } from "../lib/dom.js";
 import { subscribe } from "../lib/events.js";
+import { withRole } from "../lib/roles.js";
 import { doctorList } from "../components/doctor.js";
 import { editor } from "../components/editor.js";
 import { activeFirstRun, FirstRunScreen, launchFrame } from "../components/firstRun.js";
@@ -16,11 +17,15 @@ const STEPS = ["AI", "Resume", "Review", "Preferences", "Companies", "Alerts"];
 const [AI_STEP, RESUME_STEP, REVIEW_STEP, PREFS_STEP, COMPANIES_STEP, ALERTS_STEP] = STEPS.keys();
 const CLAUDE_CODE = "claude-code";
 const CLAUDE_CODE_URL = "https://claude.com/claude-code";
+const ROLE_LABELS = { backend: "Backend", frontend: "Frontend", fullstack: "Full stack", systems: "Systems",
+  ml: "Machine learning", data: "Data", quant: "Quant", research: "Research", platform: "Platform",
+  security: "Security", mobile: "Mobile", embedded: "Embedded" };
 const ANCHOR_HINTS = ["e.g. Stripe, Databricks, Jane Street = 90", "e.g. Datadog, Snowflake = 75",
   "e.g. a strong regional company = 60"];
 const ACCEPT = ".pdf,.txt,.md";
-// what /api/onboard/options answers, for when it cannot be reached
-const BUILT_IN_OPTIONS = { work_authorization: ["US citizen", "F-1 OPT", "needs sponsorship", "unknown"] };
+// what /api/onboard/options answers, for when it cannot be reached; without the
+// role keywords there are no role checkboxes
+const BUILT_IN_OPTIONS = { roles: {}, work_authorization: ["US citizen", "F-1 OPT", "needs sponsorship", "unknown"] };
 const GRADUATION_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const DEFAULT_GRADUATION_MONTH = "06";
 const DEFAULT_MAX_YEARS = 2;
@@ -28,6 +33,8 @@ const READ_LINE = /^\[setup\] read (\d+) words/;
 const SLOW_DRAFT_SECONDS = 60;
 // long enough to see the draft pass its check before Review replaces the screen
 const CHECKED_PAUSE_MS = 700;
+
+const roleLabel = (role) => ROLE_LABELS[role] || role[0].toUpperCase() + role.slice(1);
 
 /**
  * The graduation year in a month field, or why the field refuses its text. The
@@ -359,6 +366,7 @@ class Setup {
       ? String(suggestions.graduation_month).padStart(2, "0") : DEFAULT_GRADUATION_MONTH;
     this.graduation = year == null ? "" : `${year}-${month}`;
     this.initial = { ntfy_topic: current?.notify_ntfy_topic || "", watchlist };
+    this.roles = suggestions.roles || [];
     return {
       title_keywords: suggestions.title_keywords ?? current?.title_keywords ?? [],
       title_exclude: suggestions.title_exclude ?? current?.title_exclude ?? [],
@@ -543,6 +551,22 @@ class Setup {
       h(id ? "label" : "span", { class: "field-label", for: id, text: label }),
       help && h("p", { class: "field-help" }, help), control);
     const words = (key, id) => tagInput(p[key], { id, onChange: (tags) => { p[key] = tags; } });
+    const lists = { title_keywords: words("title_keywords", "pref-title-keywords"),
+      title_exclude_field: words("title_exclude_field", "pref-title-field") };
+    const toggle = (role, on) => {
+      Object.assign(p, withRole(p, this.options.roles, this.roles, role, on));
+      this.roles = Object.keys(this.options.roles).filter((r) => (r === role ? on : this.roles.includes(r)));
+      for (const key of Object.keys(lists)) {
+        const fresh = words(key, lists[key].querySelector("input").id);
+        lists[key].replaceWith(fresh);
+        lists[key] = fresh;
+      }
+    };
+    const roleNames = Object.keys(this.options.roles);
+    const roles = roleNames.length > 0 && h("div", { class: "check-grid", role: "group", "aria-label": "Roles" },
+      roleNames.map((role) => h("label", { class: "check" },
+        h("input", { type: "checkbox", checked: this.roles.includes(role),
+          onchange: (event) => toggle(role, event.target.checked) }), roleLabel(role))));
     const auth = h("select", { class: "select", id: "pref-auth", onchange: (event) => { p.work_authorization = event.target.value; } },
       this.options.work_authorization.map((value) => h("option", { value, selected: value === p.work_authorization,
         text: value === "unknown" ? "Prefer not to say" : value })));
@@ -568,12 +592,13 @@ class Setup {
       oninput: (event) => { p.calibre_anchors[i] = event.target.value; } })));
     return h("div", { class: "setup-body" },
       h("p", { class: "setup-lead", text: "Cairn filled these in from your resume. You can change them later in Settings." }),
+      roles && field("Roles", "Checking a role adds its job titles to the lists below. Unchecking it takes them out.", roles),
       field("Title keywords", "Cairn shows only jobs whose title has one of these words. Leave it empty to use Cairn’s own list.",
-        words("title_keywords", "pref-title-keywords"), "pref-title-keywords"),
+        lists.title_keywords, "pref-title-keywords"),
       field("Skip titles with", "Cairn hides jobs whose title has any of these words, such as senior roles.",
         words("title_exclude", "pref-title-exclude"), "pref-title-exclude"),
       field("Skip field roles with", "Cairn hides jobs in fields your resume doesn’t point to, such as hardware.",
-        words("title_exclude_field", "pref-title-field"), "pref-title-field"),
+        lists.title_exclude_field, "pref-title-field"),
       field("Locations", "Leave empty to see jobs in every location.",
         h("div", { class: "field-stack" }, tagInput(p.locations, { id: "pref-locations", placeholder: "Seattle, New York, CA…",
           onChange: (tags) => { p.locations = tags; } }),

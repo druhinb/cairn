@@ -27,6 +27,7 @@ PROFILE = _doc("Candidate profile", "profile.md", {
     "Snapshot": "- Sam Lee, B.S. Computer Science.",
     onboard.TIER_HEADING: "- **90-100** — the strongest engineering orgs."})
 SUGGESTIONS = {"graduation_year": 2027, "graduation_month": 6, "degrees_held": ["Bachelor's"],
+               "roles": ["backend", "systems"],
                "title_keywords": ["backend", "software engineer"], "title_exclude": ["senior"],
                "title_exclude_field": ["hardware"], "locations": ["Seattle, WA"],
                "work_authorization": "unknown", "internship_terms": ["fall 2026"],
@@ -53,13 +54,14 @@ class ValidatedTest(unittest.TestCase):
         self.assertEqual(draft.profile_md, PROFILE)
         self.assertEqual(draft.suggestions, SUGGESTIONS)
 
-    def test_fences_are_stripped_and_unknown_keys_dropped(self):
-        extra = {**SUGGESTIONS, "hobby": "chess", "header": {"name": "Sam Lee"}}
+    def test_fences_are_stripped_and_unknown_keys_and_roles_dropped(self):
+        extra = {**SUGGESTIONS, "roles": ["backend", "astronaut"], "hobby": "chess",
+                 "header": {"name": "Sam Lee"}}
         draft = onboard.resume._validated(envelope(
             profile=f"```markdown\n{PROFILE}```\n",
             suggestions=f"```json\n{json.dumps(extra)}\n```"))
         self.assertEqual(draft.profile_md, PROFILE)
-        self.assertEqual(draft.suggestions, SUGGESTIONS)
+        self.assertEqual(draft.suggestions, {**SUGGESTIONS, "roles": ["backend"]})
 
     def test_title_words_are_lowercased_and_deduplicated(self):
         messy = {**SUGGESTIONS, "title_keywords": [" Backend ", "backend", "", "x" * 41],
@@ -101,6 +103,7 @@ class ValidatedTest(unittest.TestCase):
     def test_a_wrong_type_or_missing_key_is_named(self):
         cases = [({"graduation_year": "2027"}, "'graduation_year'"),
                  ({"graduation_year": True}, "'graduation_year'"),
+                 ({"roles": "backend"}, "'roles'"),
                  ({"title_keywords": "backend"}, "'title_keywords'"),
                  ({"title_exclude_field": [1]}, "'title_exclude_field'"),
                  ({"locations": [1]}, "'locations'"),
@@ -142,6 +145,7 @@ class DraftTest(unittest.TestCase):
         self.assertIn("no placeholder or TODO lines", prompt)
         for words in onboard.TITLE_DEFAULTS.values():
             self.assertIn(json.dumps(words), prompt)
+        self.assertIn(json.dumps(onboard.ROLE_KEYWORDS), prompt)
 
     def test_every_example_heading_has_a_section_guide(self):
         for heading in onboard.required_headings("profile.md"):
@@ -241,6 +245,17 @@ class ResumeTextTest(unittest.TestCase):
 class PreferencesTest(unittest.TestCase):
     def mapped(self, **prefs):
         return onboard.preferences_to_settings(prefs, settings.defaults())
+
+    def test_every_role_word_is_lowercase_and_distinct(self):
+        for role, keywords in onboard.ROLE_KEYWORDS.items():
+            with self.subTest(role=role):
+                self.assertEqual(keywords, [k.lower() for k in dict.fromkeys(keywords)])
+
+    def test_each_unskip_is_a_default_skip_word_its_role_brings_back(self):
+        for role, words in onboard.ROLE_UNSKIPS.items():
+            with self.subTest(role=role):
+                self.assertLessEqual(set(words), set(settings.DEFAULT_TITLE_EXCLUDE_FIELD))
+                self.assertLessEqual(set(words), set(onboard.ROLE_KEYWORDS[role]))
 
     def test_title_words_become_the_settings(self):
         mapped = self.mapped(title_keywords=["Quant", "trader", "quant"], title_exclude=[],
