@@ -93,7 +93,8 @@ off: on `haiku` that took one from about 70 seconds to about 4, with the same bl
 `max_summaries_per_run` then picks the real top. A cap on ranking takes the N
 newest postings, because the feed arrives newest-first, and spends the budget on
 whoever posted most recently while the best companies wait in the held-back pile.
-Set an integer (1 or more) only to bound a one-off enormous backlog.
+The first run ignores the cap and ranks every match. Set an integer (1 or more) only
+to bound the daily runs after it.
 
 ## Requirements summaries
 

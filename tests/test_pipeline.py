@@ -239,7 +239,7 @@ class ClosedLinkTest(PipelineTestCase):
 
 
 class FirstRunTest(PipelineTestCase):
-    """A first run ranks the newest open postings and marks the rest of the backlog seen."""
+    """A first run ranks every new posting; the per-run bounds apply to the runs after it."""
 
     def setUp(self):
         super().setUp()
@@ -264,44 +264,20 @@ class FirstRunTest(PipelineTestCase):
     def use(self, **overrides):
         settings.use(dataclasses.replace(settings.get(), **overrides))
 
-    def test_it_ranks_the_newest_postings_and_marks_the_rest_seen(self):
-        with mock.patch.object(pipeline, "FIRST_RUN_POSTINGS", 2):
-            result = pipeline.run(RunOptions(first_run=True))
-        self.assertEqual(self.ranked, [["new0", "new1"]])
-        self.assertEqual(store.seen_ids(), {"new0", "new1", "new2", "new3", "old"})
-        self.assertEqual((result.counts["ranked"], result.counts["backlog"]), (2, 3))
-        self.assertIsNone(store.get_posting("new2")["fit"])
-        self.assertIn("[first run] 2 of 5 new postings to rank, the newest from the last "
-                      "14 days. The other 3 are marked seen.",
-                      [e.data.get("text") for e in self.events])
-
-    def test_postings_older_than_two_weeks_are_left_to_the_backlog(self):
-        pipeline.run(RunOptions(first_run=True))
-        self.assertEqual(self.ranked, [["new0", "new1", "new2", "new3"]])
-        self.assertIn("old", store.seen_ids())
-
-    def test_max_rank_per_run_bounds_it(self):
-        self.use(max_rank_per_run=1)
-        pipeline.run(RunOptions(first_run=True))
-        self.assertEqual(self.ranked, [["new0"]])
-
-    def test_it_ranks_no_more_than_the_calls_left_under_the_monthly_cap(self):
-        self.use(monthly_call_cap=3, rank_batch_size=1)
-        store.record_call("onboard", "sonnet", 10, 10)
-        pipeline.run(RunOptions(first_run=True))
-        self.assertEqual(self.ranked, [["new0", "new1"]])
-
-    def test_a_share_the_monthly_cap_cut_leaves_the_backlog_unseen(self):
-        self.use(monthly_call_cap=3, rank_batch_size=1)
-        store.record_call("onboard", "sonnet", 10, 10)
+    def test_it_ranks_every_new_posting_and_marks_them_seen(self):
         result = pipeline.run(RunOptions(first_run=True))
-        self.assertEqual(store.seen_ids(), {"new0", "new1"})
-        self.assertEqual(result.counts["backlog"], 0)
-        store.record_call("onboard", "sonnet", 10, 10)
-        store.record_call("onboard", "sonnet", 10, 10)
+        self.assertEqual(self.ranked, [["new0", "new1", "new2", "new3", "old"]])
+        self.assertEqual(store.seen_ids(), {"new0", "new1", "new2", "new3", "old"})
+        self.assertEqual(result.counts["ranked"], 5)
+
+    def test_max_rank_per_run_bounds_only_the_runs_after_it(self):
+        self.use(max_rank_per_run=1)
+        caps = []
+        rank.process = lambda jobs, run_id=None: (
+            caps.append(settings.get().max_rank_per_run) or _fake_process(jobs, run_id))
         pipeline.run(RunOptions(first_run=True))
-        self.assertEqual(self.ranked[-1], [])
-        self.assertEqual(store.seen_ids(), {"new0", "new1"})
+        pipeline.run(RunOptions())
+        self.assertEqual(caps, [None, 1])
 
     def test_it_summarises_at_most_ten_and_the_settings_keep_their_own(self):
         pipeline.run(RunOptions(first_run=True))
@@ -320,10 +296,9 @@ class FirstRunTest(PipelineTestCase):
             pipeline.run(RunOptions(first_run=True))
         self.assertEqual(store.seen_ids(), set())
 
-    def test_a_daily_run_still_ranks_every_new_posting(self):
-        result = pipeline.run(RunOptions())
+    def test_a_daily_run_ranks_every_new_posting(self):
+        pipeline.run(RunOptions())
         self.assertEqual(self.ranked, [["new0", "new1", "new2", "new3", "old"]])
-        self.assertNotIn("backlog", result.counts)
 
 
 class IconOrderTest(unittest.TestCase):

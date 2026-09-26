@@ -18,7 +18,7 @@ const RUN_KINDS = ["run_start", "phase_start", "phase_end", "rank_progress", "po
   "summary_progress", "info", "warn", "error", "run_done", "run_failed"];
 const MODIFIERS = new Set(["Shift", "Control", "Alt", "Meta", "CapsLock"]);
 
-const LEAD = "This first run ranks the newest postings from the last two weeks. After today, each run ranks only what is new.";
+const LEAD = "This first run ranks every posting that matches your preferences. After today, each run ranks only what is new.";
 const STEP_LABELS = { fetch: "Fetch postings", match: "Keep your matches", rank: "Rank them against your profile",
   read: "Read the best ones in full" };
 const STATE_WORDS = { todo: "Not started", now: "In progress", done: "Done", failed: "Stopped" };
@@ -78,7 +78,7 @@ function noteFor(step, progress) {
       done: p.sources ? `${fmt.plural(p.fetched, "posting")} from ${fmt.plural(p.sources, "source")}` : "",
     },
     match: {
-      now: p.toRank != null ? `Checking that the newest ${fmt.number(p.toRank)} are still open` : "Applying your preferences",
+      now: p.toRank != null ? `Checking which of ${fmt.number(p.toRank)} are still open` : "Applying your preferences",
       done: p.matched != null ? `${fmt.number(p.matched)} match, ${fmt.number(p.toRank)} to rank` : "",
     },
     rank: {
@@ -232,7 +232,7 @@ export class FirstRunScreen {
   renderClock() {
     const started = this.run?.startedAt;
     if (!started || this.progress.status !== "running") return;
-    this.frame.clock.textContent = `${fmt.duration((Date.now() - started) / 1000)} so far. First runs take a few minutes.`;
+    this.frame.clock.textContent = `${fmt.duration((Date.now() - started) / 1000)} so far. The first run ranks every match, which can take several minutes.`;
   }
 
   render(before) {

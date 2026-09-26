@@ -99,7 +99,7 @@ export const SECTIONS = [
     { key: "rank_retries", label: "Retries", type: "number", unit: "tries", min: 0,
       help: "How many times Cairn tries a batch again when it can't read the answer." },
     { key: "max_rank_per_run", label: "Max ranked per run", type: "number", unit: "postings", nullable: true, min: 1,
-      help: "Leave empty to rank every new posting. With a limit, Cairn ranks the newest first and saves the rest for later runs." },
+      help: "Leave empty to rank every new posting. With a limit, Cairn ranks the newest first and saves the rest for later runs. The first run ranks every match either way." },
     { key: "max_summaries_per_run", label: "Max summaries per run", type: "number", unit: "postings", min: 0,
       help: "Each summary uses one AI request." },
     { key: "monthly_call_cap", label: "Monthly AI limit", type: "number", unit: "requests", nullable: true, min: 1,

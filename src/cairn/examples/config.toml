@@ -41,7 +41,7 @@
 #max_summaries_per_run = 25
 #rank_batch_size = 25
 #rank_retries = 1
-# unset by default, which ranks every new posting; 200 caps a big first day
+# unset by default, which ranks every new posting; the first run ranks every match either way
 #max_rank_per_run = 200
 #fetch_descriptions = true
 # look up each company's website and cache its icon for the app's lists

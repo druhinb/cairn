@@ -8,8 +8,7 @@ const LOG = `2026-09-25 18:00:00  run 3 started  limit=None  fit=None  dry_run=F
 2026-09-25 18:00:02  [fetch] Stripe: 40 postings, 2 already seen in an earlier source.
 2026-09-25 18:00:03  [fetch] 1240 total, 300 relevant/recent, 300 new since last run.
 2026-09-25 18:00:03  [fetch] 3.0s
-2026-09-25 18:00:03  [first run] 100 of 300 new postings to rank, the newest from the last 14 days. The other 200 are marked seen.
-2026-09-25 18:00:05  [links] checked 100 new, 4 closed and left out of ranking
+2026-09-25 18:00:05  [links] checked 300 new, 4 closed and left out of ranking
 2026-09-25 18:00:05  == rank ==
 `;
 const RANKED = `2026-09-25 18:02:00  [rank] fit 85 tier 70  Acme — Software Engineer  abc
@@ -17,11 +16,11 @@ const RANKED = `2026-09-25 18:02:00  [rank] fit 85 tier 70  Acme — Software En
 2026-09-25 18:02:00  [rank] fit 40 tier 80  Globex — Software Engineer  ghi
 `;
 
-test("a log read mid-rank gives the sources, the matches and the share being ranked", () => {
+test("a log read mid-rank gives the sources, the matches and how many are ranked", () => {
   const progress = replay(newProgress(60), LOG);
   assert.equal(progress.step, "rank");
   assert.deepEqual([progress.sources, progress.fetched], [2, 1240]);
-  assert.deepEqual([progress.matched, progress.fresh, progress.toRank], [300, 300, 96]);
+  assert.deepEqual([progress.matched, progress.fresh, progress.toRank], [300, 300, 296]);
   assert.equal(progress.status, "running");
 });
 
@@ -29,12 +28,6 @@ test("ranked lines end the ranking and count the strong ones above the tier floo
   const progress = replay(newProgress(60), LOG + RANKED);
   assert.equal(progress.step, "read");
   assert.deepEqual([progress.ranked, progress.strong], [3, 1]);
-});
-
-test("a run without a first-run plan ranks every new posting it found", () => {
-  const progress = newProgress(60);
-  advance(progress, "info", { text: "[fetch] 50 total, 12 relevant/recent, 7 new since last run." });
-  assert.deepEqual([progress.step, progress.toRank], ["match", 7]);
 });
 
 test("the summary line and run_done finish it, and later events change nothing", () => {

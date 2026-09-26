@@ -9,7 +9,6 @@ const RANK_LINE = /^\[rank\] fit (\d+) tier (\d+)(\s+below floor)?/;
 const FAILED_LINE = /^run \d+ failed: (.*)$/;
 const SOURCE_LINE = /^\[fetch\] (.+): (\d+) postings/;
 const FETCH_LINE = /^\[fetch\] (\d+) total, (\d+) relevant\/recent, (\d+) new/;
-const PLAN_LINE = /^\[first run\] (\d+) of (\d+) new postings to rank/;
 const LINKS_LINE = /^\[links\] checked (\d+) new, (\d+) closed/;
 const SUMMARY_LINE = /^\[jd\] (\d+)\/(\d+) postings summarised/;
 const RANK_PROGRESS_LINE = /^\[rank\] ranked (\d+) of (\d+)$/;
@@ -47,7 +46,6 @@ export function newProgress(fitThreshold) {
 function readInfo(progress, text) {
   const fetched = text.match(FETCH_LINE);
   const source = !fetched && text.match(SOURCE_LINE);
-  const plan = text.match(PLAN_LINE);
   const links = text.match(LINKS_LINE);
   const summary = text.match(SUMMARY_LINE);
   if (source) {
@@ -56,8 +54,6 @@ function readInfo(progress, text) {
   } else if (fetched) {
     Object.assign(progress, { matched: Number(fetched[2]), fresh: Number(fetched[3]), step: "match" });
     progress.toRank ??= progress.fresh;
-  } else if (plan) {
-    progress.toRank = Number(plan[1]);
   } else if (links && progress.toRank != null) {
     progress.toRank = Math.max(0, progress.toRank - Number(links[2]));
   } else if (summary) {

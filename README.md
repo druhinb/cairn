@@ -56,9 +56,8 @@ The first time Cairn opens, setup walks you through three steps:
 3. Answer a few questions: roles, locations, work authorization and graduation
    date.
 
-Then the first search runs, and you can watch its progress. It scores the most
-recent postings only, and the rest of today's backlog counts as seen, so later runs
-only bring new postings.
+Then the first search runs, and you can watch its progress. It scores every
+posting that matches your preferences, so later runs only bring new postings.
 
 To run setup again, open Settings and click Redo setup.
 

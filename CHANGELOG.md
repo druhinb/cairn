@@ -6,6 +6,10 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+- The first run ranks every posting that matches your preferences, where it used
+  to rank at most 100 from the last two weeks. Max ranked per run, in Settings,
+  applies to the runs after it.
+
 ## [0.0.2] — 2026-09-26
 
 - `cairn ui` shows as Cairn, with the Cairn icon, in the Dock and the app

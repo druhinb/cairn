@@ -15,12 +15,8 @@ from cairn import (applications, descriptions, events, fetch, paths, rank, setti
 
 
 LINK_WAIT_SECONDS = 30
-# A first run ranks what is open now and marks the rest of the backlog seen, as seed
-# does. Postings from the last two weeks are the likeliest to still take applications.
-# 100 postings are four ranking calls at the default batch of 25, and with ten
-# summaries the run takes a few minutes of model time.
-FIRST_RUN_DAYS = 14
-FIRST_RUN_POSTINGS = 100
+# A first run ranks every new posting, and ten summaries keep its model time to a
+# few minutes on top of the ranking.
 FIRST_RUN_SUMMARIES = 10
 
 
@@ -93,7 +89,9 @@ def summarise_posting(posting_id, force=False):
 
 @contextmanager
 def run_settings(opts):
-    """Settings with --fit and a first run's summary bound applied, for this run only.
+    """Settings with --fit and a first run's bounds applied, for this run only.
+
+    A first run ranks past max_rank_per_run, which bounds the runs after it.
 
     Only settings.get() in this thread sees them; settings.base() and config.toml
     are never changed.
@@ -104,6 +102,7 @@ def run_settings(opts):
     if opts.first_run:
         overrides["max_summaries_per_run"] = min(settings.get().max_summaries_per_run,
                                                  FIRST_RUN_SUMMARIES)
+        overrides["max_rank_per_run"] = None
     with settings.override(dataclasses.replace(settings.get(), **overrides)):
         yield
 
@@ -223,50 +222,12 @@ def _without_closed_links(new):
     return [job for job in new if job["id"] not in closed]
 
 
-def _calls_left(cfg):
-    if cfg.monthly_call_cap is None:
-        return None
-    return max(0, cfg.monthly_call_cap - store.call_counts(30)["total"])
-
-
-def _first_run_share(new):
-    """(the postings a first run ranks, the backlog it marks seen).
-
-    It ranks the newest postings of the last FIRST_RUN_DAYS, at most
-    FIRST_RUN_POSTINGS, max_rank_per_run, or as many as the calls left under
-    monthly_call_cap can rank. When monthly_call_cap cut that share, the backlog is
-    empty and the rest stay unseen for a later run.
-    """
-    cfg = settings.get()
-    bound = min(b for b in (FIRST_RUN_POSTINGS, cfg.max_rank_per_run) if b is not None)
-    cutoff = time.time() - FIRST_RUN_DAYS * 86400
-    recent = [job for job in new
-              if max(job.get("date_posted") or 0, job.get("date_updated") or 0) >= cutoff][:bound]
-    left = _calls_left(cfg)
-    share = recent if left is None else recent[:left * cfg.rank_batch_size]
-    if len(share) < len(recent):
-        events.emit("info", text=f"[first run] {len(share)} of {len(new)} new postings to "
-                                 f"rank, as many as the monthly call cap has left. The "
-                                 f"other {len(new) - len(share)} stay unseen for a later run.")
-        return share, []
-    chosen = {job["id"] for job in share}
-    backlog = [job for job in new if job["id"] not in chosen]
-    events.emit("info", text=f"[first run] {len(share)} of {len(new)} new postings to rank, "
-                             f"the newest from the last {FIRST_RUN_DAYS} days. The other "
-                             f"{len(backlog)} are marked seen.")
-    return share, backlog
-
-
 def _pipeline(run_id, opts):
     started = time.monotonic()
     # a fresh home has every company's icon to look up, a minute or more of work
     # that a first run leaves until its postings are ranked
     with _phase("fetch"):
         new, counts = fetch.fetch_new(dry_run=opts.dry_run, icons=not opts.first_run)
-
-    backlog = []
-    if opts.first_run:
-        new, backlog = _first_run_share(new)
 
     if opts.limit is not None:
         held = len(new) - opts.limit
@@ -289,10 +250,9 @@ def _pipeline(run_id, opts):
     scored = results + [{**r, "id": other} for r in results for other in r.get("also_ids", ())]
     store.save_scores(scored, run_id)
     # The one commit point. Ids are marked seen only after their scores are stored,
-    # and only for postings that were ranked or that a first run left to the backlog:
-    # anything dropped by --limit, the rank cap, or a failed rank batch stays unseen
-    # and retries.
-    store.mark_seen([*(r.get("id") for r in scored), *(job["id"] for job in backlog)])
+    # and only for postings that were ranked: anything dropped by --limit, the rank
+    # cap, or a failed rank batch stays unseen and retries.
+    store.mark_seen(r.get("id") for r in scored)
     if opts.first_run:
         fetch.fetch_icons_later()
 
@@ -300,8 +260,6 @@ def _pipeline(run_id, opts):
     counts = {**counts, "ranked": len(results), "unranked": len(unranked),
               "summarised": sum(1 for r in results if r.get("keywords")),
               "follow_ups": len(follow_ups)}
-    if opts.first_run:
-        counts["backlog"] = len(backlog)
     return RunResult(run_id=run_id, status="ok", counts=counts, results=results,
                      unranked=unranked, elapsed=time.monotonic() - started,
                      follow_ups=follow_ups)

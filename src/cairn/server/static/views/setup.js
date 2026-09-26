@@ -641,7 +641,7 @@ class Setup {
     const find = h("button", { type: "button", class: "btn btn-primary" }, icon("search"), label);
     find.addEventListener("click", () => this.findJobs(find, label, checks));
     return h("div", { class: "setup-body" },
-      h("p", { class: "setup-lead", text: "Your first run collects today's postings and ranks the ones from the last two weeks. After that, each run ranks only new postings." }),
+      h("p", { class: "setup-lead", text: "Your first run collects today's postings and ranks every one that matches your preferences. After that, each run ranks only new postings." }),
       unresolved.length > 0 && h("p", { class: "field-error", text: `Couldn't find a careers page for ${unresolved.join(", ")}. Add them in Settings › Sources by pasting a link.` }),
       h("div", { class: "setup-actions" }, find, h("span", { class: "filter-spacer" }),
         h("a", { href: "#today", class: "link", text: "Skip for now" })),
