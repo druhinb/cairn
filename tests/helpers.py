@@ -13,6 +13,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from unittest import mock
 
 from fastapi.testclient import TestClient
 
@@ -45,6 +46,11 @@ def temp_home(**overrides):
             store.close()
             os.environ["CAIRN_HOME"] = outer_home
             settings.use(outer_settings)
+
+
+def user_home(path):
+    """Make path the user's home folder, which Windows reads from USERPROFILE."""
+    return mock.patch.dict(os.environ, {"HOME": str(path), "USERPROFILE": str(path)})
 
 
 def app_client(case, **kwargs):

@@ -22,7 +22,7 @@ from unittest import mock
 import httpx
 import sys
 from fastapi.testclient import TestClient
-from helpers import app_client, temp_home
+from helpers import app_client, temp_home, user_home
 from test_onboard import PROFILE, SUGGESTIONS, envelope
 
 from cairn import (claude, cli, descriptions, doctor, events, fetch, logos, onboard,
@@ -1476,7 +1476,7 @@ class KeysTest(ServerTestCase):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, 200)
                 self.assertNotIn(self.KEY, response.text)
-        with mock.patch.dict(os.environ, HOME=str(self.home / "user")):
+        with user_home(self.home / "user"):
             path = Path(self.client.post("/api/backup").json()["path"])
         self.assertTrue(path.is_relative_to(self.home))
         with zipfile.ZipFile(path) as bundle:

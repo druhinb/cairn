@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest import mock
 from zoneinfo import ZoneInfo
 
-from helpers import app_client, temp_home
+from helpers import app_client, temp_home, user_home
 
 from cairn import events, settings, store, tracking
 
@@ -384,7 +384,7 @@ class RouteTest(unittest.TestCase):
 
     def test_attachments(self):
         home = self.enterContext(tempfile.TemporaryDirectory())
-        self.enterContext(mock.patch.dict(os.environ, {"HOME": home}))
+        self.enterContext(user_home(home))
         (Path(home) / "cv.pdf").write_text("cv", encoding="utf-8")
         added = self.call("POST", "/api/jobs/a/attachments", 200,
                           json={"label": "CV", "path": str(Path(home) / "cv.pdf")})
