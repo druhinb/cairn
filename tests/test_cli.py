@@ -193,7 +193,7 @@ class MainTest(unittest.TestCase):
     def test_the_help_lists_every_command(self):
         code, out = run_main("--help")
         self.assertEqual(code, 0)
-        self.assertIn("settings,llm}", out)
+        self.assertIn("settings,watchlist,llm}", out)
 
 
 @unittest.skipIf(sys.platform == "win32", "Windows files have no Unix permission bits")

@@ -1,6 +1,7 @@
 """Every cairn command but init, one cmd_ function each."""
 import argparse
 import getpass
+import json
 import sys
 import time
 from pathlib import Path
@@ -9,6 +10,7 @@ from cairn import store
 from cairn.ai import claude, llm
 from cairn.core import paths, secrets, settings, ui
 from cairn.jobs import fetch, logos, notify, pipeline
+from cairn.sources import watchlists
 from cairn.system import backup, doctor, schedule, update
 from cairn.tracking import applications
 
@@ -302,6 +304,25 @@ def cmd_settings_export(args):
     except FileNotFoundError:
         ui.error(f"no config.toml in {paths.home()}. Create one with: cairn init")
         return 1
+    return 0
+
+
+def cmd_watchlist(args):
+    cfg = settings.base()
+    if args.action == "export":
+        sys.stdout.write(json.dumps(watchlists.export(cfg.watchlist), indent=2) + "\n")
+        return 0
+    try:
+        name, specs = watchlists.parse(Path(args.file).expanduser().read_text(encoding="utf-8"))
+    except (OSError, watchlists.WatchlistFileError) as e:
+        ui.error(f"could not import {args.file}: {e}")
+        return 1
+    merged, added, turned_on = watchlists.merge(cfg.watchlist, specs)
+    new = settings.from_dict({"watchlist": merged}, base=cfg, source=args.file)
+    settings.save(new)
+    settings.use(new)
+    ui.info(f"imported {name or args.file}: {added} added, "
+            f"{turned_on} turned back on, {len(specs) - added - turned_on} already followed.")
     return 0
 
 

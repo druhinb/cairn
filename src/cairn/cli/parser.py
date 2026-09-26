@@ -49,7 +49,7 @@ def build_parser():
     sub = parser.add_subparsers(
         dest="cmd",
         metavar="{init,run,check,fetch,seed,icons,status,applied,track,serve,ui,doctor,schedule,"
-                "autostart,update-check,backup,restore,settings,llm}")
+                "autostart,update-check,backup,restore,settings,watchlist,llm}")
 
     init_p = sub.add_parser("init", help=f"seed {paths.home()} with example files")
     drafts = init_p.add_mutually_exclusive_group()
@@ -171,6 +171,14 @@ def build_parser():
                                                  metavar="{export}")
     settings_actions.add_parser("export", help="print config.toml to standard output")
     settings_p.set_defaults(func=commands.cmd_settings_export)
+
+    watchlist_p = sub.add_parser("watchlist", help="share your watchlist as a file, or add one")
+    watchlist_actions = watchlist_p.add_subparsers(dest="action", required=True,
+                                                   metavar="{export,import}")
+    watchlist_actions.add_parser("export", help="print the watchlist file to standard output")
+    import_p = watchlist_actions.add_parser("import", help="add a watchlist file's companies")
+    import_p.add_argument("file", metavar="FILE", help="a file from `cairn watchlist export`")
+    watchlist_p.set_defaults(func=commands.cmd_watchlist)
 
     llm_p = sub.add_parser("llm", help="show, set, or test the model provider")
     llm_actions = llm_p.add_subparsers(dest="action", metavar="{set,test}")

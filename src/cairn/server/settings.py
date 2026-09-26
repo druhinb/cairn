@@ -8,6 +8,7 @@ from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel, StringConstraints
 
 from cairn import sources, store
+from cairn.sources import watchlists
 from cairn.core import paths, settings
 
 router = APIRouter()
@@ -17,6 +18,11 @@ EDITABLE = {"profile": paths.profile_md}
 
 class FileBody(BaseModel):
     text: str
+
+
+class ImportBody(BaseModel):
+    text: Annotated[str, StringConstraints(max_length=200_000)]
+    watchlist: list[dict]
 
 
 class ResolveBody(BaseModel):
@@ -72,3 +78,20 @@ def resolve_watchlist(body: ResolveBody):
     if found is None:
         raise HTTPException(404, f"Cairn couldn't find a careers page for {body.query}")
     return {"kind": found.kind, "location": found.location, "company": found.company}
+
+
+@router.get("/api/watchlist/export")
+def export_watchlist():
+    return watchlists.export(settings.base().watchlist)
+
+
+@router.post("/api/watchlist/import")
+def import_watchlist(body: ImportBody):
+    """body.watchlist with the file's companies merged in; nothing is saved."""
+    try:
+        name, specs = watchlists.parse(body.text)
+    except watchlists.WatchlistFileError as e:
+        raise HTTPException(400, str(e)) from None
+    merged, added, turned_on = watchlists.merge(body.watchlist, specs)
+    return {"name": name, "watchlist": merged, "added": added, "turned_on": turned_on,
+            "already": len(specs) - added - turned_on}

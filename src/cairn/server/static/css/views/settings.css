@@ -456,6 +456,13 @@
   display: none;
 }
 
+.share-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .suggested {
   display: grid;
   gap: 6px;

@@ -364,6 +364,7 @@ see it too.
 | `schedule install [--hour H] [--minute M]` | Install the daily run and the hourly check (launchd on a Mac, Task Scheduler on Windows) |
 | `schedule status` / `schedule remove` | Show or remove it |
 | `autostart install` / `status` / `remove` | Open the app at login |
+| `watchlist export` / `watchlist import FILE` | Print your watchlist as a file to share, or add the companies from one |
 | `llm` / `llm set PROVIDER [--model M] [--cheap-model M] [--base-url U] [--key-stdin]` / `llm test` | Show, choose or test the model provider; `set` asks for the key |
 | `update-check [--force]` | Check GitHub for a newer release |
 | `backup [--to DIR]` | Save config, profile, database and icons to one zip (default `~/Downloads`) |

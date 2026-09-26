@@ -46,15 +46,54 @@ export function renderSources(view) {
   const watch = errorFor("watchlist");
   watch.wrap.append(
     h("h3", { class: "field-label", text: "Watchlist" }),
-    h("p", { class: "field-help", text: "Companies you follow. Cairn checks their careers pages on every run." }),
+    h("p", { class: "field-help", text: "Companies you follow. Cairn checks their careers pages every hour, and tells you when a strong match appears." }),
     specList(view, "watchlist", (spec) => [h("span", { class: "spec-company", text: spec.company || spec.location }),
       h("span", { class: "spec-name mono", text: spec.location })]),
-    addCompanyForm(view), watch.error,
+    addCompanyForm(view), sharingRow(view), watch.error,
     suggestedList(view));
   view.sections.get("sources").replaceChildren(view.sectionHead(section),
     h("div", { class: "fields" }, feeds.wrap, watch.wrap, usajobsBlock(view)));
   view.showError("sources");
   view.showError("watchlist");
+}
+
+/** Save the watchlist as a file to share, or add the companies from one. */
+function sharingRow(view) {
+  const exportList = async () => {
+    const data = await api("/api/watchlist/export").catch(() => null);
+    if (!data) return;
+    const href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    const link = h("a", { href, download: "cairn-watchlist.json", hidden: true });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 1000);
+    toast(`Saved ${fmt.plural(data.companies.length, "company", "companies")} to cairn-watchlist.json`);
+  };
+  const file = h("input", { type: "file", accept: ".json,application/json", hidden: true });
+  file.addEventListener("change", async () => {
+    const chosen = file.files?.[0];
+    file.value = "";
+    if (!chosen) return;
+    try {
+      const got = await api("/api/watchlist/import", { method: "POST", quiet: true,
+        body: { text: await chosen.text(), watchlist: view.draft.watchlist || [] } });
+      if (!view.mounted) return;
+      view.set("watchlist", got.watchlist);
+      renderSources(view);
+      const changed = got.added + got.turned_on;
+      toast(changed ? `Added ${fmt.plural(changed, "company", "companies")} from ${got.name || chosen.name}. Save to keep the change`
+        : `You already follow every company in ${got.name || chosen.name}`);
+    } catch (error) {
+      toast(`Couldn't import ${chosen.name}: ${error.message}`, { tone: "error" });
+    }
+  });
+  return h("div", { class: "share-row" },
+    h("button", { type: "button", class: "btn btn-sm", text: "Save as a file", onclick: exportList,
+      title: "Save the companies you follow as a file to share. Save your changes first to include them." }),
+    h("button", { type: "button", class: "btn btn-sm", text: "Add from a file", onclick: () => file.click(),
+      title: "Add the companies from a watchlist file someone shared" }),
+    file);
 }
 
 /** Companies with strong recent postings and no watchlist board, each with Follow. */
