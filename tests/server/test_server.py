@@ -497,7 +497,7 @@ class SettingsTest(ServerTestCase):
 
 class WatchlistResolveTest(ServerTestCase):
     def test_a_board_url_resolves_without_probing(self):
-        self.patch(sources, "_has_jobs", lambda kind, slug: self.fail("probed a URL"))
+        self.patch(sources.resolve, "_has_jobs", lambda kind, slug: self.fail("probed a URL"))
         response = self.client.post("/api/watchlist/resolve",
                                     json={"query": "https://jobs.lever.co/palantir"})
         self.assertEqual(response.status_code, 200, response.text)
@@ -505,13 +505,13 @@ class WatchlistResolveTest(ServerTestCase):
                          {"kind": "lever", "location": "palantir", "company": "Palantir"})
 
     def test_a_name_resolves_to_the_first_board_with_jobs(self):
-        self.patch(sources, "_has_jobs", lambda kind, slug: kind == "ashby")
+        self.patch(sources.resolve, "_has_jobs", lambda kind, slug: kind == "ashby")
         response = self.client.post("/api/watchlist/resolve", json={"query": "Ramp "})
         self.assertEqual(response.json(),
                          {"kind": "ashby", "location": "ramp", "company": "Ramp"})
 
     def test_no_board_is_404_and_a_blank_query_is_400(self):
-        self.patch(sources, "_has_jobs", lambda kind, slug: False)
+        self.patch(sources.resolve, "_has_jobs", lambda kind, slug: False)
         response = self.client.post("/api/watchlist/resolve", json={"query": "Nobody Inc"})
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["error"],

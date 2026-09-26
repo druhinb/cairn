@@ -111,7 +111,7 @@ class BoardRowTest(unittest.TestCase):
             {"title": title, "externalPath": f"/job/US-WA-Seattle/R{i}",
              "locationsText": "US, WA, Seattle", "postedOn": "Posted Today"}
             for i, title in enumerate(titles)]}
-        with temp_home(), mock.patch.object(sources, "_post_json",
+        with temp_home(), mock.patch.object(sources.web, "post_json",
                                             lambda url, body, timeout=None: page):
             new_grad, senior = sources.workday("acme.wd5/External", "Acme")
             self.assertTrue(fetch._relevant(new_grad))
@@ -228,7 +228,7 @@ def _load_items(rows_by_source):
     specs = [{"kind": "github", "location": _feed(name)} for name in rows_by_source]
     by_url = {_feed(name): rows for name, rows in rows_by_source.items()}
     with temp_home(sources=specs), mock.patch.object(
-            sources, "_get_json", lambda url, timeout=None, limit=None: by_url[url]):
+            sources.web, "get_json", lambda url, timeout=None, limit=None: by_url[url]):
         return [job for _, rows in fetch._load_all() for job in rows]
 
 

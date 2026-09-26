@@ -1795,7 +1795,7 @@ class FetchTest(unittest.TestCase):
                                            "listings.json"} for name in ("one", "two")]))
         self.feeds = {}
         self.enterContext(mock.patch.object(
-            sources, "_get_json",
+            sources.web, "get_json",
             lambda url, timeout=None, limit=None: self._serve(url.split("/")[4])))
         self.enterContext(mock.patch.object(logos, "fetch_missing"))
 

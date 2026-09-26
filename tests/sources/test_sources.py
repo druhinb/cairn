@@ -31,7 +31,7 @@ def _fixture(name):
 
 
 def _served(by_fragment):
-    """A stand-in for sources._get_json answering with the fixture whose key is in the URL."""
+    """A stand-in for sources.web.get_json answering with the fixture whose key is in the URL."""
     def get_json(url, timeout=None, limit=None):
         for fragment, reply in by_fragment.items():
             if fragment in url:
@@ -39,11 +39,11 @@ def _served(by_fragment):
                     raise reply
                 return _fixture(reply) if isinstance(reply, str) else reply
         raise AssertionError(f"unexpected request for {url}")
-    return mock.patch.object(sources, "_get_json", get_json)
+    return mock.patch.object(sources.web, "get_json", get_json)
 
 
 def _web_served(by_fragment):
-    """A stand-in for sources._web_json, as _served is for _get_json; records each URL
+    """A stand-in for sources.web.read_json, as _served is for get_json; records each URL
     and the headers sent with it."""
     asked = []
 
@@ -55,13 +55,13 @@ def _web_served(by_fragment):
                     raise reply
                 return _fixture(reply) if isinstance(reply, str) else reply
         raise AssertionError(f"unexpected request for {url}")
-    patch = mock.patch.object(sources, "_web_json", web_json)
+    patch = mock.patch.object(sources.web, "read_json", web_json)
     patch.asked = asked
     return patch
 
 
 def _posted(by_fragment):
-    """A stand-in for sources._post_json, as _served is for _get_json; records bodies."""
+    """A stand-in for sources.web.post_json, as _served is for get_json; records bodies."""
     bodies = []
 
     def post_json(url, body, timeout=None):
@@ -70,7 +70,7 @@ def _posted(by_fragment):
             if fragment in url:
                 return reply(body) if callable(reply) else _fixture(reply)
         raise AssertionError(f"unexpected request for {url}")
-    patch = mock.patch.object(sources, "_post_json", post_json)
+    patch = mock.patch.object(sources.web, "post_json", post_json)
     patch.bodies = bodies
     return patch
 
@@ -208,7 +208,7 @@ class WorkdayTest(unittest.TestCase):
 
     def test_rows_carry_stable_ids_and_urls_on_the_board_host(self):
         first = self.rows[0]
-        self.assertEqual(first["id"], sources._path_safe(
+        self.assertEqual(first["id"], sources.common._path_safe(
             "workday:acme.wd5/AcmeCareers:Senior-Software-Engineer--Widget-Runtime_R0000101"))
         self.assertEqual(first["url"], "https://acme.wd5.myworkdayjobs.com/AcmeCareers/job/"
                                        "US-OR-Springfield/Senior-Software-Engineer--Widget-"
@@ -219,8 +219,8 @@ class WorkdayTest(unittest.TestCase):
     def test_posted_on_text_becomes_unix_seconds(self):
         self.assertEqual([r["date_posted"] for r in self.rows],
                          [NOW, NOW - DAY, NOW - 2 * DAY, NOW - 31 * DAY])
-        self.assertEqual(sources._workday_posted("Posted 3 Days Ago", NOW), NOW - 3 * DAY)
-        self.assertIsNone(sources._workday_posted("Posted recently", NOW))
+        self.assertEqual(sources.workday_jobs._workday_posted("Posted 3 Days Ago", NOW), NOW - 3 * DAY)
+        self.assertIsNone(sources.workday_jobs._workday_posted("Posted recently", NOW))
         self.assertTrue(all(r["date_is_relative"] for r in self.rows))
 
     def test_a_stored_posting_keeps_the_date_it_was_first_given(self):
@@ -312,7 +312,7 @@ class WorkdayTest(unittest.TestCase):
         heard = []
         self.addCleanup(events.subscribe(heard.append))
         with _posted({"myworkdayjobs.com": page}), \
-                mock.patch.object(sources, "FETCH_TIMEOUT", 0.2):
+                mock.patch.object(sources.web, "FETCH_TIMEOUT", 0.2):
             rows = sources.workday(self.LOCATION, "Acme")
         self.assertEqual(len(rows), 40)
         self.assertEqual([(e.kind, e.data["text"]) for e in heard],
@@ -360,7 +360,7 @@ class SmartRecruitersTest(unittest.TestCase):
             offset = int(url.rsplit("offset=", 1)[1])
             return {"totalFound": 250, "content": [
                 {"id": str(offset + i), "name": "SWE"} for i in range(min(100, 250 - offset))]}
-        with mock.patch.object(sources, "_get_json", get_json):
+        with mock.patch.object(sources.web, "get_json", get_json):
             rows = sources.smartrecruiters("Initech", "Initech")
         self.assertEqual([url.rsplit("offset=", 1)[1] for url in requested], ["0", "100", "200"])
         self.assertEqual(len(rows), 250)
@@ -448,8 +448,8 @@ class BambooHRTest(unittest.TestCase):
             return _fixture("bamboohr_detail")
         heard = []
         self.addCleanup(events.subscribe(heard.append))
-        with mock.patch.object(sources, "_get_json", get_json), \
-                mock.patch.object(sources, "FETCH_TIMEOUT", 0.2):
+        with mock.patch.object(sources.web, "get_json", get_json), \
+                mock.patch.object(sources.web, "FETCH_TIMEOUT", 0.2):
             rows = sources.bamboohr("hooli", "Hooli")
         self.assertEqual([r["id"] for r in rows if r["date_posted"]], ["bamboohr:hooli:42"])
         self.assertEqual(len(rows), 4)
@@ -465,7 +465,7 @@ class BambooHRTest(unittest.TestCase):
             raise urllib.error.URLError("connection reset")
         heard = []
         self.addCleanup(events.subscribe(heard.append))
-        with mock.patch.object(sources, "_get_json", get_json):
+        with mock.patch.object(sources.web, "get_json", get_json):
             rows = sources.bamboohr("hooli", "Hooli")
         self.assertEqual([r["id"] for r in rows if r["date_posted"]], ["bamboohr:hooli:42"])
         self.assertEqual(len(rows), 4)
@@ -853,7 +853,7 @@ def _text(name):
 
 
 def _served_text(by_fragment):
-    """A stand-in for sources._web_text answering with the fixture file whose key is
+    """A stand-in for sources.web.read_text answering with the fixture file whose key is
     in the URL; a reply that is an exception is raised."""
     requested = []
 
@@ -865,7 +865,7 @@ def _served_text(by_fragment):
                     raise reply
                 return _text(reply)
         raise AssertionError(f"unexpected request for {url}")
-    patch = mock.patch.object(sources, "_web_text", web_text)
+    patch = mock.patch.object(sources.web, "read_text", web_text)
     patch.requested = requested
     return patch
 
@@ -876,7 +876,7 @@ SEPTEMBER_POSTED = 1788274877
 
 
 def _hn_served(requested=None):
-    """A stand-in for sources._web_json serving the Algolia search, the thread, and
+    """A stand-in for sources.web.read_json serving the Algolia search, the thread, and
     each comment by its item id."""
     comments = _fixture("hn_comments")
 
@@ -894,7 +894,7 @@ def _hn_served(requested=None):
             return {"id": 48800001, "parent": AUGUST_THREAD, "time": 1785800000,
                     "type": "comment", "text": "Brindle | Backend Engineer | Boston, MA"}
         return comments[item]
-    return mock.patch.object(sources, "_web_json", web_json)
+    return mock.patch.object(sources.web, "read_json", web_json)
 
 
 class HackerNewsTest(unittest.TestCase):
@@ -917,18 +917,18 @@ class HackerNewsTest(unittest.TestCase):
 
     def test_a_comment_without_fields_or_a_deleted_one_is_skipped(self):
         comments = _fixture("hn_comments")
-        self.assertIsNone(sources._hn_row(SEPTEMBER_THREAD, comments["49523176"]))
-        self.assertIsNone(sources._hn_row(SEPTEMBER_THREAD, comments["49524098"]))
-        self.assertIsNone(sources._hn_row(SEPTEMBER_THREAD, None))
+        self.assertIsNone(sources.hn._hn_row(SEPTEMBER_THREAD, comments["49523176"]))
+        self.assertIsNone(sources.hn._hn_row(SEPTEMBER_THREAD, comments["49524098"]))
+        self.assertIsNone(sources.hn._hn_row(SEPTEMBER_THREAD, None))
 
     def test_remote_anywhere_on_the_first_line_names_remote_in_the_locations(self):
-        row = sources._hn_row(1, {"id": 2, "time": NOW,
+        row = sources.hn._hn_row(1, {"id": 2, "time": NOW,
                                   "text": "Fernhollow | Remote Software Engineer | Full-time"})
         self.assertEqual((row["title"], row["locations"]),
                          ("Remote Software Engineer", ["Remote"]))
 
     def test_the_title_is_the_first_field_naming_a_role_and_urls_leave_the_company(self):
-        row = sources._hn_row(1, {"id": 2, "time": NOW, "text":
+        row = sources.hn._hn_row(1, {"id": 2, "time": NOW, "text":
                                   "Redmoss https://redmoss.example/ | Madrid, Spain | HYBRID | "
                                   "Scientific Computing Engineer | Full-time<p>More."})
         self.assertEqual((row["company_name"], row["title"]),
@@ -950,7 +950,7 @@ class HackerNewsTest(unittest.TestCase):
 
     def test_comments_past_the_cap_are_not_requested(self):
         requested = []
-        with mock.patch.object(sources, "HN_MAX_COMMENTS", 2):
+        with mock.patch.object(sources.hn, "HN_MAX_COMMENTS", 2):
             rows = self._fetch(SEPTEMBER_POSTED + 10 * DAY, requested=requested)
         self.assertEqual(len(rows), 2)
         self.assertFalse(any("49523176" in url or "49524098" in url for url in requested))
@@ -973,9 +973,9 @@ class GithubReadmeTest(unittest.TestCase):
     def test_rows_carry_ids_from_the_apply_url_and_the_row_above_for_arrows(self):
         rows = self._rows(JOBRIGHT, "readme_jobright.md")
         self.assertEqual([r["id"] for r in rows],
-                         [sources._path_safe("github_readme:https://jobright.ai/jobs/info/6ab6aac34873fd3fd852e870"),
-                          sources._path_safe("github_readme:https://jobright.ai/jobs/info/6ab6aac19d4843569fe4ebd3"),
-                          sources._path_safe("github_readme:https://jobright.ai/jobs/info/6a52c0efe726ec56126a450c")])
+                         [sources.common._path_safe("github_readme:https://jobright.ai/jobs/info/6ab6aac34873fd3fd852e870"),
+                          sources.common._path_safe("github_readme:https://jobright.ai/jobs/info/6ab6aac19d4843569fe4ebd3"),
+                          sources.common._path_safe("github_readme:https://jobright.ai/jobs/info/6a52c0efe726ec56126a450c")])
         self.assertEqual([r["company_name"] for r in rows],
                          ["Tallowgate Systems", "Tallowgate Systems", "Quillmark Space"])
         self.assertEqual(rows[0]["title"], "Junior Full Stack Developer (Data CoE)")
@@ -1015,7 +1015,7 @@ class GithubReadmeTest(unittest.TestCase):
                 "| [Redmoss](https://redmoss.example) | SWE, New Grad | NYC | "
                 "[![Apply](https://img.example/apply.png)](https://redmoss.example/jobs/7) "
                 "| 2 days ago |\n")
-        (row,) = sources._readme_rows(text, NOW)
+        (row,) = sources.github._readme_rows(text, NOW)
         self.assertEqual((row["company_name"], row["url"], row["category"]),
                          ("Redmoss", "https://redmoss.example/jobs/7", "Software"))
         self.assertEqual(row["date_posted"], NOW - 2 * DAY)
@@ -1025,12 +1025,12 @@ class GithubReadmeTest(unittest.TestCase):
                 "| Redmoss | SWE | [a](https://redmoss.example/1) |\n\n"
                 "## Quant\n| Company | Role | Link |\n|---|---|---|\n"
                 "| ↳ | Quant Dev | [b](https://other.example/2) |\n")
-        self.assertEqual([r["company_name"] for r in sources._readme_rows(text, NOW)],
+        self.assertEqual([r["company_name"] for r in sources.github._readme_rows(text, NOW)],
                          ["Redmoss"])
 
     def test_a_table_without_company_and_role_columns_is_ignored(self):
         text = "| Name | Link |\n|---|---|\n| Redmoss | [x](https://redmoss.example) |\n"
-        self.assertEqual(sources._readme_rows(text, NOW), [])
+        self.assertEqual(sources.github._readme_rows(text, NOW), [])
 
     def test_date_cells(self):
         cases = {"5h": (NOW - 5 * 3600, True), "1w": (NOW - 7 * DAY, True),
@@ -1039,7 +1039,7 @@ class GithubReadmeTest(unittest.TestCase):
                  "soon": (None, False), "": (None, False)}
         for text, expected in cases.items():
             with self.subTest(text):
-                self.assertEqual(sources._listed_at(text, NOW), expected)
+                self.assertEqual(sources.github._listed_at(text, NOW), expected)
 
     def test_a_list_is_named_by_its_repo_and_any_file_other_than_the_readme(self):
         self.assertEqual(sources.Source("github_readme", JOBRIGHT).name,
@@ -1132,10 +1132,10 @@ CAREERS = "https://www.tallowgate.example/careers"
 class PathSafeIdTest(unittest.TestCase):
     def test_an_id_built_from_a_link_holds_no_slash_and_stays_stable(self):
         link_id = "github_readme:https://www.weareroku.com/jobs/8223823?gh_jid=8223823"
-        self.assertNotIn("/", sources._path_safe(link_id))
-        self.assertTrue(sources._path_safe(link_id).startswith("github_readme:"))
-        self.assertEqual(sources._path_safe(link_id), sources._path_safe(link_id))
-        self.assertEqual(sources._path_safe("greenhouse:acme:123"), "greenhouse:acme:123")
+        self.assertNotIn("/", sources.common._path_safe(link_id))
+        self.assertTrue(sources.common._path_safe(link_id).startswith("github_readme:"))
+        self.assertEqual(sources.common._path_safe(link_id), sources.common._path_safe(link_id))
+        self.assertEqual(sources.common._path_safe("greenhouse:acme:123"), "greenhouse:acme:123")
 
 
 class PageTest(unittest.TestCase):
@@ -1150,7 +1150,7 @@ class PageTest(unittest.TestCase):
             ("Research Scientist, Storage", "https://www.tallowgate.example/careers/jobs/4123"),
             ("Engineering Manager, AI Platform", "https://boards.tallowgate.example/jobs/9")])
         self.assertEqual(self.rows[0]["id"],
-                         sources._path_safe("page:https://www.tallowgate.example/careers/jobs/4121"))
+                         sources.common._path_safe("page:https://www.tallowgate.example/careers/jobs/4121"))
         self.assertEqual({(r["company_name"], r["date_posted"]) for r in self.rows},
                          {("Tallowgate", None)})
 
@@ -1160,7 +1160,7 @@ class PageTest(unittest.TestCase):
                           ["San Francisco, CA", "London, United Kingdom"]])
 
     def test_links_past_the_cap_are_left_out(self):
-        with mock.patch.object(sources, "PAGE_MAX_LINKS", 2), \
+        with mock.patch.object(sources.pages, "PAGE_MAX_LINKS", 2), \
                 _served_text({CAREERS: "page.html"}):
             self.assertEqual(len(sources.page(CAREERS, "Tallowgate")), 2)
 
@@ -1178,25 +1178,25 @@ class PageTest(unittest.TestCase):
 
     def test_ids_keep_only_the_query_parameters_that_name_a_job(self):
         self.assertEqual(
-            sources._page_id("https://Acme.example/Jobs/?jobId=R12&utm_source=x&REQ=7"),
+            sources.pages._page_id("https://Acme.example/Jobs/?jobId=R12&utm_source=x&REQ=7"),
             "page:https://acme.example/jobs?jobId=R12&REQ=7")
-        self.assertEqual(sources._page_id("https://acme.example/jobs/?utm_source=x"),
+        self.assertEqual(sources.pages._page_id("https://acme.example/jobs/?utm_source=x"),
                          "page:https://acme.example/jobs")
         page = ('<a href="/open?jobId=1&utm_source=a">Software Engineer</a>'
                 '<a href="/open?jobId=1&utm_source=b">Software Engineer</a>'
                 '<a href="/open?jobId=2">Data Engineer</a>')
-        with mock.patch.object(sources, "_web_text", lambda *args, **kwargs: page):
+        with mock.patch.object(sources.web, "read_text", lambda *args, **kwargs: page):
             rows = sources.page(CAREERS, "Tallowgate")
         self.assertEqual([r["id"] for r in rows],
-                         [sources._path_safe("page:https://www.tallowgate.example/open?jobId=1"),
-                          sources._path_safe("page:https://www.tallowgate.example/open?jobId=2")])
+                         [sources.common._path_safe("page:https://www.tallowgate.example/open?jobId=1"),
+                          sources.common._path_safe("page:https://www.tallowgate.example/open?jobId=2")])
 
     def test_hostile_markup_parses_in_linear_time(self):
         pages = {"nested": ("<b>x" * 131072)[:sources.PAGE_MAX_BYTES],
                  "unclosed": ("<span>" * 60000 + "</div>" * 20000)[:sources.PAGE_MAX_BYTES]}
         for name, page in pages.items():
             with self.subTest(name):
-                parser = sources._Anchors(CAREERS, time.monotonic() + 20)
+                parser = sources.pages._Anchors(CAREERS, time.monotonic() + 20)
                 start = time.monotonic()
                 parser.parse(page)
                 self.assertLess(time.monotonic() - start, 0.5)
@@ -1206,12 +1206,12 @@ class PageTest(unittest.TestCase):
         self.addCleanup(events.subscribe(heard.append))
         cards = "".join(f'<li><a href="/j/{i}">Software Engineer {i}</a></li>' for i in range(3))
         page = cards + "<i>" * sources.PAGE_MAX_TAGS + '<a href="/j/late">Data Engineer</a>'
-        with mock.patch.object(sources, "_web_text", lambda *args, **kwargs: page):
+        with mock.patch.object(sources.web, "read_text", lambda *args, **kwargs: page):
             rows = sources.page(CAREERS, "Tallowgate")
         self.assertEqual(len(rows), 3)
         self.assertEqual([e.data["text"] for e in heard],
                          [f"[fetch] page:{CAREERS}: read part of the page, over 50000 tags"])
-        parser = sources._Anchors(CAREERS, time.monotonic() - 1)
+        parser = sources.pages._Anchors(CAREERS, time.monotonic() - 1)
         parser.parse("<i>" * 1000)
         self.assertEqual(parser.cut_short, "out of time")
 
@@ -1246,7 +1246,7 @@ class WebReadTest(unittest.TestCase):
             return {"sidebarLinks": [["Remote", "/jobs/role/software-engineer/remote"],
                                      ["Elsewhere", "https://jobs.elsewhere.example/x"],
                                      ["Other", "https://ycombinator.com.evil.example/jobs"]]}
-        with mock.patch.object(sources, "_inertia_props", props):
+        with mock.patch.object(sources.job_sites, "_inertia_props", props):
             sources.yc_waas(sources.YC_JOBS)
         self.assertEqual(asked, [sources.YC_JOBS,
                                  "https://www.ycombinator.com/jobs/role/software-engineer/remote"])
