@@ -411,37 +411,28 @@ class PacingTest(LLMTestCase):
 
 
 class ClaudeDispatchTest(LLMTestCase):
-    def calls(self, provider, *models):
+    def calls(self, **changes):
         seen = []
         self.enterContext(mock.patch.object(
             llm, "complete", lambda prompt, *, tier, timeout: seen.append(tier) or ("OK", None)))
-        self.enterContext(mock.patch.object(claude, "run_cli",
-                                            lambda *a, **k: seen.append("cli") or ("OK", None)))
-        settings.use(dataclasses.replace(settings.get(), llm_provider=provider))
-        for model in models:
-            self.assertEqual(claude.run("hi", model=model), ("OK", None))
+        self.enterContext(mock.patch.object(
+            claude, "run_cli", lambda prompt, model, timeout, thinking:
+            seen.append((model, thinking)) or ("OK", None)))
+        settings.use(dataclasses.replace(settings.get(), **changes))
+        for tier in ("strong", "cheap"):
+            self.assertEqual(claude.run("hi", tier=tier), ("OK", None))
         return seen
 
-    def test_an_explicit_tier_wins_over_the_model(self):
-        seen = []
-        self.enterContext(mock.patch.object(
-            llm, "complete", lambda prompt, *, tier, timeout: seen.append(tier) or ("OK", None)))
-        cfg = settings.get()
-        settings.use(dataclasses.replace(cfg, llm_provider="groq",
-                                         description_model=cfg.claude_model))
-        claude.run("hi", model=cfg.claude_model, tier="cheap")
-        claude.run("hi", model=cfg.claude_model)
-        self.assertEqual(seen, ["cheap", "strong"])
+    def test_claude_code_runs_the_cli_with_each_tier_default(self):
+        self.assertEqual(self.calls(llm_provider="claude-code"),
+                         [("sonnet", True), ("haiku", False)])
 
-    def test_claude_code_runs_the_cli(self):
-        self.assertEqual(self.calls("claude-code", None, "haiku"), ["cli", "cli"])
+    def test_claude_code_runs_the_models_ai_provider_names(self):
+        self.assertEqual(self.calls(llm_model="opus", llm_model_cheap="sonnet"),
+                         [("opus", True), ("sonnet", False)])
 
-    def test_other_providers_map_the_model_to_a_tier(self):
-        cfg = settings.get()
-        self.assertEqual(
-            self.calls("groq", None, cfg.claude_model, cfg.description_model,
-                       "claude-haiku-4-5", "opus"),
-            ["strong", "strong", "cheap", "cheap", "strong"])
+    def test_other_providers_get_the_tier(self):
+        self.assertEqual(self.calls(llm_provider="groq"), ["strong", "cheap"])
 
 
 class SecretsTest(LLMTestCase):
@@ -607,7 +598,7 @@ class RouterTest(LLMTestCase):
         with mock.patch.object(claude, "run_cli", return_value=("OK", None)) as run_cli:
             body = self.call("POST", "/api/llm/test", json={})
         self.assertTrue(body["ok"])
-        run_cli.assert_called_once_with(llm.TEST_PROMPT, None, llm_routes.TEST_TIMEOUT)
+        run_cli.assert_called_once_with(llm.TEST_PROMPT, "sonnet", llm_routes.TEST_TIMEOUT)
 
     def test_a_fixed_provider_refuses_a_base_url(self):
         secrets.set_key("anthropic", KEY)

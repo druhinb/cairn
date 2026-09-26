@@ -12,7 +12,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from cairn import store
-from cairn.ai import claude
+from cairn.ai import claude, llm
 from cairn.core import events, paths, settings
 from cairn.jobs import descriptions
 
@@ -196,7 +196,7 @@ def _rank_batch(profile, batch, budget, calibrated="", run_id=None):
     for _ in range(cfg.rank_retries + 1):
         budget.take()
         res, err = claude.run(prompt, tier="strong")
-        store.record_call("rank", descriptions.model_called(None, "strong"), len(prompt),
+        store.record_call("rank", llm.model_for("strong"), len(prompt),
                           len(res or ""), run_id)
         if not res:
             continue
@@ -340,7 +340,7 @@ def explain(job):
         "No prose, no code fences."
     )
     res, err = claude.run(prompt, tier="strong")
-    store.record_call("rank", descriptions.model_called(None, "strong"), len(prompt),
+    store.record_call("rank", llm.model_for("strong"), len(prompt),
                       len(res or ""))
     if not res:
         raise ExplainFailed(err)

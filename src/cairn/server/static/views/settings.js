@@ -16,7 +16,6 @@ import { KIND_HINTS, renderSources } from "./settingsSources.js";
 
 const TYPE_WORDS = { int: "a whole number", str: "text", bool: "on or off" };
 const SPY_OFFSET = 48;
-const CLAUDE_CODE = "claude-code";
 const ICONS_POLL_MS = 15000;
 
 /** A path as one piece per folder, so it wraps between folders and never inside a name. */
@@ -107,7 +106,6 @@ class Settings {
     this.iconsPoll = null;
     this.iconsDone = 0;
     /** the active AI provider's id, or null when it could not be read */
-    this.provider = null;
   }
 
   mount() {
@@ -205,16 +203,13 @@ class Settings {
   }
 
   async load() {
-    const [cfg, profile, schedule, status, llm] = await Promise.all([
+    const [cfg, profile, schedule, status] = await Promise.all([
       api("/api/settings").catch(() => null),
       api("/api/files/profile").catch(() => null),
       api("/api/schedule", { quiet: true }).catch((error) => ({ error: error.message })),
       // without the status the Advanced section shows dashes for its paths
-      api("/api/status", { quiet: true }).catch(() => null),
-      // an unknown provider shows the Claude Code model fields, and the AI provider section says why it failed
-      api("/api/llm", { quiet: true }).catch(() => null)]);
+      api("/api/status", { quiet: true }).catch(() => null)]);
     if (!this.mounted) return;
-    this.provider = llm?.provider ?? null;
     this.kinds = status?.kinds || this.ctx.status()?.kinds || this.kinds;
     if (cfg) {
       const { defaults, path, ...values } = cfg;
@@ -308,19 +303,15 @@ class Settings {
     this.renderDirty();
   }
 
-  /**
-   * One section of plain fields. Ranking keeps the Claude Code model fields for
-   * Claude Code, or for a provider that could not be read.
-   */
+  /** One section of plain fields. Ranking points to AI provider for the models. */
   renderFields(section) {
-    const hideClaude = this.provider != null && this.provider !== CLAUDE_CODE;
-    const shown = section.fields.filter((field) => !(hideClaude && field.claudeOnly) && (MAC || !field.macOnly));
+    const shown = section.fields.filter((field) => MAC || !field.macOnly);
     for (const field of section.fields) {
       this.fields.delete(field.key);
       this.defaultButtons.delete(field.key);
     }
-    const elsewhere = hideClaude && section.fields.some((field) => field.claudeOnly)
-      && h("p", { class: "field-help" }, "Pick the models under ",
+    const elsewhere = section.id === "ranking"
+      && h("p", { class: "field-help" }, "Pick the ranking and summary models under ",
         h("a", { class: "link", href: "#settings?section=provider", text: "AI provider", onclick: (event) => {
           event.preventDefault();
           this.jump("provider", { focus: true });
@@ -640,12 +631,9 @@ class Settings {
       return;
     }
     if (!this.mounted) return;
-    const picker = providerPicker(data, { onSaved: (current) => {
+    const picker = providerPicker(data, { onSaved: () => {
       if (!this.mounted) return;
       this.runDoctor();
-      if (current.provider === this.provider) return;
-      this.provider = current.provider;
-      if (this.saved) this.renderFields(SECTIONS.find((s) => s.id === "ranking"));
     } });
     box.replaceChildren(this.sectionHead(section),
       h("p", { class: "field-help", text: "Cairn uses the AI provider you pick here to rank postings and write summaries. Its Save button applies the change right away." }),

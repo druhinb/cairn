@@ -8,7 +8,6 @@
  * @property {boolean} [nullable] an empty number means null
  * @property {number} [min]
  * @property {number} [max]
- * @property {boolean} [claudeOnly] shown only while Claude Code is the AI provider
  * @property {boolean} [macOnly] shown only on a Mac
  */
 
@@ -68,10 +67,6 @@ export const SECTIONS = [
       help: "Cairn stops ranking and summarizing after this many AI requests in 30 days. Leave empty for no limit." },
     { key: "fetch_descriptions", label: "Summarize requirements", type: "switch",
       help: "Reads the posting pages of your best matches and summarizes what they ask for." },
-    { key: "claude_model", label: "Ranking model", type: "text", claudeOnly: true,
-      help: "The Claude Code model Cairn ranks postings with, such as sonnet." },
-    { key: "description_model", label: "Summary model", type: "text", claudeOnly: true,
-      help: "The Claude Code model Cairn summarizes posting pages with, such as haiku. A cheaper model is enough here." },
     { key: "model_concurrency", label: "Requests at once", type: "number", unit: "requests", min: 1, max: 8,
       help: "How many AI requests Cairn sends at the same time. A higher number finishes a run sooner. Lower it if your AI provider says you sent too many." },
     { key: "claude_bin", label: "Claude command", type: "text",

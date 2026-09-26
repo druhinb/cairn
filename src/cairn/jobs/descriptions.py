@@ -238,15 +238,6 @@ def distill_prompt(text):
         posting=_FENCE_TAG.sub(" ", text))
 
 
-def model_called(model, tier):
-    """The model a claude.run call reaches, for the call log: model, or claude_model
-    when it is None, through the claude CLI, else the provider's model for tier."""
-    if llm.active() == "claude-code":
-        return model or settings.get().claude_model
-    # the key plays no part in the model's name, so secrets.toml is left unread
-    return llm.target(tier, key="").model
-
-
 def keywords(job, force=False, run_id=None, calls=None):
     """Haiku-distilled requirements summary for a posting, or None.
 
@@ -272,12 +263,11 @@ def keywords(job, force=False, run_id=None, calls=None):
         text = entry.get("text") if entry else get(job)
     if not text:
         return None
-    model = settings.get().description_model
     prompt = distill_prompt(text)
     if calls is not None:
         calls.take()
-    out, err = claude.run(prompt, model=model, timeout=120, tier="cheap")
-    store.record_call("summary", model_called(model, "cheap"), len(prompt), len(out or ""),
+    out, err = claude.run(prompt, timeout=120, tier="cheap")
+    store.record_call("summary", llm.model_for("cheap"), len(prompt), len(out or ""),
                       run_id)
     if not out:
         events.emit("warn", text=f"[jd] could not distill {job.get('company_name')}: {err}")

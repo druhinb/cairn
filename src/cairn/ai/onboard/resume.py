@@ -7,7 +7,7 @@ from importlib import resources
 from pathlib import Path
 
 from cairn import store
-from cairn.ai import claude
+from cairn.ai import claude, llm
 from cairn.core import settings
 
 PDFTOTEXT_TIMEOUT = 30
@@ -205,8 +205,8 @@ def draft_prompt(text):
 def draft_from_resume(text):
     """A Draft of profile.md and suggested answers. Raises ClaudeFailed."""
     prompt = draft_prompt(text)
-    out, err = claude.run(prompt, model=settings.get().claude_model, timeout=DRAFT_TIMEOUT)
-    store.record_call("onboard", settings.get().claude_model, len(prompt), len(out or ""))
+    out, err = claude.run(prompt, timeout=DRAFT_TIMEOUT)
+    store.record_call("onboard", llm.model_for("strong"), len(prompt), len(out or ""))
     if not out:
         raise ClaudeFailed(err)
     try:

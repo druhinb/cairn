@@ -117,7 +117,7 @@ class ClaudeInvocationTest(unittest.TestCase):
         self.assertEqual(kwargs["cwd"], paths.home())
 
     def test_summaries_run_without_thinking_and_ranking_with_it(self):
-        _, cheap = self._command(model="haiku", tier="cheap")
+        _, cheap = self._command(tier="cheap")
         _, strong = self._command(tier="strong")
         self.assertEqual(cheap["env"]["MAX_THINKING_TOKENS"], "0")
         self.assertIsNone(strong["env"])

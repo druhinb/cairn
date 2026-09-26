@@ -118,19 +118,18 @@ class DraftTest(unittest.TestCase):
     def draft_with(self, reply, text="Sam Lee\nInitech intern"):
         calls = []
 
-        def fake_run(prompt, model=None, timeout=240):
-            calls.append((prompt, model, timeout))
+        def fake_run(prompt, timeout=240, tier="strong"):
+            calls.append((prompt, tier, timeout))
             return reply
 
         with mock.patch.object(claude, "run", fake_run):
             return onboard.draft_from_resume(text), calls
 
-    def test_one_call_with_the_configured_model(self):
-        with temp_home(claude_model="opus"):
-            draft, calls = self.draft_with((envelope(), None))
+    def test_one_call_to_the_ranking_model(self):
+        draft, calls = self.draft_with((envelope(), None))
         self.assertEqual(draft.suggestions["name"], "Sam Lee")
-        ((prompt, model, timeout),) = calls
-        self.assertEqual((model, timeout), ("opus", onboard.DRAFT_TIMEOUT))
+        ((prompt, tier, timeout),) = calls
+        self.assertEqual((tier, timeout), ("strong", onboard.DRAFT_TIMEOUT))
         self.assertIn("Sam Lee\nInitech intern", prompt)
 
     def test_the_prompt_carries_every_heading_and_no_example_persona(self):

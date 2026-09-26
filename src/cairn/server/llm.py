@@ -128,7 +128,7 @@ def test_llm(body: dict = Body(default={})):
     target = llm.target(provider=provider, model=model, base_url=base_url, key=key)
     started = time.monotonic()
     if llm.PROVIDERS[provider]["kind"] == "cli":
-        reply, error = claude.run_cli(llm.TEST_PROMPT, model, TEST_TIMEOUT)
+        reply, error = claude.run_cli(llm.TEST_PROMPT, target.model, TEST_TIMEOUT)
     else:
         reply, error = llm.send(target, llm.TEST_PROMPT, TEST_TIMEOUT, retries=0)
     return {"ok": error is None, "latency_ms": round((time.monotonic() - started) * 1000),

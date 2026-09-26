@@ -48,8 +48,10 @@
 #company_icons = true
 # ---- Claude -------------------------------------------------------------
 #claude_bin = "claude"
-#claude_model = "sonnet"
-#description_model = "haiku"
+# empty models pick the provider's own: sonnet and haiku for Claude Code
+#llm_provider = "claude-code"
+#llm_model = ""
+#llm_model_cheap = ""
 # model calls made at once while ranking and summarizing, 1 to 8
 #model_concurrency = 4
 

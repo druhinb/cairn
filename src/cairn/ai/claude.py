@@ -13,30 +13,15 @@ from cairn.ai import llm
 from cairn.core import paths, settings
 
 
-def run(prompt, model=None, timeout=240, tier=None):
+def run(prompt, timeout=240, tier="strong"):
     """(text, err). Never raises; the caller decides how loud a failure is.
 
-    For a provider other than claude-code, `tier` ("strong" or "cheap") picks the
-    model; without it `model` stands for a tier. Through the claude CLI the cheap
-    tier runs with thinking off.
+    tier, "strong" or "cheap", picks the active provider's model. Through the claude
+    CLI the cheap tier runs with thinking off.
     """
-    tier = tier or tier_of(model)
     if llm.active() == "claude-code":
-        return run_cli(prompt, model, timeout, thinking=tier != "cheap")
+        return run_cli(prompt, llm.model_for(tier), timeout, thinking=tier != "cheap")
     return llm.complete(prompt, tier=tier, timeout=timeout)
-
-
-def tier_of(model):
-    """The llm tier a claude model name stands for, cheap for the summary model or
-    a Haiku name and strong otherwise.
-
-    When the summary model is also the ranking model this says strong, so a caller
-    that summarises passes tier="cheap" to run.
-    """
-    cfg = settings.get()
-    if not model or model == cfg.claude_model:
-        return "strong"
-    return "cheap" if model == cfg.description_model or "haiku" in model else "strong"
 
 
 # A one-word prompt to haiku took 3.6-5.5 s and read 17,446 input tokens with
@@ -66,7 +51,7 @@ LEAN_FLAGS = [
 NO_THINKING = {"MAX_THINKING_TOKENS": "0"}
 
 
-def run_cli(prompt, model=None, timeout=240, thinking=True):
+def run_cli(prompt, model, timeout=240, thinking=True):
     """(text, err) from the claude CLI, whatever provider settings name."""
     # The prompt goes on stdin: macOS caps a command line at 1 MiB, and a long
     # resume or ranking batch passed as an argument failed with OSError. The data
@@ -76,7 +61,6 @@ def run_cli(prompt, model=None, timeout=240, thinking=True):
     # only ever runs a .exe
     cmd = [shutil.which(cfg.claude_bin) or cfg.claude_bin, "-p", "--output-format", "json",
            *LEAN_FLAGS]
-    model = model or cfg.claude_model
     if model:
         cmd += ["--model", model]
     home = paths.home()

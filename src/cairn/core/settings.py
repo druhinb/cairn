@@ -119,7 +119,7 @@ class Settings:
 
     recent_days: int = 21            # only consider postings posted this recently
     fit_threshold: int = 60          # 0-100; below this no summary and no mention in the push
-    # each costs one page fetch and one description_model call
+    # each costs one page fetch and one call to the cheap model
     max_summaries_per_run: int = 25
     # stop ranking and summaries once the last 30 days hold this many model calls
     monthly_call_cap: int | None = None
@@ -133,7 +133,6 @@ class Settings:
     # The feeds carry no description text; distilling a fetched page is mechanical
     # work for the cheap model.
     fetch_descriptions: bool = True
-    description_model: str = "haiku"
 
     # company names go to Clearbit and Wikidata, and website domains to DuckDuckGo and Google
     company_icons: bool = True
@@ -163,13 +162,14 @@ class Settings:
     llm_base_url: str = ""
 
     claude_bin: str = "claude"       # or an absolute path, e.g. ~/.local/bin/claude
-    claude_model: str = "sonnet"     # sonnet is plenty for ranking and far cheaper
 
 
 # settings a past version read; config.toml files still carry them
 RETIRED_KEYS = frozenset({"max_tailor_per_run", "max_fit_iters", "min_bullets",
                           "preset_model_matching", "reuse_resumes", "output_dir",
                           "usajobs_key"})
+# the claude-code models a past version kept apart from llm_model and llm_model_cheap
+RENAMED_KEYS = {"claude_model": "llm_model", "description_model": "llm_model_cheap"}
 
 
 def defaults():
@@ -204,7 +204,18 @@ def load(path=None):
     if retired:
         events.emit("warn", text=f"{path.name}: ignoring retired setting(s): "
                                  f"{', '.join(retired)}")
-    return from_dict({k: v for k, v in raw.items() if k not in RETIRED_KEYS}, source=path)
+    return from_dict(_renamed({k: v for k, v in raw.items() if k not in RETIRED_KEYS}),
+                     source=path)
+
+
+def _renamed(raw):
+    """raw with RENAMED_KEYS under their new names. Their values named claude-code
+    models, so another provider drops them."""
+    old = {key: raw.pop(key) for key in RENAMED_KEYS if key in raw}
+    if raw.get("llm_provider", "claude-code") == "claude-code":
+        for key, value in old.items():
+            raw.setdefault(RENAMED_KEYS[key], value)
+    return raw
 
 
 def _check_llm(raw, source):

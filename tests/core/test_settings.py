@@ -164,6 +164,21 @@ class RetiredKeyTest(unittest.TestCase):
         self.assertEqual(self.warnings, ["config.toml: ignoring retired setting(s): "
                                          "output_dir, max_tailor_per_run"])
 
+    def test_the_old_claude_code_models_become_the_provider_models(self):
+        paths.config_file().write_text('claude_model = "opus"\ndescription_model = "sonnet"\n',
+                                       encoding="utf-8")
+        cfg = settings.load()
+        self.assertEqual((cfg.llm_model, cfg.llm_model_cheap), ("opus", "sonnet"))
+        self.assertEqual(self.warnings, [])
+
+    def test_the_old_claude_code_models_never_reach_another_provider(self):
+        paths.config_file().write_text('llm_provider = "groq"\nclaude_model = "opus"\n',
+                                       encoding="utf-8")
+        self.assertEqual(settings.load().llm_model, "")
+        paths.config_file().write_text('llm_model = "opus"\nclaude_model = "sonnet"\n',
+                                       encoding="utf-8")
+        self.assertEqual(settings.load().llm_model, "opus")
+
     def test_a_usajobs_key_in_config_toml_is_retired_and_never_a_setting(self):
         paths.config_file().write_text('usajobs_key = "k3y"\nusajobs_email = "me@example.com"\n',
                                        encoding="utf-8")

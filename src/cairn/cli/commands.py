@@ -379,7 +379,7 @@ def _llm_test():
     target = llm.target()
     started = time.monotonic()
     if llm.PROVIDERS[target.provider]["kind"] == "cli":
-        reply, error = claude.run_cli(llm.TEST_PROMPT, None, 20)
+        reply, error = claude.run_cli(llm.TEST_PROMPT, target.model, 20)
     else:
         reply, error = llm.send(target, llm.TEST_PROMPT, 20, retries=0)
     ms = round((time.monotonic() - started) * 1000)

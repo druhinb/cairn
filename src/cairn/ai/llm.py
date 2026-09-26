@@ -172,6 +172,12 @@ def target(tier="strong", provider=None, model=None, base_url=None, key=None):
     return Target(provider, model, base_url.rstrip("/"), key)
 
 
+def model_for(tier="strong"):
+    """The model the active provider answers tier with."""
+    # the key plays no part in the model's name, so secrets.toml is left unread
+    return target(tier, key="").model
+
+
 _pace_lock = threading.Lock()
 _next_slot = {}
 
