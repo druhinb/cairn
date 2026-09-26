@@ -72,6 +72,7 @@ class _Rules:
     off_season_internships: bool
     wanted_terms: frozenset
     max_years: int | None
+    us_only: bool
 
 
 def relevance_rules(cfg):
@@ -86,6 +87,7 @@ def relevance_rules(cfg):
         off_season_internships=cfg.include_off_season_internships,
         wanted_terms=frozenset(t.casefold() for t in cfg.wanted_intern_terms),
         max_years=cfg.max_years_required,
+        us_only=cfg.us_only,
     )
 
 
@@ -153,6 +155,10 @@ def _location_ok(job, title, rules):
     return any(l in locs for l in rules.locations)
 
 
+def _country_ok(job, title, rules):
+    return not (rules.us_only and places.abroad(job.get("locations")))
+
+
 # the relevance rules in the order they apply, each (name, passes(job, title, rules))
 RULES = (
     ("exclude", _seniority_ok),
@@ -163,6 +169,7 @@ RULES = (
     ("title keyword", _keyword_ok),
     ("degree", _degree_ok),
     ("location", _location_ok),
+    ("country", _country_ok),
 )
 
 

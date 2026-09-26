@@ -251,6 +251,10 @@ class PreferencesTest(unittest.TestCase):
         mapped = onboard.preferences_to_settings({"roles": []}, base)
         self.assertEqual(mapped.title_keywords, settings.DEFAULT_TITLE_KEYWORDS)
 
+    def test_us_only_becomes_the_setting(self):
+        self.assertTrue(self.mapped(us_only=True).us_only)
+        self.assertFalse(self.mapped(locations=[]).us_only)
+
     def test_remote_ok_adds_remote_to_a_location_list(self):
         self.assertEqual(self.mapped(locations=["Seattle, WA"], remote_ok=True).location_allow,
                          ["Seattle, WA", "Remote"])

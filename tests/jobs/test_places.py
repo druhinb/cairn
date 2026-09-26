@@ -64,6 +64,22 @@ class LocationPreferenceTest(unittest.TestCase):
         self.assertEqual(self._kept(["LA"], rows), {"la", "full"})
 
 
+class AbroadTest(unittest.TestCase):
+    def test_a_posting_is_abroad_when_every_place_names_another_country(self):
+        for locations in (["London, UK"], ["Toronto, ON, Canada"], ["Gurugram"],
+                          ["São Paulo, Brazil"], ["Zürich, CH"], ["Remote in Canada"],
+                          ["London", "Dublin, Ireland"]):
+            with self.subTest(locations):
+                self.assertTrue(places.abroad(locations))
+
+    def test_a_us_or_unclear_place_keeps_a_posting(self):
+        for locations in ([], None, ["Remote"], ["Hybrid"], ["Seattle Office"],
+                          ["Dublin, CA"], ["Remote in USA"], ["London, UK", "New York, NY"],
+                          ["Georgia"], ["Remote - CA"]):
+            with self.subTest(locations):
+                self.assertFalse(places.abroad(locations))
+
+
 class StoredPlaceTest(unittest.TestCase):
     def setUp(self):
         self.enterContext(temp_home())

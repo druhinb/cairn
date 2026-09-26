@@ -26,6 +26,8 @@ export const SECTIONS = [
       help: "Job categories to keep. A posting needs one of these and a title keyword." },
     { key: "location_allow", label: "Locations", type: "tags",
       help: "Leave empty to see postings in every location." },
+    { key: "us_only", label: "Only jobs in the US", type: "switch",
+      help: "Hides postings that list only places outside the US. Postings that just say Remote or Hybrid stay." },
     { key: "degrees_held", label: "Degrees", type: "tags",
       help: "Cairn hides postings that accept none of your degrees. Leave empty to show them all." },
     { key: "graduation_year", label: "Graduation year", type: "number", nullable: true, min: 2000, max: 2100,

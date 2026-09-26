@@ -75,6 +75,9 @@ def _relevance_rule(cfg):
     if cfg.location_allow:
         add(*_any_substring(_LOCATIONS, [places.term(l) for l in cfg.location_allow]))
 
+    if getattr(cfg, "us_only", False):
+        add("NOT abroad(postings.locations)")
+
     return "(" + " AND ".join(clauses) + ")", params
 
 
@@ -82,7 +85,7 @@ def _relevance_rule(cfg):
 _RELEVANCE_SETTINGS = ("title_exclude", "title_exclude_field", "intern_terms",
                        "wanted_intern_terms", "include_off_season_internships",
                        "allowed_categories", "title_keywords", "degrees_held",
-                       "location_allow", "max_years_required")
+                       "location_allow", "max_years_required", "us_only")
 
 
 def _relevance_rules(cfg):

@@ -26,12 +26,14 @@ SETTING_FOR_PREF = {
     "ntfy_topic": "notify_ntfy_topic",
     "experience_years": "experience_years",
     "max_years_required": "max_years_required",
+    "us_only": "us_only",
 }
 
 PREF_SHAPES = {
     "roles": (_str_list, "a list of strings"),
     "locations": (_str_list, "a list of strings"),
     "remote_ok": (lambda v: isinstance(v, bool), "true or false"),
+    "us_only": (lambda v: isinstance(v, bool), "true or false"),
     "graduation_year": (_int_or_none, "an integer year or null"),
     "degrees_held": (_str_list, "a list of strings"),
     "internship_terms": (_str_list, "a list of strings"),

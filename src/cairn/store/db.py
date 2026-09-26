@@ -7,7 +7,9 @@ import sys
 import threading
 
 from cairn.core import paths, settings, ui
+from cairn.jobs import places
 from cairn.store.keys import name_key
+from cairn.store.rows import _list
 from cairn.store.schema import _AFTER_MIGRATION, SCHEMA, SCHEMA_VERSION, _migrate
 
 # One connection per (path, thread). A shared connection would let a background
@@ -61,6 +63,10 @@ def _stop_memory_stats():
 _stop_memory_stats()
 
 
+def _abroad(locations):
+    return places.abroad(_list(locations))
+
+
 def now():
     return datetime.datetime.now().isoformat(timespec="seconds")
 
@@ -87,6 +93,7 @@ def connect():
     if hasattr(conn, "setconfig"):  # Python 3.12+
         conn.setconfig(sqlite3.SQLITE_DBCONFIG_DEFENSIVE, True)
     conn.create_function("name_key", 1, name_key, deterministic=True)
+    conn.create_function("abroad", 1, _abroad, deterministic=True)
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA foreign_keys = ON")
     try:

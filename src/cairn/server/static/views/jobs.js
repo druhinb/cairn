@@ -32,6 +32,7 @@ const WHY_RULES = {
   "title keyword": ["title_keywords", "Title keywords"],
   "degree": ["degrees_held", "Degrees"],
   "location": ["location_allow", "Locations"],
+  "country": ["us_only", "Only jobs in the US"],
   "recent": ["recent_days", "Recent days"],
 };
 const FADE_ROWS = 10;

@@ -293,7 +293,8 @@ class WhyNothingTest(unittest.TestCase):
                 {"rule": "intern term", "dropped": 1}, {"rule": "experience", "dropped": 1},
                 {"rule": "category", "dropped": 1},
                 {"rule": "title keyword", "dropped": 1}, {"rule": "degree", "dropped": 1},
-                {"rule": "location", "dropped": 1}, {"rule": "recent", "dropped": 1}])
+                {"rule": "location", "dropped": 1}, {"rule": "country", "dropped": 0},
+                {"rule": "recent", "dropped": 1}])
 
 
 class SuggestedCompaniesTest(unittest.TestCase):

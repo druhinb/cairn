@@ -115,6 +115,7 @@ class Settings:
     # Keep only postings whose location matches one of these substrings, e.g.
     # ["CA", "New York", "Remote"]. Empty keeps every location.
     location_allow: list[str] = field(default_factory=list)
+    us_only: bool = False            # skip postings whose every place is outside the US
 
     recent_days: int = 21            # only consider postings posted this recently
     fit_threshold: int = 60          # 0-100; below this no summary and no mention in the push

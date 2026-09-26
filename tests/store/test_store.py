@@ -170,6 +170,8 @@ def _fixture():
         _row("zurich-upper", "SOFTWARE ENGINEER", locations=["ZÜRICH"]),
         _row("accented-senior", "SÉNIOR SOFTWARE ENGINEER"),
         _row("tab-term", "Software Engineer Intern", terms=["Fall 2026\t"]),
+        _row("london", locations=["London, UK"]),
+        _row("london-or-seattle", locations=["London, UK", "Seattle, WA"]),
     ]
     rows[4].pop("is_visible")
     for row in rows:
@@ -185,6 +187,7 @@ CONFIGS = {
     "no-off-season": {"wanted_intern_terms": ["Fall 2026"],
                       "include_off_season_internships": False},
     "non-ascii": {"wanted_intern_terms": ["Fall 2026"], "location_allow": ["Zürich"]},
+    "us-only": {"us_only": True},
     "empty-lists": {"allowed_categories": [], "title_keywords": [], "title_exclude": [],
                     "title_exclude_field": [], "intern_terms": []},
 }
@@ -213,6 +216,10 @@ class RelevantQueryTest(unittest.TestCase):
         for posting_id in ("hidden", "senior", "intern-summer", "hardware-cat",
                            "grad-only", "new-york", "null-title"):
             self.assertNotIn(posting_id, kept)
+        with temp_home(**CONFIGS["us-only"]):
+            kept = {r["id"] for r in _fixture() if fetch._relevant(r)}
+        self.assertTrue({"london-or-seattle", "remote", "no-locations"} <= kept)
+        self.assertFalse({"london", "zurich"} & kept)
 
 
 class StoredRelevanceTest(unittest.TestCase):
