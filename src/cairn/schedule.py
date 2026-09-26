@@ -1,6 +1,7 @@
 """The launchd jobs: the daily `cairn run`, and `cairn ui` at login.
 
-Install, remove, and inspect either one.
+Install, remove, and inspect either one. On Windows, schedule_windows supplies the
+same six functions.
 """
 import os
 import plistlib
@@ -237,3 +238,8 @@ def autostart_status():
         except Exception as e:  # noqa: BLE001 - any malformed plist is reported, not raised
             result["error"] = f"cannot read {path}: {type(e).__name__}: {_one_line(e)}"
     return result
+
+
+if sys.platform == "win32":
+    from cairn.schedule_windows import (  # noqa: E402, F811 - they replace the launchd forms
+        autostart_install, autostart_remove, autostart_status, install, remove, status)

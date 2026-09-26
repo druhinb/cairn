@@ -24,6 +24,7 @@ from cairn import (applications, backup, claude, doctor, fetch, llm, logfile, lo
 
 TOP_SHOWN = 15  # ranked postings echoed to the terminal; the app has them all
 LOGGED_COMMANDS = {"run", "serve", "icons"}  # their events are appended to paths.run_log()
+JOB_FILE = "entry" if sys.platform == "win32" else "plist"
 
 
 def cmd_run(args):
@@ -216,7 +217,7 @@ def cmd_schedule(args):
             ("loaded", "yes" if job["loaded"] else "no"),
             ("daily at", when),
             ("runs", job["program"] or "-"),
-            ("plist", job["plist"])]
+            (JOB_FILE, job["plist"])]
     if job["error"]:
         rows.append(("error", job["error"]))
     ui.summary(rows, title=f"schedule {args.action}")
@@ -234,7 +235,7 @@ def cmd_autostart(args):
     rows = [("installed", "yes" if item["installed"] else "no"),
             ("loaded", "yes" if item["loaded"] else "no"),
             ("opens", item["program"] or "-"),
-            ("plist", item["plist"])]
+            (JOB_FILE, item["plist"])]
     if item["error"]:
         rows.append(("error", item["error"]))
     ui.summary(rows, title=f"autostart {args.action}")
@@ -697,7 +698,27 @@ def _parser():
     return parser
 
 
+BACKGROUND_OUTPUT = {"stdout": "background.out", "stderr": "background.err"}
+
+
+def _windows_output():
+    """UTF-8 output on Windows. pythonw, which the daily task and the login entry
+    start, has no console, so its output goes to files in the data home, as launchd's
+    does on a Mac."""
+    for name, file in BACKGROUND_OUTPUT.items():
+        stream = getattr(sys, name)
+        if stream is None:
+            paths.home().mkdir(parents=True, exist_ok=True)
+            setattr(sys, name, open(paths.home() / file, "a", encoding="utf-8"))
+        else:
+            # a redirected stream writes the ANSI code page, which lacks ✓ and most
+            # company names outside Western Europe
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main():
+    if sys.platform == "win32":
+        _windows_output()
     parser = _parser()
     args = parser.parse_args()
     if args.cmd is None:  # bare `cairn` still means `cairn run`

@@ -21,7 +21,8 @@ from cairn import events, settings
 
 # isatty(), not console.is_terminal: rich honors FORCE_COLOR, which would let an
 # inherited env var put a live Progress region into redirected output.
-IS_TTY = sys.stdout.isatty()
+# pythonw, which Windows starts for the daily task and at login, has no stdout
+IS_TTY = sys.stdout is not None and sys.stdout.isatty()
 
 # force_terminal=False, not just no_color=True. no_color strips colour but keeps
 # attributes, so a bold style still emits "\x1b[1m...\x1b[0m" — enough to corrupt
