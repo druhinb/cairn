@@ -390,7 +390,7 @@ class ExplainTest(ServerTestCase):
 
     def setUp(self):
         super().setUp()
-        paths.profile_md().write_text("Candidate profile: a new grad.")
+        paths.profile_md().write_text("Candidate profile: a new grad.", encoding="utf-8")
         settings.use(dataclasses.replace(settings.get(), llm_provider="ollama"))
         self.prompts = []
 
@@ -522,7 +522,7 @@ class FilesTest(ServerTestCase):
             with self.subTest(name=name):
                 response = self.client.put(f"/api/files/{name}", json={"text": f"# {name}\n"})
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(path.read_text(), f"# {name}\n")
+                self.assertEqual(path.read_text(encoding="utf-8"), f"# {name}\n")
                 self.assertEqual(self.client.get(f"/api/files/{name}").json(),
                                  {"name": name, "path": str(path), "text": f"# {name}\n"})
         self.assertEqual([p.name for p in self.home.iterdir() if p.name.startswith(".")], [])
@@ -639,7 +639,7 @@ class RunOverrideTest(ServerTestCase):
 
 class RunsTest(ServerTestCase):
     def test_list_and_log_slice(self):
-        paths.run_log().write_text("before\nrun line 1\nrun line 2\nafter\n")
+        paths.run_log().write_text("before\nrun line 1\nrun line 2\nafter\n", encoding="utf-8")
         finished = store.start_run(str(paths.run_log()))
         store.finish_run(finished, "ok", {"ranked": 2}, log_start=7, log_end=29)
         running = store.start_run(str(paths.run_log()))
@@ -677,7 +677,8 @@ class RunsTest(ServerTestCase):
         store.finish_run(earlier, "ok", {}, log_start=0, log_end=7)
         run_id = store.start_run(str(paths.run_log()))
         start = f"2026-09-25 07:00:00  run {run_id} started  limit=5  fit=None  dry_run=True\n"
-        paths.run_log().write_text(f"before\n{start}2026-09-25 07:00:01  == fetch ==\n")
+        paths.run_log().write_text(f"before\n{start}2026-09-25 07:00:01  == fetch ==\n",
+                                   encoding="utf-8")
         with pipeline.run_lock():
             status = self.client.get("/api/run/status").json()
             log = self.client.get(f"/api/runs/{run_id}/log").text
@@ -689,8 +690,8 @@ class RunsTest(ServerTestCase):
 
     def test_a_log_is_read_from_run_log_alone_and_cut_to_its_end(self):
         secret = self.home / "secret.txt"
-        secret.write_text("the resume\n")
-        paths.run_log().write_text("0123456789abcdefghij\n")
+        secret.write_text("the resume\n", encoding="utf-8")
+        paths.run_log().write_text("0123456789abcdefghij\n", encoding="utf-8")
         run_id = store.start_run(str(secret))
         store.finish_run(run_id, "failed", {}, log_start=0, log_end=21)
         crafted = store.start_run(str(secret))
@@ -699,7 +700,7 @@ class RunsTest(ServerTestCase):
         self.assertEqual(self.client.get(f"/api/runs/{run_id}/log").text, "abcdefghij\n")
         self.assertEqual(self.client.get(f"/api/runs/{crafted}/log").text, "012")
         running = store.start_run(str(secret))
-        secret.write_text(f"x  run {running} started  limit=1\n")
+        secret.write_text(f"x  run {running} started  limit=1\n", encoding="utf-8")
         with pipeline.run_lock():
             status = self.client.get("/api/run/status").json()
         self.assertEqual(status["run"]["options"], {})
@@ -712,7 +713,7 @@ class RunsTest(ServerTestCase):
         self.assertEqual((status["running"], status["run"]), (True, None))
 
     def test_a_marker_left_by_a_dead_icon_fetch_holds_nothing(self):
-        (self.home / "icons.pid").write_text(str(os.getpid() + 1))
+        (self.home / "icons.pid").write_text(str(os.getpid() + 1), encoding="utf-8")
         with pipeline.run_lock():
             status = self.client.get("/api/run/status").json()
         self.assertEqual((status["running"], status["icons"]), (True, False))
@@ -1039,7 +1040,7 @@ class OnboardTest(ServerTestCase):
         cli.cmd_init(cli._parser().parse_args(["init"]))
         self.assertEqual(self.client.get("/api/onboard/status").json(),
                          {"initialised": True, "needs_setup": True})
-        paths.profile_md().write_text("mine")
+        paths.profile_md().write_text("mine", encoding="utf-8")
         self.assertFalse(self.client.get("/api/onboard/status").json()["needs_setup"])
 
     def test_options_list_the_roles_and_authorizations(self):
@@ -1062,7 +1063,7 @@ class OnboardTest(ServerTestCase):
 
     def test_pasted_text_that_names_a_file_is_not_read(self):
         secret = self.home / "notes.txt"
-        secret.write_text("private")
+        secret.write_text("private", encoding="utf-8")
         self.client.post("/api/onboard/draft", json={"text": str(secret)})
         self.assertNotIn("private", self.prompts[0])
 
@@ -1087,7 +1088,7 @@ class OnboardTest(ServerTestCase):
         self.assertIn("Sam from txt", self.prompts[-1])
 
     def test_draft_is_refused_up_front_when_files_hold_own_content(self):
-        paths.profile_md().write_text("mine")
+        paths.profile_md().write_text("mine", encoding="utf-8")
         response = self.client.post("/api/onboard/draft", json={"text": "Sam"})
         self.assertEqual(response.status_code, 409)
         self.assertIn(str(paths.profile_md()), response.json()["error"])
@@ -1171,14 +1172,14 @@ class OnboardTest(ServerTestCase):
 
     def test_apply_refuses_own_content_until_overwrite(self):
         self.patch(onboard.sources, "resolve_company", lambda name: None)
-        paths.profile_md().write_text("mine")
+        paths.profile_md().write_text("mine", encoding="utf-8")
         body = {"profile_md": PROFILE,
                 "prefs": {"roles": ["ml"], "graduation_year": 2027, "watchlist": ["Nope"]}}
         response = self.client.post("/api/onboard/apply", json=body)
         self.assertEqual(response.status_code, 409)
         self.assertIn(str(paths.profile_md()), response.json()["error"])
         self.assertEqual(response.json()["files"], [str(paths.profile_md())])
-        self.assertEqual(paths.profile_md().read_text(), "mine")
+        self.assertEqual(paths.profile_md().read_text(encoding="utf-8"), "mine")
 
         body["prefs"]["overwrite"] = True
         response = self.client.post("/api/onboard/apply", json=body)
@@ -1401,7 +1402,8 @@ class GuardTest(ServerTestCase):
 
     def test_a_restore_that_changes_the_provider_waits_for_confirmation(self):
         paths.config_file().write_text('claude_bin = "/tmp/anything"\n'
-                                       'llm_base_url = "https://attacker.example/v1"\n')
+                                       'llm_base_url = "https://attacker.example/v1"\n',
+                                       encoding="utf-8")
         path = backup.export(self.home / "out")
         paths.config_file().unlink()
         upload = {"backup": ("b.zip", path.read_bytes())}

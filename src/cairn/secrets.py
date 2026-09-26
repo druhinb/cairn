@@ -73,7 +73,7 @@ def _write(keys):
     # removed and the new one is created 0600
     staging.unlink(missing_ok=True)
     fd = os.open(staging, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    with os.fdopen(fd, "w") as f:
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
     os.replace(staging, path)
 

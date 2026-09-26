@@ -378,7 +378,7 @@ class LockTest(PipelineTestCase):
             pass
         self.assertTrue(paths.run_lock().exists())
         self.assertEqual(pipeline.run(RunOptions(dry_run=True)).status, "dry-run")
-        self.assertEqual(paths.run_lock().read_text(), str(os.getpid()))
+        self.assertEqual(paths.run_lock().read_text(encoding="utf-8"), str(os.getpid()))
 
     def test_a_summary_runs_while_a_run_holds_the_lock(self):
         store.upsert_postings([_job("a")], "feed")
@@ -425,7 +425,7 @@ class LockTest(PipelineTestCase):
         self.assertEqual(sorted(outcomes), ["refused", "won"])
 
     def test_garbage_in_the_lock_file(self):
-        paths.run_lock().write_text("not a pid")
+        paths.run_lock().write_text("not a pid", encoding="utf-8")
         self.assertEqual(pipeline.run(RunOptions(dry_run=True)).status, "dry-run")
 
         fd = os.open(paths.run_lock(), os.O_RDWR)
@@ -440,7 +440,7 @@ class LockTest(PipelineTestCase):
 
 class RunLogTest(PipelineTestCase):
     def test_the_runs_row_slices_the_log_to_this_run(self):
-        paths.run_log().write_text("an earlier line\n")
+        paths.run_log().write_text("an earlier line\n", encoding="utf-8")
         self.addCleanup(logfile.attach(paths.run_log()))
         first = pipeline.run(RunOptions(dry_run=True)).run_id
         pipeline.run(RunOptions(dry_run=True))

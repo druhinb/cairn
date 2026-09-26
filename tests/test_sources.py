@@ -25,7 +25,7 @@ VANSHB03 = ("https://raw.githubusercontent.com/vanshb03/Summer2027-Internships/d
 
 
 def _fixture(name):
-    return json.loads((FIXTURES / f"{name}.json").read_text())
+    return json.loads((FIXTURES / f"{name}.json").read_text(encoding="utf-8"))
 
 
 def _served(by_fragment):
@@ -683,7 +683,7 @@ class SettingsTest(unittest.TestCase):
         self.enterContext(temp_home())
 
     def _load(self, text):
-        paths.config_file().write_text(text)
+        paths.config_file().write_text(text, encoding="utf-8")
         return settings.load()
 
     def test_sources_and_watchlist_round_trip_as_arrays_of_tables(self):
@@ -699,7 +699,7 @@ class SettingsTest(unittest.TestCase):
                        {"kind": "workable", "location": "globex"},
                        {"kind": "bamboohr", "location": "hooli"}])
         settings.save(original)
-        text = paths.config_file().read_text()
+        text = paths.config_file().read_text(encoding="utf-8")
         self.assertIn('[[sources]]\nkind = "github"\nlocation = "https://raw', text)
         self.assertIn('[[watchlist]]\nkind = "ashby"\nlocation = "openai"', text)
         self.assertLess(text.index("fit_threshold"), text.index("[["))
@@ -847,7 +847,7 @@ class RenameSourcesTest(unittest.TestCase):
 
 
 def _text(name):
-    return (FIXTURES / name).read_text()
+    return (FIXTURES / name).read_text(encoding="utf-8")
 
 
 def _served_text(by_fragment):
@@ -1315,7 +1315,7 @@ class NewKindSettingsTest(unittest.TestCase):
         self.enterContext(temp_home())
 
     def _load(self, text):
-        paths.config_file().write_text(text)
+        paths.config_file().write_text(text, encoding="utf-8")
         return settings.load()
 
     def test_every_new_kind_and_the_usajobs_account_round_trip(self):

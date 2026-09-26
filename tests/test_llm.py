@@ -288,7 +288,7 @@ class AnswerRecordTest(LLMTestCase):
         self.assertLess(datetime.datetime.now(datetime.UTC) - answered,
                         datetime.timedelta(minutes=1))
         self.assertEqual(llm.check_file(), paths.home() / "llm_check.json")
-        self.assertNotIn(KEY, llm.check_file().read_text())
+        self.assertNotIn(KEY, llm.check_file().read_text(encoding="utf-8"))
         self.assertIsNone(llm.last_answer("mistral"))
         self.opener(http_error(401, {"error": {"message": "no"}}))
         llm.send(self.target("mistral"), "hi")
@@ -455,7 +455,7 @@ class SecretsTest(LLMTestCase):
         secrets.delete_key("groq")
         self.assertIsNone(secrets.get_key("groq"))
         self.assertEqual(secrets.get_key("claude-code"), "other")
-        self.assertNotIn(KEY, path.read_text())
+        self.assertNotIn(KEY, path.read_text(encoding="utf-8"))
         self.assertFalse((paths.home() / "config.toml").exists())
 
     def test_a_loosened_file_is_made_private_on_the_next_write(self):
@@ -490,7 +490,7 @@ class SecretsTest(LLMTestCase):
 
     def test_a_bad_key_written_into_the_file_by_hand_is_ignored(self):
         self.enterContext(mock.patch.object(secrets, "_warned", set()))
-        secrets.secrets_file().write_text('[keys]\ngroq = "two words"\n')
+        secrets.secrets_file().write_text('[keys]\ngroq = "two words"\n', encoding="utf-8")
         self.assertIsNone(secrets.get_key("groq"))
 
     def test_usajobs_is_a_key_name_and_unknown_names_are_refused(self):
@@ -505,7 +505,7 @@ class SecretsTest(LLMTestCase):
 
     def test_a_stale_staging_file_never_lends_its_mode(self):
         staging = secrets.secrets_file().with_name("secrets.toml.tmp")
-        staging.write_text("left over")
+        staging.write_text("left over", encoding="utf-8")
         staging.chmod(0o644)
         secrets.set_key("groq", KEY)
         self.assertEqual(stat.S_IMODE(secrets.secrets_file().stat().st_mode), 0o600)
@@ -518,7 +518,7 @@ class SecretsTest(LLMTestCase):
         self.assertFalse(secrets.secrets_file().exists())
 
     def test_a_broken_file_is_an_error(self):
-        secrets.secrets_file().write_text("[keys\n")
+        secrets.secrets_file().write_text("[keys\n", encoding="utf-8")
         with self.assertRaises(secrets.SecretsError):
             secrets.get_key("groq")
 
@@ -552,7 +552,7 @@ class RouterTest(LLMTestCase):
                                                   "key": KEY})
         self.assertEqual(body, {"provider": "groq", "model": "llama-x", "model_cheap": "",
                                 "base_url": "", "has_key": True})
-        config = paths.config_file().read_text()
+        config = paths.config_file().read_text(encoding="utf-8")
         self.assertIn('llm_provider = "groq"', config)
         self.assertNotIn(KEY, config)
         self.assertEqual(secrets.get_key("groq"), KEY)

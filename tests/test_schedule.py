@@ -117,7 +117,7 @@ class StatusTest(ScheduleTestCase):
 
     def test_reads_an_installed_plist(self):
         self.plist.parent.mkdir(parents=True)
-        self.plist.write_text(schedule.render(PROGRAM, 6, 30))
+        self.plist.write_text(schedule.render(PROGRAM, 6, 30), encoding="utf-8")
         self.launchctl.loaded = True
         self.assertEqual(schedule.status(), {
             "installed": True, "loaded": True, "plist": str(self.plist),

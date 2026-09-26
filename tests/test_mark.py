@@ -26,5 +26,6 @@ class MarkTest(unittest.TestCase):
     def test_svg_copies_match_the_grid(self):
         for name in ("index.html", "favicon.svg"):
             with self.subTest(name):
-                paths = re.findall(r'<path [^>]*d="([^"]+)"', (STATIC / name).read_text())
+                text = (STATIC / name).read_text(encoding="utf-8")
+                paths = re.findall(r'<path [^>]*d="([^"]+)"', text)
                 self.assertEqual(paths, [_path(mark.STONE), _path(mark.SUN)])

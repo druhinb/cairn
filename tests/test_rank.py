@@ -27,7 +27,7 @@ def _ids_in(prompt):
 class RankTestCase(unittest.TestCase):
     def setUp(self):
         self.enterContext(temp_home())
-        paths.profile_md().write_text("Candidate profile: a new grad.")
+        paths.profile_md().write_text("Candidate profile: a new grad.", encoding="utf-8")
         self._claude = claude.run
         self.calls = []
 
@@ -371,7 +371,7 @@ class CallCapTest(RankTestCase):
 class SummaryBudgetTest(unittest.TestCase):
     def setUp(self):
         self.enterContext(temp_home(fit_threshold=60, tier_floor=50, max_summaries_per_run=2))
-        paths.profile_md().write_text("Candidate profile: a new grad.")
+        paths.profile_md().write_text("Candidate profile: a new grad.", encoding="utf-8")
         self.summarised, self.asked = [], []
         self.addCleanup(setattr, claude, "run", claude.run)
         self.addCleanup(setattr, descriptions, "keywords", descriptions.keywords)
