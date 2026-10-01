@@ -91,8 +91,9 @@ def connect():
 
 
 def _open(path):
-    # both modules connect through this one, so a top-level import would be circular
+    # these modules connect through this one, so a top-level import would be circular
     from cairn.store import legacy, relevance  # noqa: PLC0415
+    from cairn.store.search import date_group  # noqa: PLC0415
     path.parent.mkdir(parents=True, exist_ok=True)
     # each connection is used only by its own thread; the flag lets close() run
     # from any thread
@@ -105,6 +106,7 @@ def _open(path):
         conn.setconfig(sqlite3.SQLITE_DBCONFIG_DEFENSIVE, True)
     conn.create_function("name_key", 1, name_key, deterministic=True)
     conn.create_function("abroad", 1, _abroad, deterministic=True)
+    conn.create_function("date_group", 1, date_group)
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA foreign_keys = ON")
     try:

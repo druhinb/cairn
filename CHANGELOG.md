@@ -4,6 +4,13 @@ This file lists every notable change to this project. It follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+- Grouped by date or company, Jobs loads each group whole before the next,
+  so scrolling no longer adds rows to groups above or changes their counts.
+  Each group's count is its full total from the start, and companies are
+  listed alphabetically.
+
 ## [0.0.5] — 2026-09-26
 
 - Cairn checks the careers pages of companies you follow every hour, even with
