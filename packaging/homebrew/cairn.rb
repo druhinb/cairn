@@ -3,7 +3,7 @@ class Cairn < Formula
 
   desc "Daily new-grad job feed: fetch postings, rank them, track applications"
   homepage "https://github.com/druhinb/cairn"
-  url "https://github.com/druhinb/cairn/archive/refs/tags/v0.0.5.tar.gz"
+  url "https://github.com/druhinb/cairn/archive/refs/tags/v0.0.6.tar.gz"
   sha256 "<sha256 of the tarball>"
   license "AGPL-3.0-or-later"
 

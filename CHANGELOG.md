@@ -6,6 +6,8 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+## [0.0.6] — 2026-10-01
+
 - Grouped by date or company, Jobs loads each group whole before the next,
   so scrolling no longer adds rows to groups above or changes their counts.
   Each group's count is its full total from the start, and companies are
@@ -127,6 +129,7 @@ The first release.
 - All data stays in `~/.cairn` on your Mac. The app only answers the window it
   opened.
 
+[0.0.6]: https://github.com/druhinb/cairn/releases/tag/v0.0.6
 [0.0.5]: https://github.com/druhinb/cairn/releases/tag/v0.0.5
 [0.0.4]: https://github.com/druhinb/cairn/releases/tag/v0.0.4
 [0.0.3]: https://github.com/druhinb/cairn/releases/tag/v0.0.3
