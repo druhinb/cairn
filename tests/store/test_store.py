@@ -907,7 +907,8 @@ class StageTest(StoreTestCase):
         store.upsert_postings([_row("a"), _row("b", company="Globex")], "feed")
 
     def test_a_stage_on_a_posting_without_a_status_starts_interviewing(self):
-        event = store.add_stage("a", "screen", "2026-10-01T14:00", "with Kim")
+        with mock.patch.object(store.db, "now", return_value="2026-09-30T09:00:00"):
+            event = store.add_stage("a", "screen", "2026-10-01T14:00", "with Kim")
         self.assertEqual({k: event[k] for k in ("posting_id", "status", "stage", "at", "note")},
                          {"posting_id": "a", "status": None, "stage": "screen",
                           "at": "2026-10-01T14:00:00", "note": "with Kim"})
