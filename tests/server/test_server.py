@@ -111,6 +111,14 @@ class JobsTest(ServerTestCase):
         self.assertEqual((body["low_fit_hidden"], body["fit_threshold"]), (1, 60))
         self.assertEqual(self.client.get("/api/jobs").json()["low_fit_hidden"], 0)
 
+    def test_grouped_rows_carry_a_heading_and_every_heading_its_count(self):
+        body = self.client.get("/api/jobs", params={"group_by": "date", "limit": 1}).json()
+        self.assertEqual(sum(body["headings"].values()), body["total"])
+        self.assertIn(body["rows"][0]["heading"], body["headings"])
+        plain = self.client.get("/api/jobs").json()
+        self.assertEqual(plain["headings"], {})
+        self.assertNotIn("heading", plain["rows"][0])
+
     def test_default_list_is_relevant_active_and_ranked(self):
         body = self.client.get("/api/jobs").json()
         self.assertEqual([r["id"] for r in body["rows"]], ["alpha", "zeta", "beta", "gamma"])

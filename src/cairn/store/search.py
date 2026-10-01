@@ -1,4 +1,5 @@
 """The jobs list: search, sort, filters, and facet counts."""
+import datetime
 import time
 
 from cairn.core import settings
@@ -26,6 +27,35 @@ _SORTS = {
     "company": "lower(postings.company), lower(postings.title)",
     "updated": f"applications.updated_at DESC, {_BY_SCORE}",
     "salary": f"{_ANNUAL_SALARY} IS NULL, {_ANNUAL_SALARY} DESC, {_BY_SCORE}",
+}
+
+DATE_GROUPS = ("Today", "Yesterday", "This week", "Earlier", "Undated")
+
+
+def date_group(posted_at):
+    """The DATE_GROUPS entry for a posting posted at this Unix time, counted in local
+    calendar days. Registered as the SQL function date_group."""
+    if posted_at is None:
+        return "Undated"
+    days = (datetime.date.today() - datetime.date.fromtimestamp(posted_at)).days
+    if days <= 0:
+        return "Today"
+    if days == 1:
+        return "Yesterday"
+    return "This week" if days < 7 else "Earlier"
+
+
+_COMPANY_GROUP = "coalesce(nullif(postings.company, ''), '–')"
+# group_by: (each posting's heading in SQL, the order headings come in, a search
+# row's heading)
+_GROUP_BY = {
+    "date": ("date_group(postings.posted_at)",
+             "CASE date_group(postings.posted_at) "
+             + " ".join(f"WHEN '{label}' THEN {i}" for i, label in enumerate(DATE_GROUPS))
+             + " END",
+             lambda job: date_group(job["date_posted"])),
+    "company": (_COMPANY_GROUP, f"lower({_COMPANY_GROUP})",
+                lambda job: job["company_name"] or "–"),
 }
 
 _VALUE_FILTERS = {
@@ -144,7 +174,7 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
            hide_passed=True, category=None, location=None, source=None,
            posted_within_days=None, active_only=True, run_id=None,
            sponsorship=None, salary_min=None, hide_low_fit=False, sort="score", limit=50,
-           offset=0):
+           offset=0, group_by=None):
     """(rows, total): one page of matching postings and the count across all pages.
 
     status lists STATUSES entries, and "none" for postings that have no status.
@@ -161,6 +191,9 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
     role's other places, and total counting roles. Status filters read the group's
     application, so a posting applied to through one source leaves the inbox with
     its copies.
+
+    group_by, "date" or "company", sorts by heading before sort and gives each row
+    its heading, so a heading's rows are never split across pages.
     """
     where, params = _filters(
         q=q, relevant_only=relevant_only, fit_min=fit_min, tier_min=tier_min,
@@ -172,10 +205,14 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
     chosen = _representatives(where)
     conn = connect()
     total = conn.execute(f"SELECT count(*) FROM ({chosen})", params).fetchone()[0]
+    heading_order = f"{_GROUP_BY[group_by][1]}, " if group_by else ""
     rows = conn.execute(f"{_DETAIL} WHERE postings.id IN ({chosen}) "
-                        f"ORDER BY {_SORTS[sort]}, postings.id LIMIT ? OFFSET ?",
+                        f"ORDER BY {heading_order}{_SORTS[sort]}, postings.id LIMIT ? OFFSET ?",
                         _DETAIL_PARAMS + params + [limit, offset]).fetchall()
     jobs = [_posting(row) for row in rows]
+    if group_by:
+        for job in jobs:
+            job["heading"] = _GROUP_BY[group_by][2](job)
     _add_also_on(jobs)
     _add_other_openings(jobs)
     _add_reposts(jobs)
@@ -187,6 +224,15 @@ def count(**filters):
     where, params = _filters(**filters)
     return connect().execute(f"SELECT count(*) FROM ({_representatives(where)})",
                              params).fetchone()[0]
+
+
+def heading_counts(group_by, **filters):
+    """{heading: the roles under it} across every page search would give."""
+    where, params = _filters(**filters)
+    rows = connect().execute(f"SELECT {_GROUP_BY[group_by][0]}, count(*) FROM postings "
+                             f"WHERE postings.id IN ({_representatives(where)}) GROUP BY 1",
+                             params)
+    return dict(rows.fetchall())
 
 
 # facet: the value it counts, a column of the candidates

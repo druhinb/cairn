@@ -1,5 +1,5 @@
 import { api, qs } from "../lib/api.js";
-import { daysAgo, debounce, fmt, h, isTyping } from "../lib/dom.js";
+import { debounce, fmt, h, isTyping } from "../lib/dom.js";
 import { subscribe } from "../lib/events.js";
 import { register } from "../lib/keys.js";
 import { markOpened, openedIds, pref, setPref } from "../lib/store.js";
@@ -47,22 +47,6 @@ const SCOPES = {
     group: ["latestGroup", "none"], byRun: true },
 };
 
-function dateBucket(posted) {
-  const days = daysAgo(posted);
-  if (days == null) return "Undated";
-  if (days <= 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return "This week";
-  return "Earlier";
-}
-
-const BUCKET_ORDER = ["Today", "Yesterday", "This week", "Earlier", "Undated"];
-const GROUP_LABELS = {
-  none: () => null,
-  date: (row) => dateBucket(row.posted_at),
-  company: (row) => row.company || "–",
-};
-
 class JobsList {
   constructor(root, ctx, scope) {
     this.root = root;
@@ -75,6 +59,10 @@ class JobsList {
     this.rowEls = new Map();
     this.groups = [];
     this.groupsByLabel = new Map();
+    /** each loaded row's heading, kept for rows a status change replaces */
+    this.headingOf = new Map();
+    /** the rows under each heading across every page, from /api/jobs */
+    this.headings = {};
     this.order = [];
     this.removed = new Map();
     this.chips = new Map();
@@ -279,7 +267,7 @@ class JobsList {
 
   query(offset, overrides = {}) {
     return qs({ ...this.params(overrides), sort: overrides.sort ?? this.filters.sort,
-      limit: overrides.limit ?? PAGE, offset });
+      group_by: this.group === "none" ? null : this.group, limit: overrides.limit ?? PAGE, offset });
   }
 
   /** Counts per source, category, status and sponsorship under the filters, fetched once per filter state. */
@@ -363,7 +351,7 @@ class JobsList {
       select("Group", GROUPS, this.group, (mode) => {
         this.group = mode;
         setPref(this.scope.group[0], mode);
-        this.renderList();
+        this.reload();
       })].filter(Boolean));
     if (focused) this.refocusFilter(focused);
   }
@@ -466,6 +454,7 @@ class JobsList {
       if (token !== this.token) return;
       this.rows = page.rows;
       this.total = page.total;
+      this.takeHeadings(page, true);
       this.lowFit = { hidden: page.low_fit_hidden, under: page.fit_threshold };
       this.removed.clear();
       this.banner.hidden = true;
@@ -492,6 +481,7 @@ class JobsList {
       const fresh = page.rows.filter((row) => !known.has(row.id));
       this.rows.push(...fresh);
       this.total = page.total;
+      this.takeHeadings(page, false);
       this.renderCount();
       this.appendRows(fresh);
       this.renderFoot();
@@ -528,6 +518,7 @@ class JobsList {
     }
     this.rows.splice(index, 1);
     this.total = Math.max(0, this.total - 1);
+    this.countHeading(job.id, -1);
     this.queueRender().removed.push({ id: job.id, index });
   }
 
@@ -536,6 +527,7 @@ class JobsList {
     this.removed.delete(job.id);
     this.rows.splice(Math.min(gone.index, this.rows.length), 0, job);
     this.total += 1;
+    this.countHeading(job.id, 1);
     this.queueRender().restored.push({ id: job.id, next: gone.next });
   }
 
@@ -843,11 +835,22 @@ class JobsList {
     this.renderOpenNext();
   }
 
+  /** Note the headings of a page's rows and the server's count under each heading. */
+  takeHeadings(page, fresh) {
+    if (fresh) this.headingOf.clear();
+    for (const row of page.rows) this.headingOf.set(row.id, row.heading ?? null);
+    this.headings = page.headings;
+  }
+
+  countHeading(id, change) {
+    const heading = this.headingOf.get(id);
+    if (heading != null && heading in this.headings) this.headings[heading] += change;
+  }
+
   /** Add rows to the rendered list, each at the end of its group; earlier rows stay as they are. */
   appendRows(rows) {
-    const labelOf = GROUP_LABELS[this.group] || GROUP_LABELS.none;
     for (const job of rows) {
-      const label = labelOf(job);
+      const label = this.headingOf.get(job.id) ?? null;
       const group = this.groupsByLabel.get(label) ?? this.addGroup(label);
       const row = this.rowEl(job);
       const last = group.rows.length ? this.rowEls.get(group.rows[group.rows.length - 1].id) : group.head;
@@ -860,15 +863,9 @@ class JobsList {
     detail.refreshNav();
   }
 
-  /** A group that later pages can still add to shows its count with a "+". */
   renderGroupCounts() {
-    const more = this.rows.length < this.total;
-    const last = this.groups[this.groups.length - 1];
-    const inOrder = this.group === "date" && this.filters.sort === "newest";
     for (const group of this.groups) {
-      if (!group.count) continue;
-      const growing = more && (!inOrder || group === last);
-      group.count.textContent = `${fmt.number(group.rows.length)}${growing ? "+" : ""}`;
+      if (group.count) group.count.textContent = fmt.number(this.headings[group.label] ?? group.rows.length);
     }
   }
 
@@ -877,12 +874,9 @@ class JobsList {
     const head = label == null ? null
       : h("div", { class: "group-head", role: "presentation" }, h("span", { text: label }), count);
     const group = { label, rows: [], head, count };
-    const rank = (other) => BUCKET_ORDER.indexOf(other);
-    let index = this.group === "date" ? this.groups.findIndex((g) => rank(g.label) > rank(label)) : -1;
-    if (index < 0) index = this.groups.length;
-    this.groups.splice(index, 0, group);
+    this.groups.push(group);
     this.groupsByLabel.set(label, group);
-    if (head) this.list.insertBefore(head, this.groups[index + 1]?.head ?? this.sentinel);
+    if (head) this.list.insertBefore(head, this.sentinel);
     return group;
   }
 

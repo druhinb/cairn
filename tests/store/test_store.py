@@ -24,6 +24,7 @@ from helpers import temp_home, user_home
 from cairn import sources, store
 from cairn.core import paths, settings
 from cairn.jobs import fetch, logos
+from cairn.store.search import date_group
 
 NOW = time.time()
 DAY = 86400
@@ -1211,6 +1212,39 @@ class SearchTest(StoreTestCase):
 
     def test_default_is_relevant_active_sorted_by_score(self):
         self.assertEqual(self._ids(), ["jane", "citadel", "acme", "other"])
+
+    def test_grouped_by_date_each_heading_comes_whole_before_the_next(self):
+        expected = [("other", "Today"), ("citadel", "Yesterday"), ("jane", "This week"),
+                    ("acme", "Earlier")]
+        rows, _ = store.search(group_by="date")
+        self.assertEqual([(r["id"], r["heading"]) for r in rows], expected)
+        paged = [r["id"] for offset in (0, 2) for r in
+                 store.search(group_by="date", limit=2, offset=offset)[0]]
+        self.assertEqual(paged, [posting_id for posting_id, _ in expected])
+
+    def test_grouped_by_company_the_headings_run_alphabetically(self):
+        rows, _ = store.search(group_by="company")
+        self.assertEqual([(r["id"], r["heading"]) for r in rows],
+                         [("acme", "Acme"), ("citadel", "Citadel"), ("other", "Initech"),
+                          ("jane", "Jane Street")])
+
+    def test_heading_counts_cover_every_page(self):
+        self.assertEqual(store.heading_counts("date"),
+                         {"Today": 1, "Yesterday": 1, "This week": 1, "Earlier": 1})
+        self.assertEqual(store.heading_counts("date", category=["Quant"]), {"Yesterday": 1})
+
+    def test_date_groups_count_local_calendar_days(self):
+        midnight = datetime.datetime.combine(datetime.date.today(), datetime.time())
+
+        def at(days, hours=0):
+            return (midnight - datetime.timedelta(days=days, hours=-hours)).timestamp()
+
+        cases = [(at(0), "Today"), (at(1, 23), "Yesterday"), (at(1), "Yesterday"),
+                 (at(2, 12), "This week"), (at(6), "This week"), (at(7), "Earlier"),
+                 (None, "Undated")]
+        for posted_at, heading in cases:
+            with self.subTest(heading=heading):
+                self.assertEqual(date_group(posted_at), heading)
 
     def test_list_filters_and_run_id(self):
         self.assertEqual(self._ids(source=["one", "two"]), ["jane", "citadel", "acme", "other"])
