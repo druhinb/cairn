@@ -6,6 +6,7 @@ are marked seen only once their scores are stored, so a failed run retries in fu
 import dataclasses
 import os
 import time
+from concurrent import futures
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 
@@ -226,30 +227,42 @@ def _without_closed_links(new):
 
 def _pipeline(run_id, opts):
     started = time.monotonic()
-    # a fresh home has every company's icon to look up, a minute or more of work
-    # that a first run leaves until its postings are ranked
     with _phase("fetch"):
-        new, counts = fetch.fetch_new(dry_run=opts.dry_run, icons=not opts.first_run)
+        new, counts = fetch.fetch_new(dry_run=opts.dry_run, icons=False)
+    if opts.dry_run:
+        return RunResult(run_id=run_id, status="dry-run", counts=counts,
+                         results=_to_rank(new, opts), elapsed=time.monotonic() - started)
+    # a fresh home has every company's icon to look up, a minute or more of work
+    # that runs beside the ranking
+    icons = fetch.fetch_icons_later()
+    try:
+        return _rank_run(run_id, _to_rank(new, opts), counts, started)
+    finally:
+        # a command-line run would end the lookup with the process
+        icons.join()
 
+
+def _to_rank(new, opts):
+    """new cut to --limit, less the postings whose apply link a check found closed."""
     if opts.limit is not None:
         held = len(new) - opts.limit
         new = new[:opts.limit]
         if held > 0:
             events.emit("info", text=f"--limit {opts.limit}: {held} posting(s) held back, "
                                      "still unseen.")
+    return _without_closed_links(new)
 
-    new = _without_closed_links(new)
 
-    if opts.dry_run:
-        return RunResult(run_id=run_id, status="dry-run", counts=counts, results=new,
-                         elapsed=time.monotonic() - started)
-
+def _rank_run(run_id, new, counts, started):
     with _phase("rank"):
-        results, unranked = _ranked(experience.within_limit(new), run_id)
+        over_limit = experience.read_meanwhile(new)
+        try:
+            results, unranked = _ranked(new, run_id)
+        finally:
+            futures.wait([over_limit])
+        results = [job for job in results if job["id"] not in over_limit.result()]
         experience.read_ranked()
     store.claim_check_scores(run_id)
-    if opts.first_run:
-        fetch.fetch_icons_later()
 
     follow_ups = _follow_ups()
     counts = {**counts, "ranked": len(results), "unranked": len(unranked),

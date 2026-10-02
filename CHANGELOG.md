@@ -6,6 +6,10 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+- Runs look up company icons and read how many years each job asks for while
+  they rank, so ranking starts minutes sooner. On a first run with 2,200 new
+  postings, ranking used to wait about five minutes for those pages.
+
 ## [0.0.6] — 2026-10-01
 
 - Grouped by date or company, Jobs loads each group whole before the next,

@@ -48,6 +48,10 @@ def _fake_fetch(dry_run=False, icons=True):
     return jobs, {"total": 2, "relevant": 2, "new": 2}
 
 
+def _no_page(job):
+    return None, None, "no page in tests"
+
+
 def _fake_process(jobs, run_id=None):
     ranked = [{**j, "fit": 80, "tier": 70, "below_floor": False} for j in jobs]
     for j in ranked:
@@ -87,7 +91,8 @@ class PipelineTestCase(unittest.TestCase):
         for module, name, fake in ((fetch, "fetch_new", _fake_fetch),
                                    (rank, "process", _fake_process),
                                    (fetch, "check_links", _no_link_check),
-                                   (fetch, "fetch_icons_later", lambda: None)):
+                                   (fetch, "fetch_icons_later", mock.Mock),
+                                   (descriptions, "fetch_one", _no_page)):
             self.addCleanup(setattr, module, name, getattr(module, name))
             setattr(module, name, fake)
         self.events = []
@@ -363,67 +368,67 @@ class FirstRunTest(PipelineTestCase):
         self.assertEqual(self.ranked, [["new0", "new1", "new2", "new3", "old"]])
 
 
+class ExperienceTest(PipelineTestCase):
+    def test_years_are_read_while_ranking_and_too_many_leave_the_results(self):
+        ranking = threading.Event()
+
+        def page(job):
+            self.assertTrue(ranking.wait(5))
+            return ("Requires 5+ years of experience." if job["id"] == "a" else "New grads"), \
+                "html", None
+
+        def process(jobs, run_id=None):
+            ranking.set()
+            return _fake_process(jobs, run_id)
+
+        self.enterContext(mock.patch.object(descriptions, "fetch_one", page))
+        self.enterContext(mock.patch.object(rank, "process", process))
+        result = pipeline.run(RunOptions())
+        self.assertEqual([job["id"] for job in result.results], ["b"])
+        self.assertEqual(result.counts["ranked"], 1)
+        self.assertEqual(store.get_posting("a")["years_required"], 5)
+
+
 class IconOrderTest(unittest.TestCase):
-    """A first run ranks before it looks up company icons; a daily run looks them up first."""
+    """A run looks up company icons while it ranks, and ends once the lookup does."""
 
     def setUp(self):
         self.enterContext(temp_home())
-        self.order = []
-        self.looked_up = threading.Event()
+        self.icons_started, self.ranking = threading.Event(), threading.Event()
+        self.icons_done = threading.Event()
         jobs = [_job("a"), _job("b")]
 
         def fetch_missing(*args, **kwargs):
-            self.order.append("icons")
-            self.looked_up.set()
+            self.icons_started.set()
+            self.overlapped = self.ranking.wait(5)
+            self.icons_done.set()
 
         def process(jobs, run_id=None):
-            self.order.append("rank")
+            self.ranking.set()
+            self.assertTrue(self.icons_started.wait(5))
             return _fake_process(jobs, run_id)
 
         self.enterContext(mock.patch.object(fetch, "_load_all", lambda: [("feed", jobs)]))
         self.enterContext(mock.patch.object(fetch, "check_links", _no_link_check))
+        self.enterContext(mock.patch.object(descriptions, "fetch_one", _no_page))
         self.enterContext(mock.patch.object(fetch.logos, "fetch_missing", fetch_missing))
         self.enterContext(mock.patch.object(rank, "process", process))
 
-    def test_a_first_run_ranks_before_it_looks_up_icons(self):
-        result = pipeline.run(RunOptions(first_run=True))
-        self.assertTrue(self.looked_up.wait(5))
-        for thread in threading.enumerate():
-            if thread.name == "icons-after-run":
-                thread.join(5)
+    def test_a_first_run_looks_up_icons_while_it_ranks(self):
+        self.assert_side_by_side(RunOptions(first_run=True))
+
+    def test_a_daily_run_looks_up_icons_while_it_ranks(self):
+        self.assert_side_by_side(RunOptions())
+
+    def assert_side_by_side(self, opts):
+        result = pipeline.run(opts)
         self.assertEqual(result.counts["ranked"], 2)
-        self.assertEqual(self.order, ["rank", "icons"])
-
-    def test_a_daily_run_looks_up_icons_before_it_ranks(self):
-        pipeline.run(RunOptions())
-        self.assertEqual(self.order, ["icons", "rank"])
-
-    def test_a_first_run_ends_with_the_icon_marker_held(self):
-        # a restore that finds the run lock free waits for an icon fetch by its marker
-        later = threading.Event()
-        taking = fetch.logos.icon_job
-
-        @contextlib.contextmanager
-        def slow_to_take():
-            time.sleep(0.2)
-            with taking():
-                yield
-
-        self.enterContext(mock.patch.object(fetch.logos, "icon_job", slow_to_take))
-        self.enterContext(mock.patch.object(fetch.logos, "fetch_missing",
-                                            lambda *args, **kwargs: later.wait(5)))
-        self.addCleanup(self.join_icon_thread)
-        self.addCleanup(later.set)
-        pipeline.run(RunOptions(first_run=True))
-        self.assertTrue(fetch.logos.icons_running())
-        later.set()
-        self.join_icon_thread()
+        self.assertTrue(self.icons_done.is_set() and self.overlapped)
         self.assertFalse(fetch.logos.icons_running())
 
-    def join_icon_thread(self):
-        for thread in threading.enumerate():
-            if thread.name == "icons-after-run":
-                thread.join(5)
+    def test_a_dry_run_looks_up_no_icons(self):
+        pipeline.run(RunOptions(dry_run=True))
+        self.assertFalse(self.icons_started.is_set())
 
 
 class LockTest(PipelineTestCase):
