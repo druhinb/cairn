@@ -164,6 +164,10 @@
   width: min(420px, 100%);
 }
 
+.field-choice .select {
+  justify-self: start;
+}
+
 .field-stack {
   display: grid;
   justify-items: start;
