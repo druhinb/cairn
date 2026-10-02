@@ -3,10 +3,13 @@
 A company board lists every opening, senior ones included, under titles such as
 "Software Engineer, GenAI Platform", so the title rules pass them. The description
 says how many years it wants, and a posting asking for more than
-max_years_required is left out before ranking.
+max_years_required is left out of the matches. A run reads the years while it
+ranks, so the pages never hold the ranking up.
 """
+import contextvars
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from cairn import store
 from cairn.core import events, settings
@@ -63,6 +66,24 @@ def within_limit(new):
         events.emit("info", text=f"[experience] left out {len(new) - len(kept)} posting(s) "
                                  f"asking for more than {most} years")
     return kept
+
+
+def read_meanwhile(new):
+    """Start reading the years new's full-time postings ask for on another thread, so
+    ranking need not wait for their pages. Returns a future of the ids that ask for
+    more than max_years_required."""
+    pool = ThreadPoolExecutor(1, thread_name_prefix="experience")
+    future = pool.submit(contextvars.copy_context().run, _over_limit, new)
+    pool.shutdown(wait=False)
+    return future
+
+
+def _over_limit(new):
+    try:
+        kept = {job["id"] for job in within_limit(new)}
+        return {job["id"] for job in new} - kept
+    finally:
+        store.close_thread()
 
 
 def read_ranked(limit=BACKLOG_PER_RUN):

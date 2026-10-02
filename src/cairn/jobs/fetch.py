@@ -250,7 +250,7 @@ def fetch_icons_later():
         finally:
             holding.set()
 
-    thread = threading.Thread(target=look_up, name="icons-after-run", daemon=True)
+    thread = threading.Thread(target=look_up, name="icons", daemon=True)
     thread.start()
     holding.wait()
     return thread

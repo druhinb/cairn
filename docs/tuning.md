@@ -196,8 +196,8 @@ pending; a company or icon that fails for a reason of its own waits 30 or 14
 days before a retry.
 
 Companies with the most active postings go first. A run spends up to 90 seconds
-on 150 companies, 60 % of it on lookups and the rest on downloads, and picks up
-where it left off next time. `cairn icons`, or Fetch icons now in
+on 150 companies while it ranks, 60 % of it on lookups and the rest on
+downloads, and picks up where it left off next time. `cairn icons`, or Fetch icons now in
 Settings, keeps going until nothing is left and runs alongside a daily run
 without blocking it; `--reset-failures` retries the companies and icons that
 failed before. Every request goes to a public address only; the
@@ -219,7 +219,7 @@ still show, and a company without one shows its initials.
   them. Only pay stated in USD sorts and filters; other currencies read as
   unstated.
 - Before ranking, a run checks the apply links of up to 60 new postings, and
-  after icons up to 60 ranked ones not checked in three days (8 s each, 30 s in
+  up to 60 ranked ones not checked in three days (8 s each, 30 s in
   all, one check at a time). A 404 or 410, or a redirect to a Greenhouse, Lever,
   Ashby or Workday board's front page, marks the posting closed. A closed posting
   is not ranked or pushed, sorts last and stays visible. A redirect to a sign-in
