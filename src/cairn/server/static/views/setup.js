@@ -2,6 +2,7 @@ import { api } from "../lib/api.js";
 import { fmt, h, safeUrl } from "../lib/dom.js";
 import { subscribe } from "../lib/events.js";
 import { readNumber } from "../lib/numbers.js";
+import { QUIZ_CARDS, quizCards } from "../lib/quiz.js";
 import { heldSkips, withRole, withSkip } from "../lib/roles.js";
 import { doctorList } from "../components/doctor.js";
 import { editor } from "../components/editor.js";
@@ -13,7 +14,7 @@ import { stepper } from "../components/stepper.js";
 import { switchControl } from "../components/switch.js";
 import { tagInput } from "../components/tagInput.js";
 import { toast } from "../components/toast.js";
-import { SECTIONS } from "./settingsFields.js";
+import { JOB_TYPES, SECTIONS } from "./settingsFields.js";
 
 const STEPS = ["AI", "Resume", "Review", "Preferences", "Companies", "Alerts"];
 const [AI_STEP, RESUME_STEP, REVIEW_STEP, PREFS_STEP, COMPANIES_STEP, ALERTS_STEP] = STEPS.keys();
@@ -25,6 +26,9 @@ const ROLE_LABELS = { backend: "Backend", frontend: "Frontend", fullstack: "Full
 const SKIP_LABELS = { senior: "Senior roles", managers: "Managers", phd: "PhD roles", hardware: "Hardware",
   engineering: "Other engineering", testing: "Test and quality", support: "Field and support",
   business: "Sales and recruiting" };
+const CHANGE_LISTS = { roles: withRole, skips: withSkip };
+const JOB_TYPE_NOTES = { internships: "Summer, fall or co-op roles while you're still in school.",
+  new_grad: "Full-time roles for when you finish school.", both: "Internships and full-time roles together." };
 const ANCHOR_HINTS = ["e.g. Stripe, Databricks, Jane Street = 90", "e.g. Datadog, Snowflake = 75",
   "e.g. a strong regional company = 60"];
 const ACCEPT = ".pdf,.txt,.md";
@@ -71,6 +75,13 @@ function yearsInput(id, value, label, onChange) {
     } });
 }
 
+/** A labelled field; without an id the label is plain text. */
+function field(label, help, control, id) {
+  return h("div", { class: "field" },
+    h(id ? "label" : "span", { class: "field-label", for: id, text: label }),
+    help && h("p", { class: "field-help" }, help), control);
+}
+
 function sizeText(bytes) {
   return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
@@ -96,6 +107,8 @@ class Setup {
     this.options = null;
     /** the role and skip group checkboxes checked on the preferences step */
     this.checked = { roles: [], skips: [] };
+    /** the preference card shown, whether the advanced card is on, and the way the last move went */
+    this.quiz = { card: QUIZ_CARDS[0], advanced: false, moved: null };
     this.starters = [];
     /** what the settings held when the wizard opened, so Finish sends only what changed */
     this.initial = { ntfy_topic: "", watchlist: [] };
@@ -167,7 +180,7 @@ class Setup {
       h("header", { class: "setup-head" }, pixelArt("checklist"),
         h("h1", { class: "display", tabindex: "-1", text: done ? "You are set up" : "Set up Cairn" }),
         h("p", { class: "setup-sub", text: done ? "Setup saved your profile and preferences."
-          : "Pick an AI provider and add your resume. Cairn drafts a profile from it for you to check, then you set a few preferences." })),
+          : "Pick an AI provider and add your resume. Cairn drafts a profile from it for you to check, then you answer a few quick questions." })),
       stepper(STEPS, done ? STEPS.length : this.step, { label: "Setup steps" }),
       body);
   }
@@ -392,6 +405,7 @@ class Setup {
       locations: either(suggestions.locations, allow.filter((place) => !isRemote(place))),
       remote_ok: allow.some(isRemote),
       us_only: current?.us_only ?? false,
+      job_type: suggestions.job_type ?? current?.job_type ?? "both",
       graduation_year: year,
       experience_years: current?.experience_years ?? 0,
       max_years_required: current ? current.max_years_required : DEFAULT_MAX_YEARS,
@@ -413,7 +427,7 @@ class Setup {
   reviewStep() {
     const edit = editor(this.profile, { label: "Profile draft", onInput: (text) => { this.profile = text; } });
     return h("div", { class: "setup-body" },
-      h("p", { class: "setup-lead", text: "Cairn compares every job to this profile. Fix anything it got wrong. The next step asks about locations and the companies you rate highest." }),
+      h("p", { class: "setup-lead", text: "Cairn compares every job to this profile. Fix anything it got wrong. Next come a few quick questions about the jobs you want." }),
       edit.element,
       h("div", { class: "setup-actions" },
         h("button", { type: "button", class: "btn btn-ghost", text: "Back", onclick: () => this.go(RESUME_STEP) }),
@@ -636,43 +650,123 @@ class Setup {
     if (this.mounted) this.go(RESUME_STEP);
   }
 
-  // step 4, preferences
+  // step 4, preferences, one question to a card
+  /** The preference cards to ask, given the answers so far. */
+  quizCards() {
+    return quizCards({ jobType: this.prefs.job_type, roles: Object.keys(this.options.roles).length > 0,
+      advanced: this.quiz.advanced });
+  }
+
+  /**
+   * Show the card `step` cards away, or leave the questions past either end. The
+   * card stays put when they are left, so Back from Companies returns to the last.
+   */
+  moveQuiz(step) {
+    const cards = this.quizCards();
+    const at = cards.indexOf(this.quiz.card) + step;
+    if (at < 0) return this.go(REVIEW_STEP);
+    if (at >= cards.length) return this.go(COMPANIES_STEP);
+    this.quiz.card = cards[at];
+    this.quiz.moved = step > 0 ? "next" : "back";
+    this.render();
+    this.card.querySelector(".quiz-question").focus({ preventScroll: true });
+    this.card.closest(".setup-scroll").scrollTop = 0;
+  }
+
   prefsStep() {
+    const cards = this.quizCards();
+    if (!cards.includes(this.quiz.card)) this.quiz.card = cards.at(-1);
+    const at = cards.indexOf(this.quiz.card);
+    const next = h("button", { type: "button", class: "btn btn-primary",
+      text: at === cards.length - 1 ? "Next: companies" : "Next", onclick: () => this.moveQuiz(1) });
+    const sync = () => {
+      const problem = card.problem?.() || null;
+      next.disabled = Boolean(problem);
+      next.title = problem || "";
+    };
+    const card = this[`${this.quiz.card}Card`](sync);
+    sync();
+    const moved = this.quiz.moved;
+    this.quiz.moved = null;
+    const advanced = switchControl("Advanced options", this.quiz.advanced, (on) => {
+      this.quiz.advanced = on;
+      this.render();
+      this.card.querySelector('[data-key="quiz-advanced"]').focus();
+    }, { key: "quiz-advanced" });
+    return h("div", { class: "setup-body quiz" },
+      h("div", { class: "quiz-bar" },
+        h("span", { class: "quiz-count", text: `${at + 1} of ${cards.length}` }),
+        h("span", { class: "quiz-meter", "aria-hidden": "true" },
+          h("span", { class: "quiz-meter-fill", style: `width: ${((at + 1) / cards.length) * 100}%` })),
+        advanced),
+      h("div", { class: `quiz-card${moved ? ` quiz-${moved}` : ""}`, role: "group", "aria-labelledby": "quiz-question",
+        onkeydown: (event) => {
+          if (event.key !== "Enter" || event.defaultPrevented || event.isComposing || next.disabled
+            || /^(BUTTON|A|SELECT|TEXTAREA)$/.test(event.target.tagName)) return;
+          event.preventDefault();
+          this.moveQuiz(1);
+        } },
+      h("h2", { class: "quiz-question", id: "quiz-question", tabindex: "-1", text: card.question }),
+      card.help && h("p", { class: "setup-lead", text: card.help }),
+      card.body),
+      h("div", { class: "setup-actions" },
+        h("button", { type: "button", class: "btn btn-ghost", text: "Back", onclick: () => this.moveQuiz(-1) }),
+        h("span", { class: "filter-spacer" }), next));
+  }
+
+  /** Check or uncheck a role or skip group, and change the title lists to match. */
+  toggleCheck(kind, name, on) {
+    Object.assign(this.prefs, CHANGE_LISTS[kind](this.prefs, this.options, this.checked, name, on));
+    this.checked[kind] = Object.keys(this.options[kind])
+      .filter((other) => (other === name ? on : this.checked[kind].includes(other)));
+  }
+
+  /** The role or skip group checkboxes; `onToggle` runs after each change. */
+  checks(kind, labels, groupLabel, onToggle) {
+    return h("div", { class: "check-grid", role: "group", "aria-label": groupLabel },
+      Object.keys(this.options[kind]).map((name) => h("label", { class: "check" },
+        h("input", { type: "checkbox", checked: this.checked[kind].includes(name),
+          onchange: (event) => {
+            this.toggleCheck(kind, name, event.target.checked);
+            onToggle?.();
+          } }), labelOf(labels, name))));
+  }
+
+  jobsCard() {
     const p = this.prefs;
-    const field = (label, help, control, id) => h("div", { class: "field" },
-      h(id ? "label" : "span", { class: "field-label", for: id, text: label }),
-      help && h("p", { class: "field-help" }, help), control);
-    const words = (key, id) => tagInput(p[key], { id, onChange: (tags) => { p[key] = tags; } });
-    const lists = { title_keywords: words("title_keywords", "pref-title-keywords"),
-      title_exclude: words("title_exclude", "pref-title-exclude"),
-      title_exclude_field: words("title_exclude_field", "pref-title-field") };
-    const change = { roles: withRole, skips: withSkip };
-    const toggle = (kind, name, on) => {
-      Object.assign(p, change[kind](p, this.options, this.checked, name, on));
-      this.checked[kind] = Object.keys(this.options[kind])
-        .filter((other) => (other === name ? on : this.checked[kind].includes(other)));
-      for (const key of Object.keys(lists)) {
-        const fresh = words(key, lists[key].querySelector("input").id);
-        lists[key].replaceWith(fresh);
-        lists[key] = fresh;
-      }
-    };
-    const checks = (kind, labels, groupLabel) => {
-      const names = Object.keys(this.options[kind]);
-      return names.length > 0 && h("div", { class: "check-grid", role: "group", "aria-label": groupLabel },
-        names.map((name) => h("label", { class: "check" },
-          h("input", { type: "checkbox", checked: this.checked[kind].includes(name),
-            onchange: (event) => toggle(kind, name, event.target.checked) }), labelOf(labels, name))));
-    };
-    const roles = checks("roles", ROLE_LABELS, "Roles");
-    const skips = checks("skips", SKIP_LABELS, "Jobs to skip");
-    const auth = h("select", { class: "select", id: "pref-auth", onchange: (event) => { p.work_authorization = event.target.value; } },
-      this.options.work_authorization.map((value) => h("option", { value, selected: value === p.work_authorization,
-        text: value === "unknown" ? "Prefer not to say" : value })));
-    const next = h("button", { type: "button", class: "btn btn-primary", text: "Next: companies",
-      disabled: Boolean(this.graduationError), onclick: () => this.go(COMPANIES_STEP) });
-    let lookbackBad = false;
-    const syncNext = () => { next.disabled = Boolean(this.graduationError) || lookbackBad; };
+    const choice = ([value, label]) => h("label", { class: `provider-card choice-card${p.job_type === value ? " is-chosen" : ""}` },
+      h("input", { type: "radio", name: "job-type", value, checked: p.job_type === value, onchange: () => {
+        p.job_type = value;
+        this.render();
+        this.card.querySelector(`input[name="job-type"][value="${value}"]`).focus();
+      } }),
+      h("span", { class: "provider-name", text: label }),
+      h("span", { class: "provider-notes", text: JOB_TYPE_NOTES[value] }));
+    return { question: "What kind of jobs are you looking for?",
+      help: this.draft?.suggestions.graduation_year != null ? "Cairn picked one from your graduation date. You can change it." : null,
+      body: h("div", { class: "choice-cards", role: "radiogroup", "aria-label": "Jobs to show" }, JOB_TYPES.map(choice)) };
+  }
+
+  rolesCard() {
+    return { question: "Which roles interest you?",
+      help: "Cairn checked the ones your resume points to. Pick as many as you like.",
+      body: this.checks("roles", ROLE_LABELS, "Roles") };
+  }
+
+  placesCard() {
+    const p = this.prefs;
+    return { question: "Where do you want to work?",
+      help: "Add cities, states or countries. Leave it empty to see jobs everywhere.",
+      body: h("div", { class: "field-stack" },
+        h("label", { class: "visually-hidden", for: "pref-locations", text: "Locations" }),
+        tagInput(p.locations, { id: "pref-locations", placeholder: "Seattle, New York, CA…",
+          onChange: (tags) => { p.locations = tags; } }),
+        switchControl("Remote is fine too", p.remote_ok, (on) => { p.remote_ok = on; }),
+        switchControl("Only jobs in the US", p.us_only, (on) => { p.us_only = on; })) };
+  }
+
+  schoolCard(sync) {
+    const p = this.prefs;
     const monthError = h("p", { class: "field-error", id: "pref-month-error", role: "alert",
       hidden: !this.graduationError, text: this.graduationError || "" });
     const month = h("input", { type: "month", class: "input input-month", id: "pref-month", min: "2000-01", max: "2100-12",
@@ -686,58 +780,112 @@ class Setup {
         monthError.hidden = !error;
         monthError.textContent = error || "";
         month.setAttribute("aria-invalid", String(Boolean(error)));
-        syncNext();
+        sync();
       } });
-    const lookbackError = h("p", { class: "field-error", id: "pref-recent-error", role: "alert", hidden: true });
+    const auth = h("select", { class: "select", id: "pref-auth", onchange: (event) => { p.work_authorization = event.target.value; } },
+      this.options.work_authorization.map((value) => h("option", { value, selected: value === p.work_authorization,
+        text: value === "unknown" ? "Prefer not to say" : value })));
+    return { question: "When do you graduate?",
+      body: h("div", { class: "field-stack" },
+        field("Graduation month", "Cairn flags jobs that start before you graduate. Leave it empty to skip the flag.",
+          h("div", { class: "field-stack" }, month, monthError), "pref-month"),
+        field("Work authorization", "Cairn weighs this when it ranks jobs.", auth, "pref-auth")),
+      problem: () => this.graduationError };
+  }
+
+  experienceCard() {
+    const p = this.prefs;
+    return { question: "How much full-time experience do you have?",
+      help: "Don't count internships. Cairn hides full-time jobs that ask for more years than your limit. Leave the second box empty to show them all.",
+      body: h("div", { class: "years-row" },
+        "I have", yearsInput("pref-years", p.experience_years, "Years of full-time experience you have",
+          (n) => { p.experience_years = n ?? 0; }),
+        "years of full-time experience. Show jobs asking for up to",
+        yearsInput("pref-max-years", p.max_years_required, "Most years a job can ask for",
+          (n) => { p.max_years_required = n; }),
+        "years.") };
+  }
+
+  termsCard(sync) {
+    const p = this.prefs;
+    const hint = h("p", { class: "field-help", role: "status" });
+    const show = () => {
+      hint.textContent = p.internship_terms.length ? "" : "Add at least one term to see internships.";
+    };
+    show();
+    return { question: "Which internship terms can you take?",
+      help: "Cairn shows internships only for the terms you list, such as Summer 2027 or Fall 2027.",
+      body: h("div", { class: "field-stack" },
+        h("label", { class: "visually-hidden", for: "pref-terms", text: "Internship terms" }),
+        tagInput(p.internship_terms, { id: "pref-terms", placeholder: "Summer 2027, Fall 2027…", onChange: (tags) => {
+          p.internship_terms = tags;
+          show();
+          sync();
+        } }),
+        hint),
+      problem: () => (p.internship_terms.length ? null : "Add at least one term") };
+  }
+
+  recentCard(sync) {
+    const p = this.prefs;
+    let problem = null;
+    const error = h("p", { class: "field-error", id: "pref-recent-error", role: "alert", hidden: true });
     const lookback = h("input", { type: "number", class: "input input-num", id: "pref-recent", min: LOOKBACK.min,
       max: LOOKBACK.max, step: "1", value: p.recent_days, "aria-describedby": "pref-recent-error",
       oninput: () => {
-        const { value, error } = readNumber(lookback, LOOKBACK);
-        if (!error) p.recent_days = value;
-        lookbackBad = Boolean(error);
-        lookbackError.hidden = !error;
-        lookbackError.textContent = error || "";
-        lookback.setAttribute("aria-invalid", String(lookbackBad));
-        syncNext();
+        const { value, error: bad } = readNumber(lookback, LOOKBACK);
+        if (!bad) p.recent_days = value;
+        problem = bad || null;
+        error.hidden = !bad;
+        error.textContent = bad || "";
+        lookback.setAttribute("aria-invalid", String(Boolean(bad)));
+        sync();
       } });
-    const anchors = h("div", { class: "anchor-inputs" }, p.calibre_anchors.map((value, i) => h("input", {
-      type: "text", class: "input input-text", value, placeholder: ANCHOR_HINTS[i], "aria-label": `Company tier example ${i + 1}`,
-      oninput: (event) => { p.calibre_anchors[i] = event.target.value; } })));
-    return h("div", { class: "setup-body" },
-      h("p", { class: "setup-lead", text: "Cairn filled these in from your resume. You can change them later in Settings." }),
-      roles && field("Roles", "Checking a role adds its job titles to the lists below. Unchecking it takes them out.", roles),
-      field("Title keywords", "Cairn shows only jobs whose title has one of these words. Leave it empty to use Cairn’s own list.",
-        lists.title_keywords, "pref-title-keywords"),
-      skips && field("Jobs to skip", "Checking a group adds its words to the two skip lists below. Unchecking it takes them out.", skips),
-      field("Skip titles with", "Cairn hides jobs whose title has any of these words, such as senior roles.",
-        lists.title_exclude, "pref-title-exclude"),
-      field("Skip field roles with", "Cairn hides jobs in fields your resume doesn’t point to, such as hardware.",
-        lists.title_exclude_field, "pref-title-field"),
-      field("Locations", "Leave empty to see jobs in every location.",
-        h("div", { class: "field-stack" }, tagInput(p.locations, { id: "pref-locations", placeholder: "Seattle, New York, CA…",
-          onChange: (tags) => { p.locations = tags; } }),
-        switchControl("Remote is fine too", p.remote_ok, (on) => { p.remote_ok = on; }),
-        switchControl("Only jobs in the US", p.us_only, (on) => { p.us_only = on; })), "pref-locations"),
-      field("Work authorization", "Cairn weighs this when it ranks jobs.", auth, "pref-auth"),
-      field("Graduation month", "Cairn flags jobs that start before you graduate.",
-        h("div", { class: "field-stack" }, month, monthError), "pref-month"),
-      field("Experience", "For full-time jobs. Cairn reads each job's description and hides the ones asking for more years. Leave the second box empty to show them all.",
-        h("div", { class: "years-row" },
-          "I have", yearsInput("pref-years", p.experience_years, "Years of full-time experience you have",
-            (n) => { p.experience_years = n ?? 0; }),
-          "years of full-time experience. Show jobs asking for up to",
-          yearsInput("pref-max-years", p.max_years_required, "Most years a job can ask for",
-            (n) => { p.max_years_required = n; }),
-          "years."), "pref-years"),
-      field("Degrees", "Cairn hides jobs that accept none of these degrees.",
-        tagInput(p.degrees_held, { id: "pref-degrees", placeholder: "Bachelor's, Master's…", onChange: (tags) => { p.degrees_held = tags; } }), "pref-degrees"),
-      field("Internship terms", "Terms you can intern in, such as “Fall 2026”. Leave empty to skip internships.",
-        tagInput(p.internship_terms, { id: "pref-terms", onChange: (tags) => { p.internship_terms = tags; } }), "pref-terms"),
-      field("Posted within", "Cairn shows jobs posted in the last this many days. New grad and intern jobs often open in July and stay open for months.",
-        h("div", { class: "field-stack" },
-          h("div", { class: "number-input" }, lookback, h("span", { class: "unit", text: "days" })), lookbackError), "pref-recent"),
-      field("Company tier examples", "Name up to three companies and the score out of 100 you'd give each. Cairn rates other companies against them.", anchors),
-      this.actions(REVIEW_STEP, next));
+    return { question: "How far back should Cairn look?",
+      help: "New grad and intern jobs often open in July and stay open for months.",
+      body: h("div", { class: "field-stack" },
+        h("div", { class: "years-row" }, h("label", { for: "pref-recent", text: "Show jobs posted in the last" }),
+          lookback, "days"),
+        error),
+      problem: () => problem };
+  }
+
+  tiersCard() {
+    const p = this.prefs;
+    return { question: "Which companies do you rate highly?",
+      help: "This one is optional. Name up to three companies and the score out of 100 you'd give each. Cairn rates other companies against them.",
+      body: h("div", { class: "anchor-inputs" }, p.calibre_anchors.map((value, i) => h("input", {
+        type: "text", class: "input input-text", value, placeholder: ANCHOR_HINTS[i], "aria-label": `Company tier example ${i + 1}`,
+        oninput: (event) => { p.calibre_anchors[i] = event.target.value; } }))) };
+  }
+
+  advancedCard() {
+    const p = this.prefs;
+    const words = (key, id) => tagInput(p[key], { id, onChange: (tags) => { p[key] = tags; } });
+    const lists = { title_keywords: words("title_keywords", "pref-title-keywords"),
+      title_exclude: words("title_exclude", "pref-title-exclude"),
+      title_exclude_field: words("title_exclude_field", "pref-title-field") };
+    const refresh = () => {
+      for (const key of Object.keys(lists)) {
+        const fresh = words(key, lists[key].querySelector("input").id);
+        lists[key].replaceWith(fresh);
+        lists[key] = fresh;
+      }
+    };
+    const skips = Object.keys(this.options.skips).length > 0 && this.checks("skips", SKIP_LABELS, "Jobs to skip", refresh);
+    return { question: "Fine-tune the filters",
+      help: "Cairn matches job titles against these lists. The roles you picked already filled them in.",
+      body: h("div", { class: "setup-body" },
+        field("Title keywords", "Cairn shows only jobs whose title has one of these words. Leave it empty to use Cairn’s own list.",
+          lists.title_keywords, "pref-title-keywords"),
+        skips && field("Jobs to skip", "Checking a group adds its words to the two skip lists below. Unchecking it takes them out.", skips),
+        field("Skip titles with", "Cairn hides jobs whose title has any of these words, such as senior roles.",
+          lists.title_exclude, "pref-title-exclude"),
+        field("Skip field roles with", "Cairn hides jobs in fields your resume doesn’t point to, such as hardware.",
+          lists.title_exclude_field, "pref-title-field"),
+        field("Degrees", "Cairn hides jobs that accept none of these degrees.",
+          tagInput(p.degrees_held, { id: "pref-degrees", placeholder: "Bachelor's, Master's…", onChange: (tags) => { p.degrees_held = tags; } }),
+          "pref-degrees")) };
   }
 
   /** The row under a step: Back to the step before, then its main button. */
