@@ -63,10 +63,12 @@ The first time Cairn opens, setup walks you through three steps:
 1. Upload your resume. Cairn drafts a profile from it: the roles you want, where
    you want to work, and which companies you rate highly.
 2. Check the profile and fix anything it got wrong.
-3. Answer a few questions: roles, which job titles to show and skip, locations,
-   work authorization, graduation date and how far back to look for postings.
-   Cairn picks the roles and job titles from your resume, and you can change
-   them.
+3. Answer a few quick questions, one card at a time: internships, new grad
+   jobs or both, the roles you want, locations, graduation date and work
+   authorization, experience, internship terms and how far back to look for
+   postings. Cairn fills in the answers it can from your resume, and you can
+   change them. Turn on Advanced options to edit the job title lists and
+   degrees too.
 
 Then the first search runs, and you can watch its progress. It scores every
 posting that matches your preferences, so later runs only bring new postings.

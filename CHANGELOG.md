@@ -17,6 +17,10 @@ This file lists every notable change to this project. It follows
   Cairn now shows new grad jobs only.
 - `cairn init --from-resume` asks which jobs to show. It suggests internships
   when you graduate more than a year from now, and new grad otherwise.
+- Setup asks its questions one card at a time, starting with whether you want
+  internships, new grad jobs or both. It skips the questions that don't apply,
+  such as experience when you only want internships. The job title lists and
+  degrees show only when you turn on Advanced options.
 
 ## [0.0.6] — 2026-10-01
 
