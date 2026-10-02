@@ -21,6 +21,9 @@ This file lists every notable change to this project. It follows
   internships, new grad jobs or both. It skips the questions that don't apply,
   such as experience when you only want internships. The job title lists and
   degrees show only when you turn on Advanced options.
+- Retake the questions, in Settings › Profile, asks the setup questions again
+  without a new resume. It starts from your current settings and keeps your
+  profile, changing only the lines the answers cover.
 
 ## [0.0.6] — 2026-10-01
 

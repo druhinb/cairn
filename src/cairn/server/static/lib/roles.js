@@ -53,6 +53,18 @@ export function withSkip(lists, options, checked, group, on) {
 }
 
 /**
+ * The roles whose keywords the lists already hold, all of them, with none of the
+ * role's unskips still on the field skip list.
+ * @param {Lists} lists @param {Options} options
+ */
+export function heldRoles(lists, options) {
+  return Object.entries(options.roles)
+    .filter(([, { keywords, unskips }]) => keywords.every((word) => lists.title_keywords.includes(word))
+      && !unskips.some((word) => lists.title_exclude_field.includes(word)))
+    .map(([role]) => role);
+}
+
+/**
  * The skip groups whose words the lists already hold, counting a word a checked
  * role takes off as held.
  * @param {Lists} lists @param {Options} options @param {string[]} roles
