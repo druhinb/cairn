@@ -9,6 +9,8 @@ This file lists every notable change to this project. It follows
 - Runs look up company icons and read how many years each job asks for while
   they rank, so ranking starts minutes sooner. On a first run with 2,200 new
   postings, ranking used to wait about five minutes for those pages.
+- Leaving Most years a job can ask for empty saves again, in setup and in
+  Settings. It used to fail, and setup could stop halfway through saving.
 
 ## [0.0.6] — 2026-10-01
 

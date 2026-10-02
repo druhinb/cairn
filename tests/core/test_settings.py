@@ -79,6 +79,18 @@ class RoundTripTest(unittest.TestCase):
         self.assertNotIn("tier_floor", text)
         self.assertNotIn("sources", text)
 
+    def test_an_emptied_limit_with_a_default_saves_and_loads_as_empty(self):
+        original = dataclasses.replace(settings.defaults(), max_years_required=None)
+        settings.save(original)
+        self.assertIn('max_years_required = "none"',
+                      paths.config_file().read_text(encoding="utf-8"))
+        self.assertEqual(settings.load(), original)
+
+    def test_none_is_only_empty_for_a_setting_that_can_be(self):
+        paths.config_file().write_text('fit_threshold = "none"\n', encoding="utf-8")
+        with self.assertRaisesRegex(settings.SettingsError, "'fit_threshold' should be"):
+            settings.load()
+
     def test_characters_outside_the_bmp_and_del_survive(self):
         """JSON escapes these in ways TOML rejects; the file must still load."""
         original = dataclasses.replace(
