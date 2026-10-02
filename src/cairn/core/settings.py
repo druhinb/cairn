@@ -204,8 +204,21 @@ def load(path=None):
     if retired:
         events.emit("warn", text=f"{path.name}: ignoring retired setting(s): "
                                  f"{', '.join(retired)}")
-    return from_dict(_renamed({k: v for k, v in raw.items() if k not in RETIRED_KEYS}),
-                     source=path)
+    raw = _renamed({k: v for k, v in raw.items() if k not in RETIRED_KEYS})
+    return from_dict(_unset(raw), source=path)
+
+
+# TOML has no null, so save writes this for a setting left empty that has a value
+# by default, such as max_years_required
+UNSET = "none"
+
+
+def _unset(raw):
+    """raw with UNSET read as None for the settings that can be empty."""
+    nullable = {f.name for f in dataclasses.fields(Settings)
+                if _matches(None, typing.get_type_hints(Settings)[f.name])}
+    return {key: None if value == UNSET and key in nullable else value
+            for key, value in raw.items()}
 
 
 def _renamed(raw):
@@ -345,6 +358,8 @@ def _toml_string(text):
 
 
 def _toml(value):
+    if value is None:
+        return _toml_string(UNSET)
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, int):
