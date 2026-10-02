@@ -341,6 +341,17 @@ class ProfileAnswersTest(unittest.TestCase):
         self.assertIn("- Work authorization: **U.S. Citizen**\n"
                       "  Stated during setup: US citizen.\n", text)
 
+    def test_a_later_answer_replaces_the_one_stated_before(self):
+        stated = PROFILE.replace("Computer Science.", "Computer Science.\n"
+                                                      "- Work authorization: **U.S. Citizen**")
+        first = onboard.with_answers(stated, {"work_authorization": "F-1 OPT"})
+        again = onboard.with_answers(first, {"work_authorization": "US citizen"})
+        self.assertEqual(again, onboard.with_answers(stated, {"work_authorization": "US citizen"}))
+        written = onboard.with_answers(PROFILE, {"work_authorization": "F-1 OPT"})
+        self.assertEqual(onboard.with_answers(written, {"work_authorization": "F-1 OPT"}), written)
+        self.assertIn("- Work authorization: F-1 OPT.\n  Stated during setup: US citizen.\n",
+                      onboard.with_answers(written, {"work_authorization": "US citizen"}))
+
     def test_authorization_without_a_snapshot_gets_one(self):
         text = onboard.with_answers("# Profile\n", {"work_authorization": "needs sponsorship"})
         self.assertEqual(text, "# Profile\n\n## Snapshot\n- Work authorization: needs sponsorship.\n")
