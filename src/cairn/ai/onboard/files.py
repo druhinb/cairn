@@ -105,6 +105,16 @@ def apply(draft, prefs):
     return Applied(written, unresolved, new)
 
 
+def answer_again(prefs):
+    """apply with the current profile.md as the draft, for answers given again
+    without a resume. The answers replace what earlier ones wrote into it, and the
+    packaged example is refused, as it describes someone else."""
+    if needs_setup():
+        raise OnboardError("Cairn has no profile of yours yet. Run setup first")
+    text = paths.profile_md().read_text(encoding="utf-8")
+    return apply(Draft(text, {}), {**prefs, "overwrite": True})
+
+
 DRAFT_FILES = ("profile.md", "suggestions.json")
 PREFS_FILE = "prefs.json"
 

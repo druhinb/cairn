@@ -73,7 +73,9 @@ The first time Cairn opens, setup walks you through three steps:
 Then the first search runs, and you can watch its progress. It scores every
 posting that matches your preferences, so later runs only bring new postings.
 
-To run setup again, open Settings and click Redo setup.
+To run setup again, open Settings › Profile and click Run setup again. To
+answer just the questions again, without a new resume, click Retake the
+questions there instead.
 
 From the command line, the same steps are:
 

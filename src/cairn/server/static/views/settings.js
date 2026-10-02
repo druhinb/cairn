@@ -507,8 +507,12 @@ class Settings {
     const redo = h("button", { type: "button", class: "btn btn-sm", text: "Run setup again",
       title: "Draft your profile from a resume again, then go over your preferences, companies and phone alerts",
       onclick: () => this.ctx.navigate("setup") });
+    const retake = h("button", { type: "button", class: "btn btn-sm", text: "Retake the questions",
+      title: "Answer the setup questions again without a new resume",
+      onclick: () => this.ctx.navigate("setup", new URLSearchParams({ retake: "1" })) });
+    const actions = h("div", { class: "section-actions" }, retake, redo);
     if (!file) {
-      box.replaceChildren(this.sectionHead(section, redo), h("p", { class: "muted", text: "Couldn't load your profile." }));
+      box.replaceChildren(this.sectionHead(section, actions), h("p", { class: "muted", text: "Couldn't load your profile." }));
       return;
     }
     this.profileText = file.text;
@@ -533,7 +537,7 @@ class Settings {
       edit.setValue(this.profileText);
       save.disabled = discard.disabled = true;
     });
-    box.replaceChildren(this.sectionHead(section, redo),
+    box.replaceChildren(this.sectionHead(section, actions),
       h("p", { class: "field-help", text: "Cairn compares every job to this profile. Lines that start with TODO still need your answer." }),
       edit.element,
       h("div", { class: "section-actions" }, save, discard));

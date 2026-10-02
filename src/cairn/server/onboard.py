@@ -21,7 +21,8 @@ MAX_RESUME_BYTES = 10 * 1024 * 1024
 
 
 class OnboardApplyBody(BaseModel):
-    profile_md: str
+    # None keeps profile.md and writes the answers into it
+    profile_md: str | None = None
     prefs: dict = {}
 
 
@@ -131,7 +132,10 @@ async def onboard_draft(request: Request):
 @router.post("/api/onboard/apply")
 def onboard_apply(body: OnboardApplyBody):
     with pipeline.run_lock():
-        applied = onboard.apply(onboard.Draft(body.profile_md, {}), body.prefs)
+        if body.profile_md is None:
+            applied = onboard.answer_again(body.prefs)
+        else:
+            applied = onboard.apply(onboard.Draft(body.profile_md, {}), body.prefs)
     return {"written": [str(path) for path in applied.written],
             "unresolved": applied.unresolved,
             "settings": dataclasses.asdict(applied.settings)}

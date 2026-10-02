@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { heldSkips, withRole, withSkip } from "../../src/cairn/server/static/lib/roles.js";
+import { heldRoles, heldSkips, withRole, withSkip } from "../../src/cairn/server/static/lib/roles.js";
 
 const OPTIONS = {
   roles: {
@@ -51,6 +51,13 @@ test("unchecking a skip group takes out its words and leaves the rest", () => {
   const lists = { ...LISTS, title_exclude: ["senior", "staff", "manager", "intern"] };
   assert.deepEqual(withSkip(lists, OPTIONS, { roles: [], skips: ["senior", "managers"] }, "senior", false),
     { title_exclude: ["manager", "intern"] });
+});
+
+test("a role counts as checked when the keywords hold all its words and the skips none of its unskips", () => {
+  const lists = { ...LISTS, title_keywords: ["backend", "engineer", "embedded", "firmware"] };
+  assert.deepEqual(heldRoles(lists, OPTIONS), ["backend"]);
+  assert.deepEqual(heldRoles({ ...lists, title_exclude_field: ["hardware"] }, OPTIONS), ["backend", "embedded"]);
+  assert.deepEqual(heldRoles(LISTS, OPTIONS), []);
 });
 
 test("a group counts as checked when its list holds every word a checked role leaves", () => {

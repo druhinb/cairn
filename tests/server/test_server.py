@@ -1224,6 +1224,30 @@ class OnboardTest(ServerTestCase):
         self.assertEqual(self.client.get("/api/settings").json()["graduation_year"], 2027)
         self.assertEqual(self.client.get("/api/files/profile").json()["text"], PROFILE)
 
+    def test_answers_without_a_profile_keep_the_profile_and_write_into_it(self):
+        for example in (None, onboard.resume._example("profile.md")):
+            if example:
+                paths.profile_md().write_text(example, encoding="utf-8")
+            response = self.client.post("/api/onboard/apply", json={"prefs": {"job_type": "new_grad"}})
+            self.assertEqual(response.status_code, 400)
+            self.assertIn("Run setup first", response.json()["error"])
+        self.assertEqual(self.client.get("/api/settings").json()["job_type"], "both")
+        own =PROFILE.replace("- from the resume", "- my own notes", 1)
+        paths.profile_md().write_text(own, encoding="utf-8")
+        response = self.client.post("/api/onboard/apply", json={"prefs": {
+            "job_type": "new_grad", "locations": ["Boston, MA"], "remote_ok": False,
+            "work_authorization": "F-1 OPT", "overwrite": False}})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(self.client.get("/api/settings").json()["job_type"], "new_grad")
+        text = paths.profile_md().read_text(encoding="utf-8")
+        self.assertIn("- my own notes", text)
+        self.assertIn("- Work authorization: F-1 OPT.", text)
+        self.assertTrue(text.endswith(f"## {onboard.LOCATION_HEADING}\n- Boston, MA.\n"))
+        self.client.post("/api/onboard/apply", json={"prefs": {"work_authorization": "US citizen"}})
+        again = paths.profile_md().read_text(encoding="utf-8")
+        self.assertEqual(again.count("Work authorization"), 1)
+        self.assertIn("  Stated during setup: US citizen.", again)
+
     def test_apply_with_a_bad_answer_is_400(self):
         response = self.client.post("/api/onboard/apply", json={
             "profile_md": PROFILE, "prefs": {"title_keywords": "astronaut"}})

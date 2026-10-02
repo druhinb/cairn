@@ -2,8 +2,8 @@ import { api } from "../lib/api.js";
 import { fmt, h, safeUrl } from "../lib/dom.js";
 import { subscribe } from "../lib/events.js";
 import { readNumber } from "../lib/numbers.js";
-import { QUIZ_CARDS, quizCards } from "../lib/quiz.js";
-import { heldSkips, withRole, withSkip } from "../lib/roles.js";
+import { QUIZ_CARDS, quizCards, statedAuthorization } from "../lib/quiz.js";
+import { heldRoles, heldSkips, withRole, withSkip } from "../lib/roles.js";
 import { doctorList } from "../components/doctor.js";
 import { editor } from "../components/editor.js";
 import { activeFirstRun, FirstRunScreen, launchFrame } from "../components/firstRun.js";
@@ -91,6 +91,8 @@ class Setup {
     this.root = root;
     this.ctx = ctx;
     this.step = 0;
+    /** whether only the preference questions are asked again, from Settings */
+    this.retake = ctx.params.get("retake") === "1";
     this.file = null;
     this.text = "";
     this.overwrite = false;
@@ -147,6 +149,10 @@ class Setup {
 
   /** Show the wizard, or the run screen when a first run is already going. */
   async open() {
+    if (this.retake) {
+      await this.openRetake();
+      return;
+    }
     const run = await activeFirstRun();
     if (!this.mounted) return;
     if (run) {
@@ -172,7 +178,64 @@ class Setup {
     this.scroll.replaceChildren(this.card);
   }
 
+  /**
+   * Ask the preference questions alone, starting from the current settings and the
+   * work authorization profile.md states; Save sends them without a profile, so
+   * apply keeps profile.md and writes the answers into it.
+   */
+  async openRetake() {
+    let current, profile, status;
+    try {
+      [current, profile, status] = await Promise.all([api("/api/settings", { quiet: true }),
+        api("/api/files/profile", { quiet: true }), api("/api/onboard/status", { quiet: true }), this.loadOptions()]);
+    } catch (error) {
+      this.error = `Couldn't load your settings: ${error.message}`;
+    }
+    if (!this.mounted) return;
+    this.showCard();
+    if (status?.needs_setup) this.error = "Cairn has no profile of yours yet, so run setup first.";
+    if (this.error) {
+      this.card.replaceChildren(h("p", { class: "field-error", role: "alert", text: this.error }),
+        h("div", { class: "setup-actions" }, h("a", { href: "#settings", class: "link", text: "Back to Settings" }),
+          h("span", { class: "filter-spacer" }), h("a", { href: "#setup", class: "btn btn-primary", text: "Run setup" })));
+      return;
+    }
+    this.prefs = this.startingPrefs({}, current);
+    const roles = heldRoles(this.prefs, this.options);
+    this.checked = { roles, skips: heldSkips(this.prefs, this.options, roles) };
+    this.prefs.work_authorization = statedAuthorization(profile.text, this.options.work_authorization);
+    this.initial.work_authorization = this.prefs.work_authorization;
+    this.step = PREFS_STEP;
+    this.render();
+    this.card.querySelector("h1").focus({ preventScroll: true });
+  }
+
+  /** Save the answers given again, then go back to Settings. */
+  async saveAnswers() {
+    const button = this.card.querySelector(".setup-actions .btn-primary");
+    button.disabled = true;
+    button.replaceChildren(h("span", { class: "spinner", "aria-hidden": "true" }), "Saving…");
+    try {
+      await api("/api/onboard/apply", { method: "POST", quiet: true, body: { prefs: this.answers() } });
+    } catch (error) {
+      toast(`Couldn't save: ${error.message}`, { tone: "error" });
+      if (this.mounted) this.render();
+      return;
+    }
+    toast("Saved your answers");
+    this.ctx.refreshStatus();
+    this.ctx.navigate("settings", new URLSearchParams({ section: "preferences" }));
+  }
+
   render() {
+    if (this.retake) {
+      this.card.replaceChildren(
+        h("header", { class: "setup-head" }, pixelArt("checklist"),
+          h("h1", { class: "display", tabindex: "-1", text: "Your preferences" }),
+          h("p", { class: "setup-sub", text: "Answer the setup questions again. Cairn keeps your profile and changes only what these answers cover." })),
+        this.prefsStep());
+      return;
+    }
     const done = this.result != null;
     const body = done ? this.finished()
       : [this.aiStep, this.resumeStep, this.reviewStep, this.prefsStep, this.companiesStep, this.alertsStep][this.step].call(this);
@@ -392,6 +455,7 @@ class Setup {
     const either = (suggested, saved) => (suggested?.length ? suggested : saved || []);
     const isRemote = (place) => place.toLowerCase() === "remote";
     const allow = current?.location_allow || [];
+    const places = allow.filter((place) => !isRemote(place));
     const watchlist = (current?.watchlist || []).map((spec) => spec.company || spec.location);
     const year = suggestions.graduation_year ?? current?.graduation_year ?? null;
     const month = suggestions.graduation_year != null && suggestions.graduation_month
@@ -402,7 +466,8 @@ class Setup {
       title_keywords: suggestions.title_keywords ?? current?.title_keywords ?? [],
       title_exclude: suggestions.title_exclude ?? current?.title_exclude ?? [],
       title_exclude_field: suggestions.title_exclude_field ?? current?.title_exclude_field ?? [],
-      locations: either(suggestions.locations, allow.filter((place) => !isRemote(place))),
+      // a list of Remote alone stays whole, since no places at all reads as everywhere
+      locations: either(suggestions.locations, places.length ? places : allow),
       remote_ok: allow.some(isRemote),
       us_only: current?.us_only ?? false,
       job_type: suggestions.job_type ?? current?.job_type ?? "both",
@@ -664,8 +729,8 @@ class Setup {
   moveQuiz(step) {
     const cards = this.quizCards();
     const at = cards.indexOf(this.quiz.card) + step;
-    if (at < 0) return this.go(REVIEW_STEP);
-    if (at >= cards.length) return this.go(COMPANIES_STEP);
+    if (at < 0) return this.retake ? this.ctx.navigate("settings") : this.go(REVIEW_STEP);
+    if (at >= cards.length) return this.retake ? this.saveAnswers() : this.go(COMPANIES_STEP);
     this.quiz.card = cards[at];
     this.quiz.moved = step > 0 ? "next" : "back";
     this.render();
@@ -677,8 +742,9 @@ class Setup {
     const cards = this.quizCards();
     if (!cards.includes(this.quiz.card)) this.quiz.card = cards.at(-1);
     const at = cards.indexOf(this.quiz.card);
+    const last = this.retake ? "Save" : "Next: companies";
     const next = h("button", { type: "button", class: "btn btn-primary",
-      text: at === cards.length - 1 ? "Next: companies" : "Next", onclick: () => this.moveQuiz(1) });
+      text: at === cards.length - 1 ? last : "Next", onclick: () => this.moveQuiz(1) });
     const sync = () => {
       const problem = card.problem?.() || null;
       next.disabled = Boolean(problem);
@@ -710,7 +776,8 @@ class Setup {
       card.help && h("p", { class: "setup-lead", text: card.help }),
       card.body),
       h("div", { class: "setup-actions" },
-        h("button", { type: "button", class: "btn btn-ghost", text: "Back", onclick: () => this.moveQuiz(-1) }),
+        h("button", { type: "button", class: "btn btn-ghost", text: this.retake && at === 0 ? "Cancel" : "Back",
+          onclick: () => this.moveQuiz(-1) }),
         h("span", { class: "filter-spacer" }), next));
   }
 
@@ -749,7 +816,7 @@ class Setup {
 
   rolesCard() {
     return { question: "Which roles interest you?",
-      help: "Cairn checked the ones your resume points to. Pick as many as you like.",
+      help: `Cairn checked the ones ${this.retake ? "your title keywords cover" : "your resume points to"}. Pick as many as you like.`,
       body: this.checks("roles", ROLE_LABELS, "Roles") };
   }
 
@@ -973,12 +1040,14 @@ class Setup {
   /**
    * The answers to send. A topic goes only when it was edited, so an empty field
    * clears a saved topic only when the user emptied it; the watchlist sends only
-   * companies it did not already hold, since apply adds to it.
+   * companies it did not already hold, since apply adds to it. A retake sends the
+   * work authorization only when it changed, as profile.md already states it.
    */
   answers() {
     const { ntfy_topic: topic, watchlist, calibre_anchors: anchors, ...rest } = this.prefs;
     const prefs = { ...rest, calibre_anchors: anchors.map((a) => a.trim()).filter(Boolean), overwrite: this.overwrite };
     if (topic !== this.initial.ntfy_topic) prefs.ntfy_topic = topic;
+    if (prefs.work_authorization === this.initial.work_authorization) delete prefs.work_authorization;
     const added = watchlist.filter((name) => !this.initial.watchlist.includes(name));
     if (added.length) prefs.watchlist = added;
     return prefs;

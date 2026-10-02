@@ -9,6 +9,7 @@ from cairn.ai.onboard.files import (
     PREFS_FILE,
     Applied,
     FilesExist,
+    answer_again,
     apply,
     conflicts,
     draft_dir,
