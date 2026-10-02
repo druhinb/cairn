@@ -11,6 +11,9 @@
 # omits yours excludes you. Empty disables the check.
 #degrees_held = ["Bachelor's"]
 
+# "internships", "new_grad" for full-time roles, or "both".
+#job_type = "both"
+
 # Keep internships only for the terms named here. Empty means no internship
 # passes. Update the list as terms roll over.
 #wanted_intern_terms = ["fall 2026", "winter 2027", "spring 2027"]
@@ -62,7 +65,6 @@
 #title_keywords = ["software engineer", "swe", "quant", "machine learning"]
 #title_exclude = ["senior", "staff", "principal", "manager", "phd"]
 #title_exclude_field = ["mechanical", "firmware", "field service", "sales"]
-#include_off_season_internships = true
 #intern_terms = ["intern", "internship", "co-op", "coop"]
 
 # ---- Sources ------------------------------------------------------------

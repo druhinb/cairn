@@ -396,6 +396,9 @@ class Settings {
       control = tagInput(value || [], { id, onChange: (tags) => this.set(spec.key, tags) });
     } else if (spec.type === "switch") {
       control = switchControl(null, Boolean(value), (on) => this.set(spec.key, on), { id, key: spec.key });
+    } else if (spec.type === "choice") {
+      control = h("select", { class: "select", id, onchange: (event) => this.set(spec.key, event.target.value) },
+        spec.choices.map(([choice, label]) => h("option", { value: choice, selected: choice === value, text: label })));
     } else if (spec.type === "number") {
       const input = h("input", { type: "number", id, class: "input input-num", value: value ?? "",
         min: spec.min, max: spec.max, step: "1", placeholder: spec.nullable ? "none" : null,

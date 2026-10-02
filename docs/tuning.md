@@ -49,8 +49,12 @@ internship, co-op, coop) is an internship, and the filter keeps an internship on
 when one of its terms equals, ignoring case, an entry in `wanted_intern_terms`.
 That list is empty by default, so no internship passes until you list the terms
 you can take, such as `["Fall 2026", "Spring 2027"]`. Update it as terms roll over.
-`include_off_season_internships` is on by default; turning it off drops every
-internship.
+
+`job_type` picks which kind of job you see: `"internships"` keeps internships
+only, `"new_grad"` keeps full-time roles only, and `"both"`, the default, keeps
+both. The term rule above still applies to internships under `"internships"`
+and `"both"`. An older config.toml with
+`include_off_season_internships = false` loads as `job_type = "new_grad"`.
 
 ### Degrees and graduation year
 

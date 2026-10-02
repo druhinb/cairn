@@ -3,13 +3,17 @@
  * @property {string} key       the config.toml setting
  * @property {string} label
  * @property {string} help
- * @property {"tags" | "number" | "switch" | "text"} type
+ * @property {"tags" | "number" | "switch" | "text" | "choice"} type
+ * @property {[string, string][]} [choices] a choice's values and their labels
  * @property {string} [unit]
  * @property {boolean} [nullable] an empty number means null
  * @property {number} [min]
  * @property {number} [max]
  * @property {boolean} [macOnly] shown only on a Mac
  */
+
+/** @type {[string, string][]} the job_type setting's values and their labels */
+export const JOB_TYPES = [["internships", "Internships"], ["new_grad", "New grad (full-time)"], ["both", "Both"]];
 
 /** @type {{id: string, title: string, fields?: Field[]}[]} */
 export const SECTIONS = [
@@ -35,10 +39,10 @@ export const SECTIONS = [
       help: "Years of full-time work you've done, not counting internships. Cairn ranks jobs that ask for more years lower." },
     { key: "max_years_required", label: "Most years a job can ask for", type: "number", unit: "years", nullable: true, min: 0, max: 50,
       help: "Cairn reads each full-time job's description and hides the ones asking for more years than this. Leave empty to show them all." },
+    { key: "job_type", label: "Jobs to show", type: "choice", choices: JOB_TYPES,
+      help: "Internships, full-time new grad jobs, or both. Internships also need a term below." },
     { key: "wanted_intern_terms", label: "Internship terms", type: "tags",
       help: "Cairn shows internships only for these terms, such as “Fall 2026”. Leave empty to hide every internship." },
-    { key: "include_off_season_internships", label: "Internships", type: "switch",
-      help: "Turn off to hide every internship. When on, Cairn shows internships for the terms above." },
     { key: "intern_terms", label: "Internship words", type: "tags",
       help: "Words in a title that mark a posting as an internship." },
     { key: "recent_days", label: "Recent days", type: "number", unit: "days", min: 1,

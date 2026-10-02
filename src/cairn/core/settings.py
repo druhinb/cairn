@@ -72,6 +72,8 @@ DEFAULT_TITLE_EXCLUDE_FIELD = [
 
 DEFAULT_INTERN_TERMS = ["intern", "internship", "co-op", "coop"]
 
+JOB_TYPES = ("internships", "new_grad", "both")
+
 @dataclass
 class Settings:
     # Each entry holds the sources.Source fields kind and location, and optionally
@@ -92,9 +94,10 @@ class Settings:
     title_exclude_field: list[str] = field(
         default_factory=lambda: list(DEFAULT_TITLE_EXCLUDE_FIELD))
 
-    # An internship passes only when its feed `terms` include a wanted_intern_terms
-    # entry; empty by default, so none pass.
-    include_off_season_internships: bool = True
+    # A title with one of intern_terms marks an internship. job_type keeps
+    # internships, full-time roles or both, and an internship passes only when its
+    # feed `terms` include a wanted_intern_terms entry; empty by default, so none pass.
+    job_type: str = "both"
     intern_terms: list[str] = field(default_factory=lambda: list(DEFAULT_INTERN_TERMS))
     wanted_intern_terms: list[str] = field(default_factory=list)
 
@@ -170,6 +173,8 @@ RETIRED_KEYS = frozenset({"max_tailor_per_run", "max_fit_iters", "min_bullets",
                           "usajobs_key"})
 # the claude-code models a past version kept apart from llm_model and llm_model_cheap
 RENAMED_KEYS = {"claude_model": "llm_model", "description_model": "llm_model_cheap"}
+# a past version's switch that hid every internship when off
+FOLDED_INTERNSHIPS = "include_off_season_internships"
 
 
 def defaults():
@@ -205,7 +210,7 @@ def load(path=None):
         events.emit("warn", text=f"{path.name}: ignoring retired setting(s): "
                                  f"{', '.join(retired)}")
     raw = _renamed({k: v for k, v in raw.items() if k not in RETIRED_KEYS})
-    return from_dict(_unset(raw), source=path)
+    return from_dict(_unset(_folded(raw)), source=path)
 
 
 # TOML has no null, so save writes this for a setting left empty that has a value
@@ -228,6 +233,13 @@ def _renamed(raw):
     if raw.get("llm_provider", "claude-code") == "claude-code":
         for key, value in old.items():
             raw.setdefault(RENAMED_KEYS[key], value)
+    return raw
+
+
+def _folded(raw):
+    """raw with FOLDED_INTERNSHIPS read as the job_type it meant."""
+    if raw.pop(FOLDED_INTERNSHIPS, True) is False:
+        raw.setdefault("job_type", "new_grad")
     return raw
 
 
@@ -255,6 +267,7 @@ def from_dict(raw, base=None, source="settings"):
             raise SettingsError(
                 f"{source}: '{key}' should be {shapes[key]}, got {type(value).__name__}")
         _check_range(key, value, source)
+        _check_choice(key, value, source)
     _check_llm(raw, source)
     for key, kinds in _SPEC_KINDS.items():
         for i, spec in enumerate(raw.get(key, ())):
@@ -286,6 +299,16 @@ def _check_range(key, value, source):
     if value < low or (high is not None and value > high):
         span = f"at least {low}" if high is None else f"between {low} and {high}"
         raise SettingsError(f"{source}: '{key}' should be {span}, got {value}")
+
+
+# the string settings that take one of a few values
+_CHOICES = {"job_type": JOB_TYPES}
+
+
+def _check_choice(key, value, source):
+    if key in _CHOICES and value not in _CHOICES[key]:
+        raise SettingsError(f"{source}: '{key}' should be one of "
+                            f"{', '.join(_CHOICES[key])}, got '{value}'")
 
 
 _SPEC_KINDS = {"sources": sources.KINDS, "watchlist": sources.BOARD_KINDS}

@@ -69,7 +69,7 @@ class _Rules:
     degrees: frozenset
     locations: tuple
     intern_terms: tuple
-    off_season_internships: bool
+    job_type: str
     wanted_terms: frozenset
     max_years: int | None
     us_only: bool
@@ -84,7 +84,7 @@ def relevance_rules(cfg):
         degrees=frozenset(cfg.degrees_held),
         locations=tuple(places.term(l) for l in cfg.location_allow),
         intern_terms=tuple(k.lower() for k in cfg.intern_terms),
-        off_season_internships=cfg.include_off_season_internships,
+        job_type=cfg.job_type,
         wanted_terms=frozenset(t.casefold() for t in cfg.wanted_intern_terms),
         max_years=cfg.max_years_required,
         us_only=cfg.us_only,
@@ -99,9 +99,14 @@ def _field_ok(job, title, rules):
     return not any(x in title for x in rules.field_excluded)
 
 
+def _job_type_ok(job, title, rules):
+    if rules.job_type == "both":
+        return True
+    return _is_internship(title, rules) == (rules.job_type == "internships")
+
+
 def _internship_ok(job, title, rules):
-    """An internship passes only with off-season internships on and a term in
-    wanted_intern_terms.
+    """An internship passes only with a term in wanted_intern_terms.
 
     The season comes from the feed's `terms` field. Nearly every title is a bare
     "Software Engineer Intern", and matching on the title hid 446 Fall 2026
@@ -109,8 +114,6 @@ def _internship_ok(job, title, rules):
     """
     if not _is_internship(title, rules):
         return True
-    if not rules.off_season_internships:
-        return False
     terms = {_fold(str(t).strip(" ")) for t in (job.get("terms") or [])}
     return bool(terms & rules.wanted_terms)
 
@@ -163,6 +166,7 @@ def _country_ok(job, title, rules):
 RULES = (
     ("exclude", _seniority_ok),
     ("field exclude", _field_ok),
+    ("job type", _job_type_ok),
     ("intern term", _internship_ok),
     ("experience", _experience_ok),
     ("category", _category_ok),
