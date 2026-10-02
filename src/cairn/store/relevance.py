@@ -46,8 +46,14 @@ def _relevance_rule(cfg):
     add(f"NOT {excluded}", values)
 
     internship, values = _any_substring(_TITLE, [k.lower() for k in cfg.intern_terms])
+    # rules recorded before this setting existed lack it
+    job_type = getattr(cfg, "job_type", "both")
+    if job_type == "internships":
+        add(internship, values)
+    elif job_type == "new_grad":
+        add(f"NOT {internship}", values)
     wanted = sorted({t.casefold() for t in cfg.wanted_intern_terms})
-    if cfg.include_off_season_internships and wanted:
+    if wanted:
         add(f"(NOT {internship} OR EXISTS (SELECT 1 FROM json_each(postings.terms) "
             f"WHERE lower(trim(value)) IN ({_marks(wanted)})))", values + wanted)
     else:
@@ -83,7 +89,7 @@ def _relevance_rule(cfg):
 
 # the settings _relevance_rule reads
 _RELEVANCE_SETTINGS = ("title_exclude", "title_exclude_field", "intern_terms",
-                       "wanted_intern_terms", "include_off_season_internships",
+                       "wanted_intern_terms", "job_type",
                        "allowed_categories", "title_keywords", "degrees_held",
                        "location_allow", "max_years_required", "us_only")
 

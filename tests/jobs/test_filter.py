@@ -99,6 +99,8 @@ class DroppedByTest(unittest.TestCase):
         self.assertEqual(fetch.dropped_by(_job("Software Engineer", degrees=["PhD"])), "degree")
         self.assertEqual(fetch.dropped_by({**_job("Software Engineer"),
                                            "locations": ["Austin, TX"]}), "location")
+        settings.use(dataclasses.replace(settings.get(), job_type="new_grad"))
+        self.assertEqual(fetch.dropped_by(_job("Software Engineer Intern")), "job type")
 
 
 class BoardRowTest(unittest.TestCase):
@@ -169,10 +171,16 @@ class InternshipTest(unittest.TestCase):
         settings.use(dataclasses.replace(settings.get(), wanted_intern_terms=[]))
         self.assertFalse(fetch._relevant(self._intern(["Fall 2026"])))
 
-    def test_disabling_the_toggle_drops_all_internships(self):
-        settings.use(dataclasses.replace(settings.get(),
-                                         include_off_season_internships=False))
+    def test_new_grad_drops_all_internships(self):
+        settings.use(dataclasses.replace(settings.get(), job_type="new_grad"))
         self.assertFalse(fetch._relevant(self._intern(["Fall 2026"])))
+        self.assertTrue(fetch._relevant(_job("Software Engineer")))
+
+    def test_internships_drop_full_time_roles_and_keep_the_term_rule(self):
+        settings.use(dataclasses.replace(settings.get(), job_type="internships"))
+        self.assertTrue(fetch._relevant(self._intern(["Fall 2026"])))
+        self.assertFalse(fetch._relevant(self._intern(["Summer 2026"])))
+        self.assertEqual(fetch.dropped_by(_job("Software Engineer")), "job type")
 
 
 if __name__ == "__main__":

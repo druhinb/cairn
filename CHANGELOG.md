@@ -11,6 +11,10 @@ This file lists every notable change to this project. It follows
   postings, ranking used to wait about five minutes for those pages.
 - Leaving Most years a job can ask for empty saves again, in setup and in
   Settings. It used to fail, and setup could stop halfway through saving.
+- A new setting, Jobs to show, picks internships, new grad (full-time) jobs
+  or both. Internships hides full-time jobs, and new grad hides internships.
+  It takes the place of the Internships switch: if you had turned that off,
+  Cairn now shows new grad jobs only.
 
 ## [0.0.6] — 2026-10-01
 

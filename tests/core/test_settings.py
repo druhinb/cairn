@@ -142,6 +142,14 @@ class InvalidFileTest(unittest.TestCase):
         self.assertEqual((cfg.fit_threshold, cfg.recent_days, cfg.max_rank_per_run),
                          (0, 365, None))
 
+    def test_job_type_takes_one_of_its_choices(self):
+        for choice in settings.JOB_TYPES:
+            self.assertEqual(settings.from_dict({"job_type": choice}).job_type, choice)
+        with self.assertRaises(settings.SettingsError) as caught:
+            settings.from_dict({"job_type": "full-time"}, source="request")
+        self.assertEqual(str(caught.exception), "request: 'job_type' should be one of "
+                                                "internships, new_grad, both, got 'full-time'")
+
     def test_a_value_out_of_range_in_the_file_fails_its_load(self):
         self._write("recent_days = 0\n")
         with self.assertRaises(settings.SettingsError) as caught:
@@ -202,6 +210,24 @@ class RetiredKeyTest(unittest.TestCase):
             settings.from_dict({"usajobs_key": "k3y"})
         settings.save(cfg)
         self.assertNotIn("k3y", paths.config_file().read_text(encoding="utf-8"))
+
+    def test_the_old_internships_switch_becomes_the_job_type(self):
+        for line, job_type in (("include_off_season_internships = false\n", "new_grad"),
+                               ("include_off_season_internships = true\n", "both"),
+                               ('include_off_season_internships = false\njob_type = "internships"\n',
+                                "internships")):
+            with self.subTest(line):
+                paths.config_file().write_text(line, encoding="utf-8")
+                self.assertEqual(settings.load().job_type, job_type)
+        self.assertEqual(self.warnings, [])
+        paths.config_file().write_text("include_off_season_internships = false\n",
+                                       encoding="utf-8")
+        settings.save(settings.load())
+        self.assertEqual(paths.config_file().read_text(encoding="utf-8"),
+                         f'{settings.HEADER}\n\njob_type = "new_grad"\n')
+        with self.assertRaisesRegex(settings.SettingsError,
+                                    "unknown setting 'include_off_season_internships'"):
+            settings.from_dict({"include_off_season_internships": False})
 
     def test_the_next_save_drops_them_from_disk(self):
         paths.config_file().write_text('fit_threshold = 70\noutput_dir = "~/Desktop/a"\n',

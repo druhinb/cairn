@@ -185,8 +185,9 @@ CONFIGS = {
     "defaults": {},
     "narrowed": {"wanted_intern_terms": ["Fall 2026", "spring 2027"],
                  "degrees_held": ["Bachelor's"], "location_allow": ["WA", "Remote"]},
-    "no-off-season": {"wanted_intern_terms": ["Fall 2026"],
-                      "include_off_season_internships": False},
+    "new-grad": {"wanted_intern_terms": ["Fall 2026"], "job_type": "new_grad"},
+    "internships": {"wanted_intern_terms": ["Fall 2026"], "job_type": "internships"},
+    "internships-no-terms": {"job_type": "internships"},
     "non-ascii": {"wanted_intern_terms": ["Fall 2026"], "location_allow": ["Zürich"]},
     "us-only": {"us_only": True},
     "empty-lists": {"allowed_categories": [], "title_keywords": [], "title_exclude": [],
@@ -205,7 +206,7 @@ class RelevantQueryTest(unittest.TestCase):
                     f"SELECT id FROM postings WHERE {where}", params)}
                 by_python = {r["id"] for r in rows if fetch._relevant(r)}
                 self.assertEqual(by_sql, by_python)
-                if name != "empty-lists":
+                if name not in ("empty-lists", "internships-no-terms"):
                     self.assertTrue(0 < len(by_python) < len(rows))
 
     def test_fixture_reaches_both_outcomes_of_each_setting(self):
@@ -221,6 +222,14 @@ class RelevantQueryTest(unittest.TestCase):
             kept = {r["id"] for r in _fixture() if fetch._relevant(r)}
         self.assertTrue({"london-or-seattle", "remote", "no-locations"} <= kept)
         self.assertFalse({"london", "zurich"} & kept)
+        with temp_home(**CONFIGS["internships"]):
+            kept = {r["id"] for r in _fixture() if fetch._relevant(r)}
+        self.assertTrue({"intern-fall", "intern-padded"} <= kept)
+        self.assertFalse({"plain", "intern-summer"} & kept)
+        with temp_home(**CONFIGS["new-grad"]):
+            kept = {r["id"] for r in _fixture() if fetch._relevant(r)}
+        self.assertIn("plain", kept)
+        self.assertNotIn("intern-fall", kept)
 
 
 class StoredRelevanceTest(unittest.TestCase):

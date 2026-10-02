@@ -290,7 +290,7 @@ class WhyNothingTest(unittest.TestCase):
                              "first_seen_at) VALUES ('ancient', 'Senior', 1, 1, '2000-01-01')")
             self.assertEqual(insights.why_nothing(settings.get(), 30), [
                 {"rule": "exclude", "dropped": 2}, {"rule": "field exclude", "dropped": 1},
-                {"rule": "intern term", "dropped": 1}, {"rule": "experience", "dropped": 1},
+                {"rule": "job type", "dropped": 0}, {"rule": "intern term", "dropped": 1}, {"rule": "experience", "dropped": 1},
                 {"rule": "category", "dropped": 1},
                 {"rule": "title keyword", "dropped": 1}, {"rule": "degree", "dropped": 1},
                 {"rule": "location", "dropped": 1}, {"rule": "country", "dropped": 0},
