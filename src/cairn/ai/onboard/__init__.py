@@ -52,4 +52,5 @@ from cairn.ai.onboard.resume import (
     draft_prompt,
     required_headings,
     resume_text,
+    suggested_job_type,
 )
