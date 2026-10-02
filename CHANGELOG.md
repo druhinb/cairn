@@ -6,6 +6,8 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+## [0.0.7] — 2026-10-01
+
 - Runs look up company icons and read how many years each job asks for while
   they rank, so ranking starts minutes sooner. On a first run with 2,200 new
   postings, ranking used to wait about five minutes for those pages.
@@ -148,6 +150,7 @@ The first release.
 - All data stays in `~/.cairn` on your Mac. The app only answers the window it
   opened.
 
+[0.0.7]: https://github.com/druhinb/cairn/releases/tag/v0.0.7
 [0.0.6]: https://github.com/druhinb/cairn/releases/tag/v0.0.6
 [0.0.5]: https://github.com/druhinb/cairn/releases/tag/v0.0.5
 [0.0.4]: https://github.com/druhinb/cairn/releases/tag/v0.0.4
