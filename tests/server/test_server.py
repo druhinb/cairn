@@ -23,7 +23,7 @@ import httpx
 import sys
 from fastapi.testclient import TestClient
 from helpers import app_client, temp_home, user_home
-from ai.test_onboard import PROFILE, SUGGESTIONS, envelope
+from ai.test_onboard import PROFILE, SUGGESTED, envelope
 
 from cairn import cli, server, sources, store
 from cairn.ai import claude, onboard
@@ -1083,7 +1083,7 @@ class OnboardTest(ServerTestCase):
     def test_draft_from_pasted_text(self):
         response = self.client.post("/api/onboard/draft", json={"text": "Sam Lee\nInitech"})
         self.assertEqual(response.status_code, 200, response.text)
-        self.assertEqual(response.json(), {"profile_md": PROFILE, "suggestions": SUGGESTIONS})
+        self.assertEqual(response.json(), {"profile_md": PROFILE, "suggestions": SUGGESTED})
         self.assertIn("<<<RESUME\nSam Lee\nInitech\nRESUME>>>", self.prompts[0])
 
     def test_a_draft_says_how_much_of_the_resume_it_read(self):

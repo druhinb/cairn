@@ -15,6 +15,8 @@ This file lists every notable change to this project. It follows
   or both. Internships hides full-time jobs, and new grad hides internships.
   It takes the place of the Internships switch: if you had turned that off,
   Cairn now shows new grad jobs only.
+- `cairn init --from-resume` asks which jobs to show. It suggests internships
+  when you graduate more than a year from now, and new grad otherwise.
 
 ## [0.0.6] — 2026-10-01
 

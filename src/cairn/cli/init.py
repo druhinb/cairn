@@ -4,7 +4,7 @@ from importlib import resources
 from pathlib import Path
 
 from cairn.ai import onboard
-from cairn.core import paths, ui
+from cairn.core import paths, settings, ui
 
 
 def _example_files():
@@ -40,6 +40,7 @@ def _split(text, separator):
 
 # key, answer kind, question; each answer is checked by onboard before it is kept
 PREF_QUESTIONS = [
+    ("job_type", "text", f"Jobs to show ({' / '.join(settings.JOB_TYPES)})"),
     ("title_keywords", "list", "Show jobs whose title has one of"),
     ("title_exclude", "list", "Skip titles with"),
     ("title_exclude_field", "list", "Skip field roles with"),

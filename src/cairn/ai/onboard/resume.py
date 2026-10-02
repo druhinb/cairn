@@ -1,4 +1,5 @@
 """A resume's text, and the profile.md one Claude call drafts from it."""
+import datetime
 import json
 import re
 import subprocess
@@ -14,6 +15,10 @@ PDFTOTEXT_TIMEOUT = 30
 DRAFT_TIMEOUT = 240
 MARKERS = ("===PROFILE===", "===SUGGESTIONS===")
 WORK_AUTHORIZATION = ("US citizen", "F-1 OPT", "needs sponsorship", "unknown")
+# a student more than this many months from graduating has a summer internship
+# ahead before full-time roles; a resume with no month counts from June
+INTERNSHIP_MONTHS = 12
+GRADUATION_MONTH = 6
 
 # suggestion key -> the default list the draft starts from
 TITLE_DEFAULTS = {
@@ -322,12 +327,23 @@ def _suggestions(raw):
             raise OnboardError(f"suggestions: '{key}' should be {expected}, "
                                f"got {json.dumps(data[key])[:80]}")
     kept = {key: data[key] for key in SUGGESTION_SHAPES}
+    kept["job_type"] = suggested_job_type(kept["graduation_year"], kept["graduation_month"])
     kept["roles"] = [role for role in kept["roles"] if role in ROLE_KEYWORDS]
     for key in TITLE_DEFAULTS:
         kept[key] = title_words(kept[key])
     # an empty title_keywords would hide every posting
     kept["title_keywords"] = kept["title_keywords"] or list(settings.DEFAULT_TITLE_KEYWORDS)
     return kept
+
+
+def suggested_job_type(year, month, today=None):
+    """internships while graduation is more than INTERNSHIP_MONTHS away, new_grad
+    once it is nearer or past, and both when the resume gives no year."""
+    if year is None:
+        return "both"
+    today = today or datetime.date.today()
+    months = (year - today.year) * 12 + (month or GRADUATION_MONTH) - today.month
+    return "internships" if months > INTERNSHIP_MONTHS else "new_grad"
 
 
 def title_words(words):

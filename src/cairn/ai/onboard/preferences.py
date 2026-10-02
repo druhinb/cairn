@@ -17,6 +17,7 @@ MAX_ANCHORS = 3
 
 # pref key -> the setting it becomes unchanged; title lists and locations are derived
 SETTING_FOR_PREF = {
+    "job_type": "job_type",
     "graduation_year": "graduation_year",
     "degrees_held": "degrees_held",
     "internship_terms": "wanted_intern_terms",
@@ -32,6 +33,7 @@ PREF_SHAPES = {
     "locations": (_str_list, "a list of strings"),
     "remote_ok": (lambda v: isinstance(v, bool), "true or false"),
     "us_only": (lambda v: isinstance(v, bool), "true or false"),
+    "job_type": (lambda v: v in settings.JOB_TYPES, f"one of {', '.join(settings.JOB_TYPES)}"),
     "graduation_year": (_int_or_none, "an integer year or null"),
     "degrees_held": (_str_list, "a list of strings"),
     "internship_terms": (_str_list, "a list of strings"),
@@ -102,6 +104,7 @@ def default_prefs(suggestions):
     return {**{key: suggestions.get(key, list(default)) for key, default in TITLE_DEFAULTS.items()},
             "locations": suggestions.get("locations", []),
             "remote_ok": False,
+            "job_type": suggestions.get("job_type", "both"),
             "graduation_year": suggestions.get("graduation_year"),
             "degrees_held": suggestions.get("degrees_held", []),
             "internship_terms": suggestions.get("internship_terms", []),
