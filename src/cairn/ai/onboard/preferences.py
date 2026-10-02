@@ -116,6 +116,7 @@ def default_prefs(suggestions):
 
 
 _AUTHORIZATION_LINE = re.compile(r"work authori[sz]ation", re.I)
+_STATED = "  Stated during setup:"
 SNAPSHOT_HEADING = "Snapshot"
 TIER_HEADING = "Company tier (drives the `tier` score, 0-100)"
 LOCATION_HEADING = "Location preference (soft, in priority order)"
@@ -149,7 +150,11 @@ def _with_authorization(text, authorization):
     lines = text.rstrip("\n").splitlines()
     for i, existing in enumerate(lines):
         if _AUTHORIZATION_LINE.search(existing):
-            lines.insert(i + 1, f"  Stated during setup: {authorization}.")
+            # the answer from an earlier setup gives way to this one
+            stated = i + 1 < len(lines) and lines[i + 1].startswith(_STATED)
+            if existing == line and not stated:
+                return text
+            lines[i + 1:i + 1 + stated] = [f"{_STATED} {authorization}."]
             return "\n".join(lines) + "\n"
     return _append_to_section(text, SNAPSHOT_HEADING, [line])
 
