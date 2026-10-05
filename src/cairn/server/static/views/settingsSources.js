@@ -44,17 +44,93 @@ export function renderSources(view) {
       h("span", { class: "spec-name mono", title: spec.location, text: spec.location })]),
     addSourceForm(view), feeds.error);
   const watch = errorFor("watchlist");
+  const lists = h("div", { class: "starter-lists" });
+  const own = h("div", { class: "own-companies" });
   watch.wrap.append(
     h("h3", { class: "field-label", text: "Watchlist" }),
     h("p", { class: "field-help", text: "Companies you follow. Cairn checks their careers pages every hour, and tells you when a strong match appears." }),
-    specList(view, "watchlist", (spec) => [h("span", { class: "spec-company", text: spec.company || spec.location }),
-      h("span", { class: "spec-name mono", text: spec.location })]),
-    addCompanyForm(view), sharingRow(view), watch.error,
+    lists, own, addCompanyForm(view), sharingRow(view), watch.error,
     suggestedList(view));
+  view.refreshWatchlist = async (focusKey) => {
+    await renderWatchlist(view, lists, own);
+    watch.wrap.querySelector(`[data-key="${focusKey}"]`)?.focus();
+  };
+  renderWatchlist(view, lists, own);
   view.sections.get("sources").replaceChildren(view.sectionHead(section),
     h("div", { class: "fields" }, feeds.wrap, watch.wrap, usajobsBlock(view)));
   view.showError("sources");
   view.showError("watchlist");
+}
+
+const describeCompany = (spec) => [h("span", { class: "spec-company", text: spec.company || spec.location }),
+  h("span", { class: "spec-name mono", text: spec.location })];
+const boardKey = (spec) => `${spec.kind}:${spec.location.toLowerCase()}`;
+
+/** The starter lists, each with one switch for all its companies, then the companies of no list. */
+async function renderWatchlist(view, listsBox, ownBox) {
+  view.starterLists ??= api("/api/watchlist/starters", { quiet: true }).catch(() => []);
+  const lists = await view.starterLists;
+  if (!view.mounted || !listsBox.isConnected) return;
+  const watchlist = view.draft.watchlist || [];
+  const listed = new Set();
+  listsBox.replaceChildren(...lists.map((list) => {
+    const boards = new Set(list.boards.map(boardKey));
+    const members = watchlist.flatMap((spec, index) => (boards.has(boardKey(spec)) ? [index] : []));
+    for (const index of members) listed.add(index);
+    return starterList(view, list, members);
+  }));
+  const rest = watchlist.flatMap((_, index) => (listed.has(index) ? [] : [index]));
+  ownBox.replaceChildren(
+    h("h4", { class: "field-label", text: "Your companies" }),
+    rest.length ? specList(view, "watchlist", describeCompany, rest)
+      : h("p", { class: "spec-empty muted", text: "Companies you add yourself show here." }));
+}
+
+function starterList(view, list, members) {
+  view.openLists ??= new Set();
+  const watchlist = view.draft.watchlist;
+  const on = members.filter((index) => watchlist[index].enabled !== false).length;
+  const all = on === list.boards.length;
+  const open = view.openLists.has(list.id);
+  const companies = h("div", { class: "starter-list-companies", hidden: !open },
+    members.length ? specList(view, "watchlist", describeCompany, members)
+      : h("p", { class: "muted", text: list.companies.join(", ") }));
+  const expand = h("button", { type: "button", class: "starter-list-name", "aria-expanded": String(open),
+    onclick: () => {
+      const now = companies.hidden;
+      companies.hidden = !now;
+      expand.setAttribute("aria-expanded", String(now));
+      if (now) view.openLists.add(list.id);
+      else view.openLists.delete(list.id);
+    } }, h("span", { text: list.name }), h("span", { class: "chevron", "aria-hidden": "true" }));
+  const toggle = switchControl(null, all, (want) => setList(view, list, members, want), { key: `list-${list.id}` });
+  toggle.querySelector("input").setAttribute("aria-label", `Follow every company in ${list.name}`);
+  return h("section", { class: `starter-list${on ? "" : " spec-off"}` },
+    h("div", { class: "starter-list-head" },
+      h("div", { class: "starter-list-text" }, expand, h("span", { class: "muted", text: list.about })),
+      h("span", { class: "starter-list-count mono", text: `${on} of ${list.boards.length} on` }),
+      toggle),
+    companies);
+}
+
+/** Follow every company of a starter list, or turn off the ones followed; Save keeps it. */
+async function setList(view, list, members, want) {
+  if (want) {
+    try {
+      const got = await api(`/api/watchlist/starters/${list.id}`, { method: "POST", quiet: true,
+        body: { watchlist: view.draft.watchlist || [] } });
+      if (!view.mounted) return;
+      view.set("watchlist", got.watchlist);
+    } catch (error) {
+      toast(`Couldn't add ${list.name}: ${error.message}`, { tone: "error" });
+    }
+  } else {
+    const next = clone(view.draft.watchlist);
+    for (const index of members) next[index].enabled = false;
+    view.set("watchlist", next);
+  }
+  renderSources(view);
+  toast(`${want ? "Turned on" : "Turned off"} ${list.name}. Save to keep the change`);
 }
 
 /** Save the watchlist as a file to share, or add the companies from one. */
@@ -89,21 +165,12 @@ function sharingRow(view) {
     file.value = "";
     if (chosen) merge("/api/watchlist/import", { text: await chosen.text() }, chosen.name);
   });
-  const starters = h("select", { class: "select", "aria-label": "Add a starter list", onchange: () => {
-    const id = starters.value;
-    starters.value = "";
-    if (id) merge(`/api/watchlist/starters/${id}`, {}, "the list");
-  } }, h("option", { value: "", text: "Add a starter list…" }));
-  api("/api/watchlist/starters", { quiet: true }).then((lists) => starters.append(
-    ...lists.map((list) => h("option", { value: list.id, text: `${list.name} (${list.companies.length})` }))), () => {
-    starters.hidden = true;
-  });
   return h("div", { class: "share-row" },
     h("button", { type: "button", class: "btn btn-sm", text: "Save as a file", onclick: exportList,
       title: "Save the companies you follow as a file to share. Save your changes first to include them." }),
     h("button", { type: "button", class: "btn btn-sm", text: "Add from a file", onclick: () => file.click(),
       title: "Add the companies from a watchlist file someone shared" }),
-    starters, file);
+    file);
 }
 
 /** Companies with strong recent postings and no watchlist board, each with Follow. */
@@ -203,12 +270,14 @@ function usajobsBlock(view) {
       h("div", { class: "provider-key" }, input, save, clear), status));
 }
 
-function specList(view, key, describe) {
+/** Rows for the entries of view.draft[key] at indices, every entry by default. */
+function specList(view, key, describe, indices) {
   const specs = view.draft[key] || [];
   if (!specs.length) {
     return h("p", { class: "spec-empty muted", text: key === "watchlist" ? "No companies yet." : "No sources yet. Add one so Cairn has jobs to find." });
   }
-  return h("ul", { class: "spec-list" }, specs.map((spec, index) => {
+  return h("ul", { class: "spec-list" }, (indices ?? [...specs.keys()]).map((index) => {
+    const spec = specs[index];
     const name = specName(spec);
     const label = spec.company || name;
     const row = h("li", { class: `spec-row${spec.enabled === false ? " spec-off" : ""}` },
@@ -219,6 +288,7 @@ function specList(view, key, describe) {
         else next[index].enabled = false;
         row.classList.toggle("spec-off", !on);
         view.set(key, next);
+        if (key === "watchlist") view.refreshWatchlist?.(`${key}-${index}`);
       }, { key: `${key}-${index}` }),
       h("button", { type: "button", class: "icon-btn", title: "Remove", "aria-label": `Remove ${label}`,
         onclick: () => {

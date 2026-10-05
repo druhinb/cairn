@@ -10,6 +10,10 @@ This file lists every notable change to this project. It follows
   AI labs, AI apps and tools, Dev tools and infrastructure, Fintech, Consumer
   apps, Defense, space and hardware, and Quant and trading. Databricks, for
   one, moved from AI labs to Dev tools and infrastructure.
+- Settings › Sources shows each starter list with one switch that follows or
+  turns off all its companies, a count of how many are on, and its companies
+  underneath. Companies you added yourself have their own group. This takes
+  the place of the Add a starter list menu.
 
 ## [0.0.7] — 2026-10-01
 
