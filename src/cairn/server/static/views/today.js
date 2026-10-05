@@ -197,7 +197,8 @@ class Today {
   picksCard(picks) {
     if (!picks.length) {
       return this.card("Today's picks", "picks", this.empty("magnifier", "No picks yet",
-        "No picks right now. Picks are the best-scored postings from the latest run that have no status yet."));
+        "No picks right now. Picks are your best matches with no status yet. Strong matches Cairn found "
+        + "today and that were posted in the last three days come first."));
     }
     this.openNextButton = h("button", { type: "button", class: "btn btn-sm", "data-key": "open-next",
       title: "Open the next pick you have not opened yet in a new tab", onclick: () => this.openNext() });

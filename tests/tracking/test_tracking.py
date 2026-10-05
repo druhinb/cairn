@@ -151,6 +151,23 @@ class TodayTest(unittest.TestCase):
         store.record_call("rank", "model", 100, 10)
         return earlier, latest
 
+    def test_picks_put_strong_matches_found_today_and_posted_lately_first(self):
+        day = 86400
+        # a source's first read gives no found time
+        store.upsert_postings([_job("old-best", title="Software Engineer, old-best", date_posted=NOW - 20 * day),
+                               _job("old-good", title="Software Engineer, old-good", date_posted=NOW - 20 * day)], "feed")
+        store.upsert_postings([_job("found-today", title="Software Engineer, found-today", date_posted=NOW - day),
+                               _job("this-week", title="Software Engineer, this-week", date_posted=NOW - 5 * day),
+                               _job("weak-new", title="Software Engineer, weak-new", date_posted=NOW - day)], "feed")
+        run = store.start_run()
+        store.save_scores([{"id": posting_id, "fit": fit, "tier": fit, "below_floor": False}
+                           for posting_id, fit in (("old-best", 95), ("old-good", 90),
+                                                   ("found-today", 70), ("this-week", 75),
+                                                   ("weak-new", 40))], run)
+        store.finish_run(run, "ok", {})
+        self.assertEqual([job["id"] for job in tracking.today()["picks"]],
+                         ["found-today", "this-week", "old-best", "old-good", "weak-new"])
+
     def test_scores_from_before_run_ids_still_give_picks(self):
         store.upsert_postings([_job(f"p{n}", f"Co{n}") for n in range(3)], "feed")
         store.save_scores([{"id": f"p{n}", "fit": 60 + n, "tier": 60 + n, "below_floor": False}
@@ -163,8 +180,9 @@ class TodayTest(unittest.TestCase):
         summary = tracking.today()
         # p0's closed link keeps it out of the count
         self.assertEqual(summary["new_since_last_visit"], {"count": 6, "run_id": latest})
-        # and out of the picks
-        self.assertEqual([job["id"] for job in summary["picks"]], ["p4", "p3", "p2", "p1"])
+        # and out of the picks, where p7, a strong match posted this week, leads
+        self.assertEqual([job["id"] for job in summary["picks"]],
+                         ["p7", "p4", "p3", "p2", "p1"])
         self.assertEqual([(i["id"], i["stage"], i["note"]) for i in summary["interviews"]],
                          [("p5", "screen", "bring questions")])
         self.assertEqual(set(summary["interviews"][0]),

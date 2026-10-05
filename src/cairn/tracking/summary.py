@@ -9,6 +9,9 @@ from cairn.tracking.followups import stale_applications
 
 TODAY_PICKS = 5
 PICKS_DAYS = 14
+# the strong matches found in the last day and posted in the last three come first,
+# then those posted in the last week, then the newest run's best
+FRESH_PICKS = ({"found_within_days": 1, "posted_within_days": 3}, {"posted_within_days": 7})
 TODAY_SKILLS = 5
 SKILLS_FROM = 100
 INTERVIEW_DAYS = 7
@@ -33,15 +36,24 @@ def _new_since(since):
 
 def _picks():
     """Up to TODAY_PICKS best-scored postings with no status and a link not found
-    closed, from the newest run that scored any, in store.search's shape. Scores
-    stored before runs were numbered belong to no run, so those fall back to the
-    best-scored recent postings."""
+    closed, in store.search's shape: the FRESH_PICKS scopes at fit_threshold or
+    above first, then the newest run that scored any. Scores stored before runs
+    were numbered belong to no run, so those fall back to the best-scored recent
+    postings."""
     run_id = store.connect().execute("SELECT max(run_id) FROM scores").fetchone()[0]
-    scope = {"run_id": run_id} if run_id is not None else {"posted_within_days": PICKS_DAYS}
-    # the score sort puts closed links last, so dropping them from the top page
-    # leaves the best open ones
-    rows = store.search(status=["none"], limit=TODAY_PICKS, **scope)[0]
-    return [row for row in rows if not row["closed"] and row["fit"] is not None]
+    fit_min = settings.get().fit_threshold
+    scopes = [{**scope, "fit_min": fit_min} for scope in FRESH_PICKS]
+    scopes.append({"run_id": run_id} if run_id is not None else {"posted_within_days": PICKS_DAYS})
+    picks = {}
+    for scope in scopes:
+        # the score sort puts closed links last, so dropping them from the top page
+        # leaves the best open ones
+        for row in store.search(status=["none"], limit=TODAY_PICKS, **scope)[0]:
+            if not row["closed"] and row["fit"] is not None:
+                picks.setdefault(row["id"], row)
+        if len(picks) >= TODAY_PICKS:
+            break
+    return list(picks.values())[:TODAY_PICKS]
 
 
 def _closed_recently():

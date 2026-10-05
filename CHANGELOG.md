@@ -14,6 +14,10 @@ This file lists every notable change to this project. It follows
   turns off all its companies, a count of how many are on, and its companies
   underneath. Companies you added yourself have their own group. This takes
   the place of the Add a starter list menu.
+- Today's picks start with strong matches Cairn found in the last day that
+  were posted in the last three days, then strong matches posted this week,
+  then the best of the latest run. Strong means a fit at or above your fit
+  threshold.
 
 ## [0.0.7] — 2026-10-01
 
