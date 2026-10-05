@@ -129,7 +129,7 @@ def _status_clauses(status, hide_passed, column="applications.status"):
 def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
              hide_passed=True, category=None, location=None, source=None,
              posted_within_days=None, active_only=True, run_id=None,
-             sponsorship=None, salary_min=None, hide_low_fit=False):
+             sponsorship=None, salary_min=None, hide_low_fit=False, found_within_days=None):
     """(where, params) over _FILTERED for search's filters."""
     # active first: SQLite tests the terms in order, and the same test after the
     # relevance rule's substring matches made a search four times slower
@@ -167,6 +167,10 @@ def _filters(q=None, relevant_only=True, fit_min=None, tier_min=None, status=Non
     if posted_within_days is not None:
         clauses.append(f"{_RECENCY} >= ?")
         params.append(time.time() - posted_within_days * 86400)
+    if found_within_days is not None:
+        found = datetime.datetime.now() - datetime.timedelta(days=found_within_days)
+        clauses.append("postings.found_at >= ?")
+        params.append(found.isoformat(timespec="seconds"))
     return " AND ".join(clauses) or "1", params
 
 
@@ -174,7 +178,7 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
            hide_passed=True, category=None, location=None, source=None,
            posted_within_days=None, active_only=True, run_id=None,
            sponsorship=None, salary_min=None, hide_low_fit=False, sort="score", limit=50,
-           offset=0, group_by=None):
+           offset=0, group_by=None, found_within_days=None):
     """(rows, total): one page of matching postings and the count across all pages.
 
     status lists STATUSES entries, and "none" for postings that have no status.
@@ -183,7 +187,9 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
     sponsorship is "yes" or "no". salary_min is a yearly USD amount that the stated
     maximum, hourly pay scaled by 2080 hours, must reach; pay stated in another
     currency counts as unstated, here and for sort="salary". hide_low_fit drops
-    postings scored under fit_threshold unless they have a status.
+    postings scored under fit_threshold unless they have a status. found_within_days
+    keeps the postings Cairn first found that recently; one from a source's first
+    read has no found time and never matches.
 
     Postings posted more than recent_days ago stay out unless they have a status.
     The postings of one role come back as a single row, the one _representatives
@@ -201,7 +207,7 @@ def search(q=None, relevant_only=True, fit_min=None, tier_min=None, status=None,
         source=source, posted_within_days=posted_within_days,
         active_only=active_only,
         run_id=run_id, sponsorship=sponsorship, salary_min=salary_min,
-        hide_low_fit=hide_low_fit)
+        hide_low_fit=hide_low_fit, found_within_days=found_within_days)
     chosen = _representatives(where)
     conn = connect()
     total = conn.execute(f"SELECT count(*) FROM ({chosen})", params).fetchone()[0]
