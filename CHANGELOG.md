@@ -6,6 +6,8 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+## [0.0.8] — 2026-10-05
+
 - The starter watchlists are seven lists that each hold one kind of company:
   AI labs, AI apps and tools, Dev tools and infrastructure, Fintech, Consumer
   apps, Defense, space and hardware, and Quant and trading. Databricks, for
@@ -163,6 +165,7 @@ The first release.
 - All data stays in `~/.cairn` on your Mac. The app only answers the window it
   opened.
 
+[0.0.8]: https://github.com/druhinb/cairn/releases/tag/v0.0.8
 [0.0.7]: https://github.com/druhinb/cairn/releases/tag/v0.0.7
 [0.0.6]: https://github.com/druhinb/cairn/releases/tag/v0.0.6
 [0.0.5]: https://github.com/druhinb/cairn/releases/tag/v0.0.5
