@@ -1,0 +1,63 @@
+{
+  "format": "cairn-watchlist",
+  "version": 1,
+  "name": "AI apps and tools",
+  "about": "Products and platforms built on AI models",
+  "companies": [
+    {
+      "company": "Cognition",
+      "kind": "ashby",
+      "location": "cognition"
+    },
+    {
+      "company": "Cursor",
+      "kind": "ashby",
+      "location": "cursor"
+    },
+    {
+      "company": "Decagon",
+      "kind": "ashby",
+      "location": "decagon"
+    },
+    {
+      "company": "Glean",
+      "kind": "greenhouse",
+      "location": "gleanwork"
+    },
+    {
+      "company": "Harvey",
+      "kind": "ashby",
+      "location": "harvey"
+    },
+    {
+      "company": "Hugging Face",
+      "kind": "workable",
+      "location": "huggingface"
+    },
+    {
+      "company": "Perplexity",
+      "kind": "ashby",
+      "location": "perplexity"
+    },
+    {
+      "company": "Replit",
+      "kind": "ashby",
+      "location": "replit"
+    },
+    {
+      "company": "Scale AI",
+      "kind": "greenhouse",
+      "location": "scaleai"
+    },
+    {
+      "company": "Sierra",
+      "kind": "ashby",
+      "location": "sierra"
+    },
+    {
+      "company": "Together AI",
+      "kind": "greenhouse",
+      "location": "togetherai"
+    }
+  ]
+}

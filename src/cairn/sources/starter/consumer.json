@@ -1,23 +1,13 @@
 {
   "format": "cairn-watchlist",
   "version": 1,
-  "name": "Big tech",
-  "about": "Large tech companies whose job boards Cairn can read",
+  "name": "Consumer apps",
+  "about": "Apps and sites people use every day",
   "companies": [
     {
       "company": "Airbnb",
       "kind": "greenhouse",
       "location": "airbnb"
-    },
-    {
-      "company": "Block",
-      "kind": "greenhouse",
-      "location": "block"
-    },
-    {
-      "company": "Cloudflare",
-      "kind": "greenhouse",
-      "location": "cloudflare"
     },
     {
       "company": "Discord",

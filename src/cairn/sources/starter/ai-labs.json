@@ -2,7 +2,7 @@
   "format": "cairn-watchlist",
   "version": 1,
   "name": "AI labs",
-  "about": "Companies building and training AI models",
+  "about": "Companies that build and train their own AI models",
   "companies": [
     {
       "company": "Anthropic",
@@ -20,34 +20,9 @@
       "location": "cohere"
     },
     {
-      "company": "Cursor",
-      "kind": "ashby",
-      "location": "cursor"
-    },
-    {
-      "company": "Databricks",
-      "kind": "greenhouse",
-      "location": "databricks"
-    },
-    {
       "company": "ElevenLabs",
       "kind": "ashby",
       "location": "elevenlabs"
-    },
-    {
-      "company": "Glean",
-      "kind": "greenhouse",
-      "location": "gleanwork"
-    },
-    {
-      "company": "Harvey",
-      "kind": "ashby",
-      "location": "harvey"
-    },
-    {
-      "company": "Hugging Face",
-      "kind": "workable",
-      "location": "huggingface"
     },
     {
       "company": "OpenAI",
@@ -55,24 +30,14 @@
       "location": "openai"
     },
     {
-      "company": "Perplexity",
+      "company": "Physical Intelligence",
       "kind": "ashby",
-      "location": "perplexity"
+      "location": "physicalintelligence"
     },
     {
       "company": "Runway",
       "kind": "ashby",
       "location": "runway"
-    },
-    {
-      "company": "Scale AI",
-      "kind": "greenhouse",
-      "location": "scaleai"
-    },
-    {
-      "company": "Together AI",
-      "kind": "greenhouse",
-      "location": "togetherai"
     },
     {
       "company": "xAI",

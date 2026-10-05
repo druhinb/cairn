@@ -67,14 +67,22 @@ class ApiTest(unittest.TestCase):
     def test_starter_lists_are_offered_and_merge_into_the_draft(self):
         offered = self.client.get("/api/watchlist/starters").json()
         self.assertEqual([s["id"] for s in offered], list(watchlists.STARTERS))
-        fintech = next(s for s in offered if s["id"] == "fintech-dev-tools")
+        fintech = next(s for s in offered if s["id"] == "fintech")
         self.assertIn("Stripe", fintech["companies"])
-        body = self.client.post("/api/watchlist/starters/fintech-dev-tools",
+        body = self.client.post("/api/watchlist/starters/fintech",
                                 json={"watchlist": [STRIPE]}).json()
         self.assertEqual((body["added"], body["already"]),
                          (len(fintech["companies"]) - 1, 1))
         self.assertEqual(self.client.post("/api/watchlist/starters/nope",
                                           json={"watchlist": []}).status_code, 404)
+
+
+class StarterTest(unittest.TestCase):
+    def test_each_company_is_in_one_starter_list(self):
+        boards = [(spec["kind"], spec["location"].casefold())
+                  for starter_id in watchlists.STARTERS
+                  for spec in watchlists.starter(starter_id)[2]]
+        self.assertEqual(len(boards), len(set(boards)))
 
 
 class CommandTest(unittest.TestCase):
