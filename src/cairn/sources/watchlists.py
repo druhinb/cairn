@@ -95,7 +95,9 @@ def starter(starter_id):
 
 
 def starters():
-    """Every packaged list, in the order setup offers them."""
+    """Every packaged list, in the order setup offers them, with the board of each
+    company so a watchlist entry can be matched to its list."""
     return [{"id": starter_id, "name": name, "about": about,
-             "companies": [spec["company"] for spec in specs]}
+             "companies": [spec["company"] for spec in specs],
+             "boards": [{"kind": spec["kind"], "location": spec["location"]} for spec in specs]}
             for starter_id in STARTERS for name, about, specs in [starter(starter_id)]]

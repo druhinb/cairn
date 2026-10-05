@@ -69,6 +69,8 @@ class ApiTest(unittest.TestCase):
         self.assertEqual([s["id"] for s in offered], list(watchlists.STARTERS))
         fintech = next(s for s in offered if s["id"] == "fintech")
         self.assertIn("Stripe", fintech["companies"])
+        self.assertIn({"kind": "greenhouse", "location": "stripe"}, fintech["boards"])
+        self.assertEqual(len(fintech["boards"]), len(fintech["companies"]))
         body = self.client.post("/api/watchlist/starters/fintech",
                                 json={"watchlist": [STRIPE]}).json()
         self.assertEqual((body["added"], body["already"]),
