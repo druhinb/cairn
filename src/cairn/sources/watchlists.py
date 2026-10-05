@@ -9,7 +9,7 @@ from cairn.sources.registry import BOARD_KINDS
 FORMAT = "cairn-watchlist"
 VERSION = 1
 MAX_COMPANIES = 500
-STARTERS = ("big-tech", "ai-labs", "quant", "fintech-dev-tools", "startups")
+STARTERS = ("ai-labs", "ai-apps", "dev-tools", "fintech", "consumer", "hardware", "quant")
 
 
 class WatchlistFileError(ValueError):

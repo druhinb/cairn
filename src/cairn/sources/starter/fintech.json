@@ -1,13 +1,18 @@
 {
   "format": "cairn-watchlist",
   "version": 1,
-  "name": "Fintech and dev tools",
-  "about": "Payments, banking and tools for developers",
+  "name": "Fintech",
+  "about": "Payments, banking, investing and crypto",
   "companies": [
     {
       "company": "Affirm",
       "kind": "greenhouse",
       "location": "affirm"
+    },
+    {
+      "company": "Block",
+      "kind": "greenhouse",
+      "location": "block"
     },
     {
       "company": "Brex",
@@ -25,44 +30,9 @@
       "location": "coinbase"
     },
     {
-      "company": "Datadog",
-      "kind": "greenhouse",
-      "location": "datadog"
-    },
-    {
-      "company": "Figma",
-      "kind": "greenhouse",
-      "location": "figma"
-    },
-    {
-      "company": "GitLab",
-      "kind": "greenhouse",
-      "location": "gitlab"
-    },
-    {
-      "company": "Linear",
-      "kind": "ashby",
-      "location": "linear"
-    },
-    {
       "company": "Mercury",
       "kind": "greenhouse",
       "location": "mercury"
-    },
-    {
-      "company": "Modal",
-      "kind": "ashby",
-      "location": "modal"
-    },
-    {
-      "company": "MongoDB",
-      "kind": "greenhouse",
-      "location": "mongodb"
-    },
-    {
-      "company": "Notion",
-      "kind": "ashby",
-      "location": "notion"
     },
     {
       "company": "Plaid",
@@ -83,16 +53,6 @@
       "company": "Stripe",
       "kind": "greenhouse",
       "location": "stripe"
-    },
-    {
-      "company": "Supabase",
-      "kind": "ashby",
-      "location": "supabase"
-    },
-    {
-      "company": "Vercel",
-      "kind": "greenhouse",
-      "location": "vercel"
     },
     {
       "company": "Wealthfront",

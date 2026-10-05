@@ -6,6 +6,11 @@ This file lists every notable change to this project. It follows
 
 ## [Unreleased]
 
+- The starter watchlists are seven lists that each hold one kind of company:
+  AI labs, AI apps and tools, Dev tools and infrastructure, Fintech, Consumer
+  apps, Defense, space and hardware, and Quant and trading. Databricks, for
+  one, moved from AI labs to Dev tools and infrastructure.
+
 ## [0.0.7] — 2026-10-01
 
 - Runs look up company icons and read how many years each job asks for while
